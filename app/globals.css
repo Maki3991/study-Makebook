@@ -20,10 +20,10 @@
   --purple: #7655e9;
   --purple-soft: #e7e0ff;
   --danger: #c83d45;
-  --radius-sm: 10px;
-  --radius-md: 18px;
-  --radius-lg: 28px;
-  --shadow-soft: 0 12px 36px rgba(27, 28, 26, 0.08);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --shadow-soft: 0 6px 20px rgba(27, 28, 26, 0.055);
 }
 
 @theme inline {
@@ -91,8 +91,8 @@ textarea:focus-visible {
   margin: 0 auto;
   overflow: hidden;
   background:
-    linear-gradient(rgba(18, 19, 19, 0.032) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(18, 19, 19, 0.032) 1px, transparent 1px),
+    linear-gradient(rgba(18, 19, 19, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18, 19, 19, 0.022) 1px, transparent 1px),
     var(--paper);
   background-size: 22px 22px;
   box-shadow: 0 0 70px rgba(0, 0, 0, 0.28);
@@ -220,7 +220,7 @@ textarea:focus-visible {
   padding: 5px 3px;
   place-items: center;
   border: 0;
-  border-radius: 12px;
+  border-radius: 6px;
   color: rgba(18, 19, 19, 0.46);
   background: transparent;
   cursor: pointer;
@@ -320,8 +320,8 @@ textarea:focus-visible {
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.52);
-  box-shadow: 0 8px 28px rgba(27, 28, 26, 0.035);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: none;
 }
 
 .section-label {
@@ -697,7 +697,8 @@ textarea:focus-visible {
   min-height: 480px;
   border-radius: var(--radius-lg);
   background: var(--paper-deep);
-  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--line);
+  box-shadow: none;
 }
 
 .product-hero::after {
@@ -2033,7 +2034,7 @@ textarea:focus-visible {
   gap: 16px;
   padding: 0 18px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 8px;
   color: white;
   background: var(--blue);
   cursor: pointer;
@@ -2299,7 +2300,7 @@ textarea:focus-visible {
     align-items: center;
     padding: 10px;
     border: 1px solid transparent;
-    border-radius: 12px;
+    border-radius: 6px;
     text-align: left;
     background: transparent;
     cursor: pointer;
@@ -2401,7 +2402,7 @@ textarea:focus-visible {
     min-width: 0;
     margin: 0;
     border: 1px solid var(--line-strong);
-    border-radius: 12px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.48);
   }
 
