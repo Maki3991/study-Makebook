@@ -47,3 +47,83 @@ export const storySteps: StoryStep[] = [
     nextLabel: "演示完成",
   },
 ];
+
+export type Candidate = {
+  id: string;
+  name: string;
+  type: string;
+  confidence: number;
+  specs: string[];
+  evidence: string[];
+  unknown: string;
+};
+
+export const sourceComments = [
+  "普通相机包看起来太像器材箱，我想背去上班也不突兀。",
+  "最好能装下一机两镜，但不要大到像双肩包。",
+  "内胆可拆很重要，平时想把它当普通斜挎包。",
+  "肩带要宽一点，背久了不要勒。",
+  "黑色最稳，预算大概在 220–260 元。",
+  "希望能快速从侧面拿到相机。",
+];
+
+export const candidates: Candidate[] = [
+  {
+    id: "FRAME-01",
+    name: "8L 模块摄影斜挎包",
+    type: "Selected direction",
+    confidence: 88,
+    specs: ["黑色", "8L", "可拆内胆", "宽肩带"],
+    evidence: [
+      "14 / 20 条评论明确反感“器材箱”外观",
+      "9 / 20 条评论提到一机两镜与日常物品共存",
+      "价格意愿集中在 220–260 元",
+    ],
+    unknown: "防水等级与侧取结构仍需打样确认",
+  },
+  {
+    id: "FRAME-02",
+    name: "10L 城市双肩包",
+    type: "Alternative",
+    confidence: 64,
+    specs: ["深灰", "10L", "后开仓", "双肩"],
+    evidence: ["容量诉求明确，但双肩形态的支持样本较少"],
+    unknown: "通勤体积与器材保护之间仍有冲突",
+  },
+  {
+    id: "FRAME-03",
+    name: "可拆内胆托特包",
+    type: "Alternative",
+    confidence: 57,
+    specs: ["米白", "12L", "独立内胆", "手提"],
+    evidence: ["生活方式感最强，但相机侧取需求无法满足"],
+    unknown: "提手承重与镜头保护方式不明确",
+  },
+];
+
+export const demandPoints = [
+  { price: "0.017", orders: 5 },
+  { price: "0.019", orders: 4 },
+  { price: "0.021", orders: 3 },
+  { price: "0.024", orders: 2 },
+  { price: "0.026", orders: 1 },
+];
+
+export const factoryTiers = [
+  {
+    id: "loom",
+    name: "Factory Loom",
+    quantity: 3,
+    price: "0.019",
+    feasible: true,
+    eligible: 4,
+  },
+  {
+    id: "north",
+    name: "Factory North",
+    quantity: 3,
+    price: "0.024",
+    feasible: false,
+    eligible: 2,
+  },
+];

@@ -3,6 +3,11 @@
 import { ArrowRight, WalletCards } from "lucide-react";
 import { useState } from "react";
 import { storySteps, type StoryStepId } from "../lib/mock-data";
+import {
+  CampaignScreen,
+  PlaceholderScreen,
+  StudioScreen,
+} from "./story-screens";
 
 export function MakebookApp() {
   const [activeStep, setActiveStep] = useState<StoryStepId>("studio");
@@ -15,6 +20,12 @@ export function MakebookApp() {
       setActiveStep(next.id);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  }
+
+  function renderScreen() {
+    if (activeStep === "studio") return <StudioScreen />;
+    if (activeStep === "campaign") return <CampaignScreen />;
+    return <PlaceholderScreen label={active.shortLabel} />;
   }
 
   return (
@@ -59,16 +70,7 @@ export function MakebookApp() {
           <p className="screen-intro">{active.intro}</p>
         </div>
 
-        <section
-          className="placeholder-panel"
-          aria-label={`${active.shortLabel}页面`}
-        >
-          <p className="placeholder-index">VIEW / 0{activeIndex + 1}</p>
-          <h2>{active.shortLabel}模块正在装配</h2>
-          <p>
-            当前先锁定移动端信息结构与视觉系统，下一批会加入真实的演示数据、页面状态和完整交互。
-          </p>
-        </section>
+        {renderScreen()}
       </main>
 
       <div className="bottom-bar">
