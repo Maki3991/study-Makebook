@@ -28,6 +28,7 @@ import {
   factoryTiers,
   sourceComments,
 } from "../lib/mock-data";
+import type { CSSProperties } from "react";
 import { Metric, SectionLabel, SourceTag } from "./ui";
 
 export function StudioScreen() {
@@ -206,19 +207,19 @@ export function CampaignScreen() {
         <SectionLabel index="01">两种需求，分开看</SectionLabel>
         <div className="metric-grid">
           <div className="surface signal-card">
-            <SourceTag tone="ai">Interest signal</SourceTag>
+            <SourceTag tone="ai">AI Generated</SourceTag>
             <Metric label="评论 / 访谈样本" value="72" suffix="条" />
             <p>说明方向值得研究，不参与清算。</p>
           </div>
           <div className="surface signal-card">
-            <SourceTag tone="onchain">Funded orders</SourceTag>
-            <Metric label="已预锁资金订单" value="4" suffix="笔" />
+            <SourceTag tone="onchain">Onchain</SourceTag>
+            <Metric label="已预锁资金订单" value="6" suffix="笔" />
             <p>钱包已预锁 maxPrice，进入清算。</p>
           </div>
         </div>
       </section>
 
-      <section className="surface">
+      <section className="surface demand-curve-card">
         <SectionLabel
           index="02"
           aside={<span className="mono-note">ORDER BOOK / LIVE</span>}
@@ -228,25 +229,122 @@ export function CampaignScreen() {
         <div
           className="demand-chart"
           role="img"
-          aria-label="价格越高，满足最高愿付价的链上订单数越少。0.019 test INJ 时有 4 笔订单。"
+          aria-label="AI 兴趣样本与链上预锁订单分别显示。链上曲线表示价格越高，满足最高愿付价的订单越少。Factory Loom 的 5 件档位在 0.019 test INJ 可行并中标，Factory North 的 3 件档位在 0.024 test INJ 不可行。"
         >
-          <div className="chart-y-label">预锁订单数</div>
-          <div className="chart-bars">
-            {demandPoints.map((point) => (
-              <div className="chart-column" key={point.price}>
-                <span className="chart-value">{point.orders}</span>
-                <div
-                  className="chart-bar"
-                  style={{ height: `${point.orders * 18}%` }}
+          <div className="interest-band">
+            <div>
+              <SourceTag tone="ai">AI Generated</SourceTag>
+              <strong>72 条兴趣样本</strong>
+              <span>访谈与评论聚合 · 不参与清算</span>
+            </div>
+            <div className="interest-scale" aria-hidden="true">
+              {[46, 72, 88, 64, 38, 22].map((height, index) => (
+                <span
+                  key={index}
+                  style={{ "--signal": `${height}%` } as CSSProperties}
                 />
-                <span className="chart-price">{point.price}</span>
-              </div>
-            ))}
-            <div className="tier-line" aria-hidden="true">
-              <span>LOOM · MOQ 3 @ 0.019</span>
+              ))}
             </div>
           </div>
-          <div className="chart-x-label">最高愿付价 / test INJ</div>
+
+          <div className="funded-chart-head">
+            <div>
+              <SourceTag tone="onchain">Onchain</SourceTag>
+              <strong>真实测试网订单</strong>
+            </div>
+            <span>maxPrice ≥ 该价格</span>
+          </div>
+
+          <svg
+            className="funded-chart"
+            viewBox="0 0 620 330"
+            preserveAspectRatio="xMidYMid meet"
+            aria-hidden="true"
+          >
+            <g className="chart-grid">
+              {[40, 80, 120, 160, 200, 240, 280].map((y) => (
+                <line key={y} x1="64" x2="586" y1={y} y2={y} />
+              ))}
+            </g>
+
+            <g className="chart-axis-labels">
+              {["6", "5", "4", "3", "2", "1", "0"].map((value, index) => (
+                <text key={value} x="44" y={44 + index * 40} textAnchor="end">
+                  {value}
+                </text>
+              ))}
+              {demandPoints.map((point, index) => (
+                <text
+                  key={point.price}
+                  x={94 + index * 112}
+                  y="316"
+                  textAnchor="middle"
+                >
+                  {point.price}
+                </text>
+              ))}
+            </g>
+
+            <g className="chart-order-bars">
+              {demandPoints.map((point, index) => {
+                const height = point.orders * 40;
+                return (
+                  <g key={point.price}>
+                    <rect
+                      x={67 + index * 112}
+                      y={280 - height}
+                      width="54"
+                      height={height}
+                      rx="7"
+                    />
+                    <text
+                      x={94 + index * 112}
+                      y={270 - height}
+                      textAnchor="middle"
+                    >
+                      {point.orders}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
+
+            <path
+              className="funded-step-line"
+              d="M94 40 H206 V80 H318 V160 H430 V200 H542 V240"
+            />
+
+            <g className="factory-threshold factory-threshold-winner">
+              <line x1="166" x2="586" y1="80" y2="80" />
+              <circle cx="206" cy="80" r="7" />
+              <rect x="356" y="50" width="220" height="23" rx="4" />
+              <text x="566" y="66" textAnchor="end">
+                WINNER · LOOM · MOQ 5 @ 0.019
+              </text>
+            </g>
+
+            <g className="factory-threshold factory-threshold-missed">
+              <line x1="390" x2="586" y1="160" y2="160" />
+              <path d="M426 154 l12 12 M438 154 l-12 12" />
+              <rect x="356" y="169" width="220" height="23" rx="4" />
+              <text x="566" y="185" textAnchor="end">
+                MISSED · NORTH · MOQ 3 @ 0.024
+              </text>
+            </g>
+
+            <text className="chart-y-title" x="66" y="19">
+              预锁订单数
+            </text>
+            <text className="chart-x-title" x="586" y="316" textAnchor="end">
+              最高愿付价 / test INJ
+            </text>
+          </svg>
+
+          <div className="chart-legend">
+            <span data-kind="curve">链上需求曲线</span>
+            <span data-kind="winner">可行 / 中标</span>
+            <span data-kind="missed">不可行</span>
+          </div>
         </div>
       </section>
 
@@ -294,7 +392,7 @@ export function CampaignScreen() {
         </div>
         <div>
           <span>当前可行性预览</span>
-          <strong>如果现在截止，Factory Loom 的 3 件档位可成批。</strong>
+          <strong>如果现在截止，Factory Loom 的 5 件档位可成批。</strong>
           <p>最终结果只在截止后由合约清算；此处不是承诺。</p>
         </div>
       </section>

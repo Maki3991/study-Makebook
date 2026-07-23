@@ -1,3 +1,11 @@
+import {
+  BadgeCheck,
+  CircleDashed,
+  Factory,
+  FlaskConical,
+  Sparkles,
+  UserCheck,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 type SourceTagTone =
@@ -15,9 +23,18 @@ export function SourceTag({
   tone: SourceTagTone;
   children: ReactNode;
 }) {
+  const Icon = {
+    onchain: BadgeCheck,
+    ai: Sparkles,
+    human: UserCheck,
+    factory: Factory,
+    offchain: CircleDashed,
+    testnet: FlaskConical,
+  }[tone];
+
   return (
     <span className="source-tag" data-tone={tone}>
-      <span className="source-tag-dot" aria-hidden="true" />
+      <Icon className="source-tag-icon" size={11} strokeWidth={2.2} aria-hidden="true" />
       {children}
     </span>
   );
