@@ -2,10 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: {
-    default: "MAKEBOOK · 造物簿",
-    template: "%s · MAKEBOOK",
-  },
+  title: "MAKEBOOK · 造物簿",
   description:
     "AI 编译需求，消费者预锁资金，工厂提交 MOQ 报价，Injective 公开清算。",
   icons: {
