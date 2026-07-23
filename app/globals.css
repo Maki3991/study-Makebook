@@ -193,6 +193,7 @@ textarea:focus-visible {
 .wallet-pill {
   display: grid;
   min-width: 44px;
+  min-height: 44px;
   padding: 0 9px;
   place-items: center;
   border-radius: 999px;
