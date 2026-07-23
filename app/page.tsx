@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MakebookApp } from "./components/makebook-app";
+import { MakebookApp } from "@/app/components/makebook-app";
 
 export const metadata: Metadata = {
   title: "MAKEBOOK · 造物簿",

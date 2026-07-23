@@ -16,22 +16,32 @@ export function MakebookApp() {
   const active = storySteps[activeIndex];
   const next = storySteps[activeIndex + 1];
 
-  function goToNext() {
-    if (next) {
-      setActiveStep(next.id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+  function goToStep(stepId: StoryStepId) {
+    setActiveStep(stepId);
+
+    if (window.innerWidth >= 1280) {
+      document
+        .getElementById(`stage-${stepId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
     }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function renderScreen() {
-    if (activeStep === "studio") return <StudioScreen />;
-    if (activeStep === "campaign") return <CampaignScreen />;
-    if (activeStep === "order") return <OrderScreen />;
+  function goToNext() {
+    if (next) goToStep(next.id);
+  }
+
+  function renderScreen(stepId: StoryStepId) {
+    if (stepId === "studio") return <StudioScreen />;
+    if (stepId === "campaign") return <CampaignScreen />;
+    if (stepId === "order") return <OrderScreen />;
     return <SettlementScreen />;
   }
 
   return (
-    <div className="app-frame">
+    <div className="app-frame" data-active-step={activeStep}>
       <header className="app-header">
         <div className="brand-lockup" aria-label="MAKEBOOK 造物簿">
           <span className="brand-mark">MB</span>
@@ -57,7 +67,7 @@ export function MakebookApp() {
             data-active={step.id === activeStep}
             data-done={index < activeIndex}
             aria-current={step.id === activeStep ? "step" : undefined}
-            onClick={() => setActiveStep(step.id)}
+            onClick={() => goToStep(step.id)}
           >
             <span className="story-number">0{index + 1}</span>
             <span className="story-label">{step.shortLabel}</span>
@@ -65,15 +75,74 @@ export function MakebookApp() {
         ))}
       </nav>
 
-      <main className="app-main">
-        <div className="screen-head">
-          <p className="screen-kicker">{active.kicker}</p>
-          <h1 className="screen-title">{active.title}</h1>
-          <p className="screen-intro">{active.intro}</p>
-        </div>
+      <main className="app-main mobile-tablet-view">
+        <div className="adaptive-page">
+          <div className="screen-head">
+            <p className="screen-kicker">{active.kicker}</p>
+            <h1 className="screen-title">{active.title}</h1>
+            <p className="screen-intro">{active.intro}</p>
+          </div>
 
-        {renderScreen()}
+          <div className="active-screen">{renderScreen(activeStep)}</div>
+        </div>
       </main>
+
+      <div className="desktop-shell">
+        <aside className="desktop-step-nav" aria-label="完整步骤导航">
+          <div className="desktop-nav-intro">
+            <span>评审路径</span>
+            <strong>从需求证据到链上凭证</strong>
+            <p>四步同屏展开，所有演示数据标明来源。</p>
+          </div>
+          {storySteps.map((step, index) => (
+            <button
+              key={step.id}
+              type="button"
+              data-active={step.id === activeStep}
+              onClick={() => goToStep(step.id)}
+            >
+              <span>0{index + 1}</span>
+              <div>
+                <strong>{step.shortLabel}</strong>
+                <small>{step.kicker}</small>
+              </div>
+              <ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" />
+            </button>
+          ))}
+        </aside>
+
+        <main className="desktop-dashboard">
+          <header className="dashboard-hero">
+            <p className="screen-kicker">MAKEBOOK / FOUR STEP DEMO</p>
+            <h1>把制造需求，变成可验证的订单簿。</h1>
+            <p>
+              从评论证据、人工确认、测试网资金订单，到统一清算与个人凭证。
+              产品讨论的是一个真实的包，不是代币行情。
+            </p>
+          </header>
+
+          {storySteps.map((step, index) => (
+            <section
+              className={`desktop-stage desktop-stage-${step.id}`}
+              id={`stage-${step.id}`}
+              key={step.id}
+              aria-labelledby={`stage-title-${step.id}`}
+            >
+              <header className="desktop-stage-head">
+                <div className="desktop-stage-number">0{index + 1}</div>
+                <div>
+                  <p>{step.kicker}</p>
+                  <h2 id={`stage-title-${step.id}`}>{step.title}</h2>
+                  <span>{step.intro}</span>
+                </div>
+              </header>
+              <div className="desktop-stage-content">
+                {renderScreen(step.id)}
+              </div>
+            </section>
+          ))}
+        </main>
+      </div>
 
       <div className="bottom-bar">
         <button

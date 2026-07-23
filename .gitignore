@@ -43,4 +43,6 @@ next-env.d.ts
 
 # local Codex preview runner
 /.codex-dev.*
+/.codex-live.*
+/.codex-start.*
 /.codex-run-dev.cmd

@@ -182,7 +182,8 @@ export function CampaignScreen() {
           alt="FRAME-01 黑色 8L 模块化摄影斜挎包"
           fill
           priority
-          sizes="(max-width: 540px) 100vw, 540px"
+          unoptimized
+          sizes="(max-width: 767px) 100vw, (max-width: 1279px) 64vw, 28vw"
         />
         <div className="product-hero-top">
           <SourceTag tone="human">Human Confirmed</SourceTag>
@@ -277,7 +278,7 @@ export function CampaignScreen() {
                 <text
                   key={point.price}
                   x={94 + index * 112}
-                  y="316"
+                  y="306"
                   textAnchor="middle"
                 >
                   {point.price}
@@ -335,7 +336,7 @@ export function CampaignScreen() {
             <text className="chart-y-title" x="66" y="19">
               预锁订单数
             </text>
-            <text className="chart-x-title" x="586" y="316" textAnchor="end">
+            <text className="chart-x-title" x="586" y="328" textAnchor="end">
               最高愿付价 / test INJ
             </text>
           </svg>
