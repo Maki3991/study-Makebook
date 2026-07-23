@@ -5,7 +5,8 @@ import { useState } from "react";
 import { storySteps, type StoryStepId } from "../lib/mock-data";
 import {
   CampaignScreen,
-  PlaceholderScreen,
+  OrderScreen,
+  SettlementScreen,
   StudioScreen,
 } from "./story-screens";
 
@@ -25,7 +26,8 @@ export function MakebookApp() {
   function renderScreen() {
     if (activeStep === "studio") return <StudioScreen />;
     if (activeStep === "campaign") return <CampaignScreen />;
-    return <PlaceholderScreen label={active.shortLabel} />;
+    if (activeStep === "order") return <OrderScreen />;
+    return <SettlementScreen />;
   }
 
   return (

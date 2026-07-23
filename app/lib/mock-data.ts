@@ -102,8 +102,8 @@ export const candidates: Candidate[] = [
 ];
 
 export const demandPoints = [
-  { price: "0.017", orders: 5 },
-  { price: "0.019", orders: 4 },
+  { price: "0.017", orders: 6 },
+  { price: "0.019", orders: 5 },
   { price: "0.021", orders: 3 },
   { price: "0.024", orders: 2 },
   { price: "0.026", orders: 1 },
@@ -113,10 +113,10 @@ export const factoryTiers = [
   {
     id: "loom",
     name: "Factory Loom",
-    quantity: 3,
+    quantity: 5,
     price: "0.019",
     feasible: true,
-    eligible: 4,
+    eligible: 5,
   },
   {
     id: "north",
