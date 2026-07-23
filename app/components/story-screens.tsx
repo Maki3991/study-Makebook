@@ -74,14 +74,18 @@ export function StudioScreen() {
   }
 
   return (
-    <div className="screen-stack">
-      <section className="surface input-surface">
-        <SectionLabel
-          index="01"
-          aside={<span className="mono-note">20 条有效输入</span>}
-        >
-          原始需求
-        </SectionLabel>
+    <div className="studio-workbench">
+      <section className="surface input-surface studio-source">
+        <div className="studio-source-head">
+          <SectionLabel index="01">原始需求</SectionLabel>
+          <div className="studio-source-count">
+            <strong>20</strong>
+            <span>VALID INPUTS</span>
+          </div>
+        </div>
+        <p className="studio-source-intro">
+          评论与访谈只作为需求证据，不直接决定生产规格。
+        </p>
         <div className="comment-preview">
           {sourceComments.slice(0, 3).map((comment, index) => (
             <div className="comment-row" key={comment}>
@@ -113,15 +117,16 @@ export function StudioScreen() {
         </p>
       </section>
 
-      <section>
-        <SectionLabel
-          index="02"
-          aside={<SourceTag tone="ai">AI Generated</SourceTag>}
-        >
-          候选方向
-        </SectionLabel>
+      <section className="studio-output">
+        <div className="studio-output-head">
+          <div>
+            <SectionLabel index="02">候选方向</SectionLabel>
+            <p>AI 提取三个可制造方向，选择一项进入人工复核。</p>
+          </div>
+          <SourceTag tone="ai">AI Generated</SourceTag>
+        </div>
         <div className="candidate-strip">
-          {candidates.map((candidate) => (
+          {candidates.map((candidate, index) => (
             <button
               className="candidate-mini"
               data-selected={candidate.id === selectedId}
@@ -132,71 +137,108 @@ export function StudioScreen() {
                 setConfirmed(false);
               }}
             >
-              <span>{candidate.id}</span>
-              <strong>{candidate.name}</strong>
-              <small>{candidate.confidence}% confidence</small>
+              <span className="candidate-index">0{index + 1}</span>
+              <span className="candidate-mini-copy">
+                <small>{candidate.id}</small>
+                <strong>{candidate.name}</strong>
+              </span>
+              <span className="candidate-score">
+                {candidate.confidence}
+                <small>%</small>
+              </span>
             </button>
           ))}
         </div>
-      </section>
 
-      <section className="surface candidate-detail">
-        <div className="candidate-heading">
-          <div>
-            <span className="mono-note">{selected.id}</span>
-            <h2>{selected.name}</h2>
+        <section className="surface candidate-detail">
+          <div className="candidate-heading">
+            <div className="candidate-title-block">
+              <div className="candidate-title-meta">
+                <span className="mono-note">{selected.id} / MANIFEST DRAFT</span>
+                <SourceTag tone="ai">AI Generated</SourceTag>
+              </div>
+              <h2>{selected.name}</h2>
+              <p>把分散的“想要”压缩成可以报价、打样和确认的规格草案。</p>
+            </div>
+            <div
+              className="confidence-readout"
+              aria-label={`置信度 ${selected.confidence}%`}
+            >
+              <span>CONFIDENCE</span>
+              <strong>{selected.confidence}</strong>
+              <small>/ 100</small>
+            </div>
           </div>
-          <div className="confidence-ring" aria-label={`置信度 ${selected.confidence}%`}>
-            {selected.confidence}
+
+          <div className="candidate-body">
+            <div className="candidate-spec-column">
+              <p className="detail-label">制造规格</p>
+              <div className="spec-grid">
+                {selected.specs.map((spec, index) => (
+                  <span key={spec}>
+                    <small>0{index + 1}</small>
+                    {spec}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="candidate-review-column">
+              <div className="evidence-block">
+                <p className="detail-label">
+                  <Quote size={14} aria-hidden="true" />
+                  证据
+                </p>
+                <ul>
+                  {selected.evidence.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="unknown-block">
+                <p className="detail-label">
+                  <AlertCircle size={14} aria-hidden="true" />
+                  仍需确认
+                </p>
+                <p>{selected.unknown}</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="spec-grid">
-          {selected.specs.map((spec) => (
-            <span key={spec}>{spec}</span>
-          ))}
-        </div>
-
-        <div className="evidence-block">
-          <p className="detail-label">
-            <Quote size={14} aria-hidden="true" />
-            证据
-          </p>
-          <ul>
-            {selected.evidence.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="unknown-block">
-          <p className="detail-label">
-            <AlertCircle size={14} aria-hidden="true" />
-            仍需确认
-          </p>
-          <p>{selected.unknown}</p>
-        </div>
-
-        <button
-          className="action-button"
-          data-confirmed={confirmed}
-          type="button"
-          onClick={() => setConfirmed((value) => !value)}
-        >
-          {confirmed ? (
-            <CheckCircle2 size={17} aria-hidden="true" />
-          ) : (
-            <PencilLine size={17} aria-hidden="true" />
-          )}
-          {confirmed ? "已人工确认，可进入 Campaign" : "编辑并确认这个方向"}
-        </button>
-
-        {confirmed ? (
-          <div className="confirmation-proof">
-            <SourceTag tone="human">Human Confirmed</SourceTag>
-            <span>manifestHash · 0x7a19…be42</span>
+          <div className="candidate-confirmation">
+            <div>
+              <span>HUMAN REVIEW</span>
+              <p>确认后才生成可进入资金流程的 manifest。</p>
+            </div>
+            <button
+              className="action-button"
+              data-confirmed={confirmed}
+              type="button"
+              onClick={() => setConfirmed((value) => !value)}
+            >
+              {confirmed ? (
+                <CheckCircle2 size={17} aria-hidden="true" />
+              ) : (
+                <PencilLine size={17} aria-hidden="true" />
+              )}
+              {confirmed ? "已确认，可进入 Campaign" : "编辑并确认方向"}
+            </button>
           </div>
-        ) : null}
+
+          <div className="confirmation-proof" data-visible={confirmed}>
+            {confirmed ? (
+              <SourceTag tone="human">Human Confirmed</SourceTag>
+            ) : (
+              <SourceTag tone="offchain">Unconfirmed Draft</SourceTag>
+            )}
+            <span>
+              {confirmed
+                ? "manifestHash · 0x7a19…be42"
+                : "等待人工确认后生成 manifestHash"}
+            </span>
+          </div>
+        </section>
       </section>
     </div>
   );
