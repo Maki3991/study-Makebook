@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { SkeletonPreview } from "./_sites-preview/SkeletonPreview";
+import { MakebookApp } from "./components/makebook-app";
 
 export const metadata: Metadata = {
-  title: "Your site is taking shape",
+  title: "MAKEBOOK · 造物簿",
   description:
-    "Your first version will appear here automatically when it’s ready.",
-  other: {
-    "codex-preview": "development",
-  },
+    "把评论里的想要，变成一条有真实资金承诺的生产需求曲线。",
 };
 
 export default function Home() {
-  return <SkeletonPreview />;
+  return <MakebookApp />;
 }

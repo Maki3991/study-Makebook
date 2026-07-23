@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,12 +13,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Starter Project",
-  description: "A clean starting point for building your site.",
+  title: {
+    default: "MAKEBOOK · 造物簿",
+    template: "%s · MAKEBOOK",
+  },
+  description:
+    "AI 编译需求，消费者预锁资金，工厂提交 MOQ 报价，Injective 公开清算。",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#eeece5",
 };
 
 export default function RootLayout({
@@ -27,12 +38,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+    <html
+      lang="zh-CN"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+    >
+      <body>{children}</body>
     </html>
   );
 }
