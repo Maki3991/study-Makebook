@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Settings2, WalletCards } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { storySteps, type StoryStepId } from "../lib/mock-data";
 import {
@@ -16,6 +17,7 @@ import {
   SettlementScreen,
   StudioScreen,
 } from "./story-screens";
+import { SourceTag } from "./ui";
 
 export function MakebookApp() {
   const [activeStep, setActiveStep] = useState<StoryStepId>("studio");
@@ -153,12 +155,57 @@ export function MakebookApp() {
 
         <main className="desktop-dashboard">
           <header className="dashboard-hero">
-            <p className="screen-kicker">MAKEBOOK / FOUR STEP DEMO</p>
-            <h1>把制造需求，变成可验证的订单簿。</h1>
-            <p>
-              从评论证据、人工确认、测试网资金订单，到统一清算与个人凭证。
-              产品讨论的是一个真实的包，不是代币行情。
-            </p>
+            <div className="dashboard-hero-copy">
+              <p className="screen-kicker">FRAME-01 / PRODUCTION DEMAND RECORD</p>
+              <h1>先看见真实需求，再决定生产。</h1>
+              <p>
+                MAKEBOOK 把评论编译成可制造规格，再用测试网资金订单与工厂
+                MOQ 报价形成公开清算。这里制造的是一个真实的包，不是代币行情。
+              </p>
+              <div className="dashboard-flow" aria-label="产品四步流程">
+                <span>Comments</span>
+                <span>Manifest</span>
+                <span>Escrow</span>
+                <span>Clearing</span>
+              </div>
+            </div>
+
+            <figure className="dashboard-product">
+              <div className="dashboard-product-image">
+                <Image
+                  src="/frame-01-hero.webp"
+                  alt="FRAME-01 黑色 8L 模块化摄影斜挎包"
+                  fill
+                  priority
+                  unoptimized
+                  sizes="(min-width: 1280px) 48vw, 100vw"
+                />
+                <div className="dashboard-product-tags">
+                  <SourceTag tone="human">Human Confirmed</SourceTag>
+                  <SourceTag tone="testnet">Testnet</SourceTag>
+                </div>
+              </div>
+              <figcaption>
+                <div>
+                  <span>FRAME-01</span>
+                  <strong>8L 模块摄影斜挎包</strong>
+                </div>
+                <dl>
+                  <div>
+                    <dt>CAPACITY</dt>
+                    <dd>8L</dd>
+                  </div>
+                  <div>
+                    <dt>COLOR</dt>
+                    <dd>BLACK</dd>
+                  </div>
+                  <div>
+                    <dt>LOAD</dt>
+                    <dd>1 + 2</dd>
+                  </div>
+                </dl>
+              </figcaption>
+            </figure>
           </header>
 
           {storySteps.map((step, index) => (
