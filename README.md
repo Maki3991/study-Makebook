@@ -1,98 +1,62 @@
-# vinext-starter
+# MAKEBOOK / 造物簿
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+MAKEBOOK 是面向实体新品的预生产订单簿：AI 将评论与访谈整理为可制造的 SKU，消费者用全额担保的最高愿付价表达真实需求，工厂提交 MOQ 阶梯报价，Injective 合约在截止后按公开规则统一清算。
 
-## Prerequisites
+当前首个案例是 `FRAME-01`——一款黑色 8L 模块化摄影斜挎包。
 
-- Node.js `>=22.13.0`
+## 这份仓库包含什么
 
-## Quick Start
+本仓库当前聚焦 MAKEBOOK 的前端、视觉系统和完整演示路径：
+
+1. **AI Demand Studio**：评论证据 → 候选 SKU → 人工确认
+2. **Campaign Market**：产品说明、兴趣样本、资金需求曲线与工厂 tiers
+3. **Conditional Order**：钱包、maxPrice、同额预锁与签名前确认
+4. **Settlement & Receipt**：清算原因、个人退款、交易与 manifest 凭证
+
+界面使用统一来源标签区分 `ONCHAIN`、`AI GENERATED`、`HUMAN CONFIRMED`、`DEMO FACTORY`、`OFF-CHAIN DEMO` 与 `TESTNET`，避免把 AI 信号、测试网状态和真实制造混在一起。
+
+## 当前实现边界
+
+- 前端交互与成功/失败演示状态可独立运行。
+- 仓库中的固定交易哈希和订单数据仅用于前端联调，不是最终链上证据。
+- 钱包、合约读取、真实交易与 AI API 由团队技术分支接入；接入后仍沿用当前状态与错误界面。
+- Operator / Factory 操作收在隐藏 Demo Panel，不进入评委主路径。
+- 这是测试网原型，不处理真实资产，也不保证真实生产、物流或质量履约。
+
+## 响应式验收
+
+移动端和桌面端均为正式使用场景：
+
+- `390 × 844`：钱包 App 内置浏览器，单列流程与底部关键操作
+- `1024 × 768`：投屏尺寸，两列布局，无横向滚动
+- `1920 × 1080`：录屏与展位大屏，四步单页 Dashboard
+
+交互目标不小于 `44 × 44px`；金额使用等宽数字；地址和哈希可复制；交易状态覆盖 idle、loading、success、error 与 disabled。
+
+## 本地运行
+
+需要 Node.js `>=22.13.0`。
 
 ```bash
 npm install
 npm run dev
+```
+
+检查前端：
+
+```bash
+npm run lint
 npm run build
+npm test
 ```
 
-This starter does not use `wrangler.jsonc`.
+## 设计方向
 
-## Included Shape
+视觉参考制造业规格书、订单簿与工程图纸：暖灰纸张、黑色信息骨架、克制蓝色强调和清晰的来源标记。产品图是主角；不使用加密行情、K 线、赛博朋克、玻璃拟态或蓝紫发光来制造“Web3 感”。
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+设计和实现过程采用小步提交。AI 用于实现辅助与审查，但产品逻辑、视觉方向、信息层级和最终验收均以团队 PRD 与人工判断为准。
 
-## Workspace Auth Headers
+## 前端所有权
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
-
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
-```
-
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+- Alan：产品体验、响应式前端、视觉系统、AIGC 资产与展示叙事
+- 团队技术方向：AI 服务、钱包/viem、Injective 合约、部署地址与真实交易证据
