@@ -8,8 +8,6 @@ import {
   CheckCircle2,
   ChevronDown,
   CircleDollarSign,
-  Copy,
-  ExternalLink,
   Factory,
   LoaderCircle,
   LockKeyhole,
@@ -21,15 +19,46 @@ import {
   Sparkles,
   WalletCards,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import {
   candidates,
   demandPoints,
   factoryTiers,
   sourceComments,
 } from "../lib/mock-data";
-import type { CSSProperties } from "react";
-import { Metric, SectionLabel, SourceTag } from "./ui";
+import type {
+  ContractReadState,
+  DemoNetworkState,
+  DemoSettlementMode,
+  DemoSignatureMode,
+} from "./demo-panel";
+import {
+  CopyValue,
+  ExplorerLink,
+  Metric,
+  SectionLabel,
+  SourceTag,
+  WeiDebug,
+} from "./ui";
+
+const demoWallet = "0x7F2A9c70B4F22E6A1D640bc7A64E2F44AC0D41C2";
+const orderTx =
+  "0xb7e4a907dd3aab90bf47e4ae41206935894d57f2652be72492da95fdc18e9c21";
+const campaignTx =
+  "0x98e219d3128ff183f4a0d45ca0d31fa764449259abb1bc43153475c4ad54b771";
+const settlementTx =
+  "0x43a90f856e8c0ddcb4af2e7d2fe812936f21159c25df5f8c1683cae0444fec18";
+const manifestHash =
+  "0x7a19d62642359562ca0612e56b9f04171a802f5d2200b4e9867cbc6445c4be42";
+
+function decimalToWei(value: string) {
+  const [whole = "0", decimal = ""] = value.split(".");
+  const normalizedDecimal = `${decimal}000000000000000000`.slice(0, 18);
+  return (
+    BigInt(whole || "0") * 10n ** 18n +
+    BigInt(normalizedDecimal || "0")
+  ).toString();
+}
 
 export function StudioScreen() {
   const [selectedId, setSelectedId] = useState("FRAME-01");
@@ -173,12 +202,60 @@ export function StudioScreen() {
   );
 }
 
-export function CampaignScreen() {
+function ContractReadFallback({
+  state,
+  onRetry,
+}: {
+  state: Exclude<ContractReadState, "ready">;
+  onRetry: () => void;
+}) {
+  if (state === "loading") {
+    return (
+      <section className="surface contract-read-state" data-state="loading">
+        <div className="contract-state-head">
+          <SourceTag tone="onchain">ONCHAIN</SourceTag>
+          <span>正在读取 Campaign 合约状态…</span>
+        </div>
+        <div className="skeleton-grid" aria-label="正在加载合约数据">
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="surface contract-read-state" data-state="error">
+      <div className="contract-error-icon">
+        <AlertCircle size={22} aria-hidden="true" />
+      </div>
+      <div>
+        <SourceTag tone="onchain">ONCHAIN</SourceTag>
+        <strong>暂时无法读取合约状态</strong>
+        <p>页面外壳仍然可用。检查 RPC 连接后重试，不会提交任何交易。</p>
+      </div>
+      <button className="action-button" type="button" onClick={onRetry}>
+        <RotateCcw size={16} aria-hidden="true" />
+        重试合约读取
+      </button>
+    </section>
+  );
+}
+
+export function CampaignScreen({
+  readState = "ready",
+  onRetry = () => undefined,
+}: {
+  readState?: ContractReadState;
+  onRetry?: () => void;
+}) {
   return (
     <div className="screen-stack">
       <section className="product-hero">
         <Image
-          src="/frame-01-hero.png"
+          src="/frame-01-hero.webp"
           alt="FRAME-01 黑色 8L 模块化摄影斜挎包"
           fill
           priority
@@ -204,6 +281,8 @@ export function CampaignScreen() {
         <span className="clock-state">正在接单</span>
       </section>
 
+      {readState === "ready" ? (
+        <>
       <section>
         <SectionLabel index="01">两种需求，分开看</SectionLabel>
         <div className="metric-grid">
@@ -397,17 +476,29 @@ export function CampaignScreen() {
           <p>最终结果只在截止后由合约清算；此处不是承诺。</p>
         </div>
       </section>
+        </>
+      ) : (
+        <ContractReadFallback state={readState} onRetry={onRetry} />
+      )}
     </div>
   );
 }
 
 const priceOptions = ["0.019", "0.021", "0.024", "0.026"];
 
-export function OrderScreen() {
+export function OrderScreen({
+  networkState = "correct",
+  signatureMode = "success",
+}: {
+  networkState?: DemoNetworkState;
+  signatureMode?: DemoSignatureMode;
+}) {
   const [maxPrice, setMaxPrice] = useState("0.024");
   const [acknowledged, setAcknowledged] = useState(false);
   const [publicAcknowledged, setPublicAcknowledged] = useState(false);
-  const [status, setStatus] = useState<"idle" | "pending" | "success">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
   const clearingPrice = 0.019;
   const numericPrice = Number(maxPrice) || 0;
   const estimatedRefund = Math.max(numericPrice - clearingPrice, 0);
@@ -415,27 +506,54 @@ export function OrderScreen() {
     acknowledged &&
     publicAcknowledged &&
     numericPrice > 0 &&
+    networkState === "correct" &&
     status === "idle";
 
   function submitOrder() {
     if (!canSubmit) return;
     setStatus("pending");
-    window.setTimeout(() => setStatus("success"), 1200);
+    window.setTimeout(
+      () => setStatus(signatureMode === "reject" ? "error" : "success"),
+      1200,
+    );
   }
 
   return (
     <div className="screen-stack">
-      <section className="surface wallet-status-card">
+      <section
+        className="surface wallet-status-card"
+        data-network-error={networkState === "wrong"}
+      >
         <div className="wallet-status-icon">
           <WalletCards size={20} aria-hidden="true" />
         </div>
         <div>
           <span className="mono-note">CONNECTED WALLET</span>
-          <strong>0x7F2A…41C2</strong>
-          <p>Injective EVM Testnet · Chain ID 1439</p>
+          <CopyValue
+            value={demoWallet}
+            display="0x7F2A…41C2"
+            label="复制完整钱包地址"
+          />
+          <p>
+            {networkState === "correct"
+              ? "Injective EVM Testnet · Chain ID 1439"
+              : "Unknown network · Chain ID 1"}
+          </p>
         </div>
-        <SourceTag tone="testnet">Testnet</SourceTag>
+        <SourceTag tone="testnet">
+          {networkState === "correct" ? "Testnet" : "Wrong Network"}
+        </SourceTag>
       </section>
+
+      {networkState === "wrong" ? (
+        <section className="inline-error" role="status">
+          <AlertCircle size={18} aria-hidden="true" />
+          <p>
+            当前不是 Injective EVM Testnet（Chain ID
+            1439）。切换网络后再继续。
+          </p>
+        </section>
+      ) : null}
 
       <section className="surface order-form">
         <SectionLabel index="01">你的最高愿付价</SectionLabel>
@@ -497,6 +615,10 @@ export function OrderScreen() {
             <strong>{estimatedRefund.toFixed(3)} test INJ</strong>
           </div>
         </div>
+        <WeiDebug
+          amount={`${numericPrice.toFixed(3)} → ${clearingPrice.toFixed(3)}`}
+          wei={`${decimalToWei(maxPrice)} → 19000000000000000`}
+        />
         <p className="honesty-note">
           <AlertCircle size={14} aria-hidden="true" />
           这里只根据当前演示订单预览。真正成交价只能在截止后由合约确定。
@@ -538,13 +660,23 @@ export function OrderScreen() {
           className="action-button action-button-dark order-submit"
           data-status={status}
           type="button"
-          disabled={!canSubmit && status !== "success"}
-          onClick={status === "success" ? () => setStatus("idle") : submitOrder}
+          aria-busy={status === "pending"}
+          disabled={
+            (!canSubmit && status !== "success" && status !== "error") ||
+            status === "pending"
+          }
+          onClick={
+            status === "success" || status === "error"
+              ? () => setStatus("idle")
+              : submitOrder
+          }
         >
           {status === "pending" ? (
             <LoaderCircle className="spin" size={17} aria-hidden="true" />
           ) : status === "success" ? (
             <CheckCircle2 size={17} aria-hidden="true" />
+          ) : status === "error" ? (
+            <AlertCircle size={17} aria-hidden="true" />
           ) : (
             <LockKeyhole size={17} aria-hidden="true" />
           )}
@@ -552,18 +684,35 @@ export function OrderScreen() {
             ? "交易已提交，正在等待 Injective 确认。请不要重复点击。"
             : status === "success"
               ? "订单已上链 · 查看交易"
+              : status === "error"
+                ? "签名已取消 · 重新尝试"
               : `签名并预锁 ${numericPrice.toFixed(3)} test INJ`}
         </button>
+
+        {status === "error" ? (
+          <div className="tx-error" role="status">
+            <AlertCircle size={16} aria-hidden="true" />
+            <p>
+              你取消了钱包签名；没有创建订单，也没有资金进入合约。
+            </p>
+          </div>
+        ) : null}
 
         {status === "success" ? (
           <div className="tx-proof">
             <div>
               <SourceTag tone="onchain">Onchain</SourceTag>
-              <span>0xb7e4…9c21</span>
+              <CopyValue
+                value={orderTx}
+                display="0xb7e4…9c21"
+                label="复制完整交易哈希"
+              />
             </div>
-            <button type="button" aria-label="复制交易哈希">
-              <Copy size={14} aria-hidden="true" />
-            </button>
+            <ExplorerLink
+              hash={orderTx}
+              display="Explorer"
+              label="订单交易"
+            />
           </div>
         ) : null}
       </section>
@@ -571,18 +720,16 @@ export function OrderScreen() {
   );
 }
 
-export function SettlementScreen() {
-  const [mode, setMode] = useState<"success" | "failure">("success");
+export function SettlementScreen({
+  mode = "success",
+}: {
+  mode?: DemoSettlementMode;
+}) {
   const [claimStatus, setClaimStatus] = useState<"idle" | "pending" | "claimed">(
     "idle",
   );
   const success = mode === "success";
   const refund = success ? "0.005" : "0.024";
-
-  function switchMode(nextMode: "success" | "failure") {
-    setMode(nextMode);
-    setClaimStatus("idle");
-  }
 
   function claimRefund() {
     if (claimStatus !== "idle") return;
@@ -592,23 +739,6 @@ export function SettlementScreen() {
 
   return (
     <div className="screen-stack">
-      <div className="scenario-switch" aria-label="清算演示场景">
-        <button
-          type="button"
-          data-active={success}
-          onClick={() => switchMode("success")}
-        >
-          成功 Campaign
-        </button>
-        <button
-          type="button"
-          data-active={!success}
-          onClick={() => switchMode("failure")}
-        >
-          失败 Campaign
-        </button>
-      </div>
-
       <section className="settlement-hero" data-success={success}>
         <div className="settlement-icon">
           {success ? (
@@ -695,7 +825,11 @@ export function SettlementScreen() {
           </div>
           <div>
             <span className="mono-note">MY RECEIPT</span>
-            <strong>0x7F2A…41C2</strong>
+            <CopyValue
+              value={demoWallet}
+              display="0x7F2A…41C2"
+              label="复制完整钱包地址"
+            />
           </div>
           <SourceTag tone="onchain">Onchain</SourceTag>
         </div>
@@ -713,10 +847,15 @@ export function SettlementScreen() {
             <strong>{refund} test INJ</strong>
           </div>
         </div>
+        <WeiDebug
+          amount={refund}
+          wei={success ? "5000000000000000" : "24000000000000000"}
+        />
         <button
           className="action-button receipt-claim"
           data-claimed={claimStatus === "claimed"}
           type="button"
+          aria-busy={claimStatus === "pending"}
           disabled={claimStatus !== "idle"}
           onClick={claimRefund}
         >
@@ -741,17 +880,41 @@ export function SettlementScreen() {
 
       <section className="surface evidence-list">
         <SectionLabel index="03">链上证据</SectionLabel>
-        {[
-          ["Campaign", "0x98E2…B771"],
-          ["Settlement tx", "0x43a9…ec18"],
-          ["Manifest hash", "0x7a19…be42"],
-        ].map(([label, value]) => (
-          <button type="button" key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-            <ExternalLink size={14} aria-hidden="true" />
-          </button>
-        ))}
+        <div className="evidence-row">
+          <span>Campaign tx</span>
+          <CopyValue
+            value={campaignTx}
+            display="0x98E2…B771"
+            label="复制 Campaign 交易哈希"
+          />
+          <ExplorerLink
+            hash={campaignTx}
+            display="Explorer"
+            label="Campaign 交易"
+          />
+        </div>
+        <div className="evidence-row">
+          <span>Settlement tx</span>
+          <CopyValue
+            value={settlementTx}
+            display="0x43a9…ec18"
+            label="复制清算交易哈希"
+          />
+          <ExplorerLink
+            hash={settlementTx}
+            display="Explorer"
+            label="清算交易"
+          />
+        </div>
+        <div className="evidence-row">
+          <span>Manifest hash</span>
+          <CopyValue
+            value={manifestHash}
+            display="0x7a19…be42"
+            label="复制完整 Manifest hash"
+          />
+          <SourceTag tone="human">HUMAN CONFIRMED</SourceTag>
+        </div>
       </section>
 
       {success ? (

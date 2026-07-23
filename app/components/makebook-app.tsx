@@ -1,8 +1,15 @@
 "use client";
 
-import { ArrowRight, WalletCards } from "lucide-react";
+import { ArrowRight, Settings2, WalletCards } from "lucide-react";
 import { useState } from "react";
 import { storySteps, type StoryStepId } from "../lib/mock-data";
+import {
+  DemoPanel,
+  type ContractReadState,
+  type DemoNetworkState,
+  type DemoSettlementMode,
+  type DemoSignatureMode,
+} from "./demo-panel";
 import {
   CampaignScreen,
   OrderScreen,
@@ -12,6 +19,14 @@ import {
 
 export function MakebookApp() {
   const [activeStep, setActiveStep] = useState<StoryStepId>("studio");
+  const [demoOpen, setDemoOpen] = useState(false);
+  const [readState, setReadState] = useState<ContractReadState>("ready");
+  const [networkState, setNetworkState] =
+    useState<DemoNetworkState>("correct");
+  const [settlementMode, setSettlementMode] =
+    useState<DemoSettlementMode>("success");
+  const [signatureMode, setSignatureMode] =
+    useState<DemoSignatureMode>("success");
   const activeIndex = storySteps.findIndex((step) => step.id === activeStep);
   const active = storySteps[activeIndex];
   const next = storySteps[activeIndex + 1];
@@ -35,9 +50,26 @@ export function MakebookApp() {
 
   function renderScreen(stepId: StoryStepId) {
     if (stepId === "studio") return <StudioScreen />;
-    if (stepId === "campaign") return <CampaignScreen />;
-    if (stepId === "order") return <OrderScreen />;
-    return <SettlementScreen />;
+    if (stepId === "campaign") {
+      return (
+        <CampaignScreen
+          readState={readState}
+          onRetry={() => {
+            setReadState("loading");
+            window.setTimeout(() => setReadState("ready"), 900);
+          }}
+        />
+      );
+    }
+    if (stepId === "order") {
+      return (
+        <OrderScreen
+          networkState={networkState}
+          signatureMode={signatureMode}
+        />
+      );
+    }
+    return <SettlementScreen key={settlementMode} mode={settlementMode} />;
   }
 
   return (
@@ -52,6 +84,14 @@ export function MakebookApp() {
         </div>
         <div className="header-actions">
           <span className="network-pill">Testnet</span>
+          <button
+            className="wallet-pill demo-panel-trigger"
+            type="button"
+            aria-label="打开演示控制面板"
+            onClick={() => setDemoOpen(true)}
+          >
+            <Settings2 size={15} strokeWidth={1.8} aria-hidden="true" />
+          </button>
           <button className="wallet-pill" type="button" aria-label="连接钱包">
             <WalletCards size={15} strokeWidth={1.8} aria-hidden="true" />
           </button>
@@ -158,6 +198,25 @@ export function MakebookApp() {
           <ArrowRight size={19} strokeWidth={1.8} aria-hidden="true" />
         </button>
       </div>
+
+      <DemoPanel
+        open={demoOpen}
+        onClose={() => setDemoOpen(false)}
+        readState={readState}
+        onReadStateChange={setReadState}
+        networkState={networkState}
+        onNetworkStateChange={setNetworkState}
+        settlementMode={settlementMode}
+        onSettlementModeChange={setSettlementMode}
+        signatureMode={signatureMode}
+        onSignatureModeChange={setSignatureMode}
+        onReset={() => {
+          setReadState("ready");
+          setNetworkState("correct");
+          setSettlementMode("success");
+          setSignatureMode("success");
+        }}
+      />
     </div>
   );
 }
