@@ -120,7 +120,16 @@ export function useWallet() {
     setConnecting(true);
     try {
       const accounts = await requestAccounts();
-      const chainIdHex = await ethereum.request<string>({ method: "eth_chainId" });
+      let chainIdHex = await ethereum.request<string>({ method: "eth_chainId" });
+      // 连接后不在目标网络时自动请求一键切换（用户可拒绝，仍回退到错网提示）。
+      if (Number.parseInt(chainIdHex, 16) !== INJECTIVE_EVM_TESTNET_CHAIN_ID) {
+        try {
+          await switchToInjectiveNetwork();
+          chainIdHex = await ethereum.request<string>({ method: "eth_chainId" });
+        } catch {
+          // 用户拒绝切换：保持错网状态，由界面的一键切换按钮接管。
+        }
+      }
       if (accounts.length > 0) {
         setWallet({ address: accounts[0], chainId: Number.parseInt(chainIdHex, 16) });
       }

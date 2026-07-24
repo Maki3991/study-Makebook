@@ -12,7 +12,6 @@ import {
 } from "viem";
 import { INJ_DECIMALS, createInjPublicClient } from "@/app/lib/chain/chain";
 import {
-  campaignStateName,
   readOrder,
   type Order,
 } from "@/app/lib/chain/reads";
@@ -28,6 +27,12 @@ import {
   shortenAddress,
   writeCampaignAction,
 } from "@/app/lib/chain/wallet";
+import {
+  useCampaignStateLabel,
+  useLang,
+  type Language,
+  type Translate,
+} from "@/app/lib/i18n";
 import {
   Button,
   CopyValue,
@@ -363,6 +368,7 @@ export function PledgePanel() {
   } = useSiteWallet();
   const countdown = useCountdown(view.deadline);
   const expired = countdown.expired;
+  const stateLabel = useCampaignStateLabel();
 
   const [maxPrice, setMaxPrice] = useState("");
   const [confirmNoCancel, setConfirmNoCancel] = useState(false);
@@ -670,7 +676,7 @@ export function PledgePanel() {
             <SourceTag tone="testnet">Testnet</SourceTag>
           </div>
           <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-64">
-            {campaignStateName(view.state)}
+            {stateLabel(view.state)}
           </span>
         </div>
 
@@ -687,7 +693,7 @@ export function PledgePanel() {
             role="timer"
           >
             {settled
-              ? campaignStateName(view.state)
+              ? stateLabel(view.state)
               : expired
                 ? "Ended"
                 : countdown.label}

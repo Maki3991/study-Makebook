@@ -13,6 +13,7 @@ import {
   type CampaignView,
 } from "@/app/lib/chain/use-campaign";
 import { shortenAddress } from "@/app/lib/chain/wallet";
+import { useLang } from "@/app/lib/i18n";
 
 /**
  * "Factory MOQ quotes" — one card per factory quote.
@@ -54,6 +55,7 @@ function QuoteCard({
   isDemoFactory: boolean;
   tiers: TierEligibility[];
 }) {
+  const { t } = useLang();
   return (
     <article className="surface flex min-w-0 flex-col gap-5 p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -75,11 +77,11 @@ function QuoteCard({
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-n-22">
-              <th className={TH}>Tier</th>
-              <th className={TH}>Min qty</th>
-              <th className={TH}>Unit price</th>
-              <th className={TH}>Eligible</th>
-              <th className={TH}>Feasible</th>
+              <th className={TH}>{t("quotes.thTier")}</th>
+              <th className={TH}>{t("quotes.thMinQty")}</th>
+              <th className={TH}>{t("quotes.thUnitPrice")}</th>
+              <th className={TH}>{t("quotes.thEligible")}</th>
+              <th className={TH}>{t("quotes.thFeasible")}</th>
             </tr>
           </thead>
           <tbody>
@@ -98,18 +100,18 @@ function QuoteCard({
                   {tier.price} <span className="text-n-40">test INJ</span>
                 </td>
                 <td className="num py-2.5 pr-4 text-13 whitespace-nowrap text-n-92">
-                  {tier.eligible} orders
+                  {t("quotes.eligibleOrders", { count: tier.eligible })}
                 </td>
                 <td className="py-2.5 text-13">
                   {tier.feasible ? (
                     <span className="inline-flex items-center gap-1.5 text-signal-onchain">
                       <Check size={14} aria-hidden="true" />
-                      Viable
+                      {t("quotes.viable")}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 text-n-40">
                       <X size={14} aria-hidden="true" />
-                      Not met
+                      {t("quotes.notMet")}
                     </span>
                   )}
                 </td>
@@ -121,12 +123,11 @@ function QuoteCard({
 
       <div className="mt-auto flex flex-col gap-2 border-t border-n-22 pt-4">
         <p className="text-13 leading-relaxed text-n-52">
-          Quotes are frozen once the campaign opened. No one can change them
-          now.
+          {t("quotes.frozen")}
         </p>
         <p className="flex flex-wrap items-center gap-2 font-mono text-11 text-n-40">
           <SourceTag tone="offchain">Off-chain Demo</SourceTag>
-          <span>Lead time 35 days · off-chain note</span>
+          <span>{t("quotes.leadTime")}</span>
         </p>
       </div>
     </article>
@@ -135,15 +136,16 @@ function QuoteCard({
 
 export function FactoryQuotes() {
   const { status, view } = useCampaignData("success");
+  const { t } = useLang();
   const ready = status === "ready";
 
   return (
     <div className="reveal flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <SectionHead
-          kicker="Factory quotes · MOQ ladders"
-          title="Factory MOQ quotes"
-          intro="Each factory submitted a price ladder before the campaign opened. A tier is viable when at least its minimum quantity of escrowed orders bid the unit price or higher — the contract enforces that at settlement."
+          kicker={t("quotes.kicker")}
+          title={t("quotes.title")}
+          intro={t("quotes.intro")}
         />
         {ready ? (
           view.source === "onchain" ? (
@@ -156,12 +158,12 @@ export function FactoryQuotes() {
 
       {!ready ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="skeleton h-[260px] w-full" aria-label="Loading" />
-          <div className="skeleton h-[260px] w-full" aria-label="Loading" />
+          <div className="skeleton h-[260px] w-full" aria-label={t("quotes.loadingAria")} />
+          <div className="skeleton h-[260px] w-full" aria-label={t("quotes.loadingAria")} />
         </div>
       ) : view.quotes.length === 0 ? (
         <div className="surface-flat flex min-h-[200px] items-center justify-center p-8 text-center text-13 text-n-52">
-          No factory quotes on this campaign yet.
+          {t("quotes.empty")}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -180,7 +182,7 @@ export function FactoryQuotes() {
         </div>
       )}
 
-      <p className="font-mono text-11 text-n-40">Hackathon scaled test data</p>
+      <p className="font-mono text-11 text-n-40">{t("common.hackathonData")}</p>
     </div>
   );
 }

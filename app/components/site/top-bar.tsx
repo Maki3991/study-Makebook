@@ -3,7 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { Globe } from "lucide-react";
 import { shortenAddress } from "@/app/lib/chain/wallet";
+import { useLang } from "@/app/lib/i18n";
 import { Button, CopyValue, SourceTag } from "./primitives";
 import { useSiteWallet } from "./wallet-provider";
 
@@ -24,6 +26,7 @@ export function TopBar() {
     switchNetwork,
     isWrongNetwork,
   } = useSiteWallet();
+  const { lang, setLang, t } = useLang();
   const [switching, setSwitching] = useState(false);
 
   const onConnect = async () => {
@@ -82,25 +85,34 @@ export function TopBar() {
           </span>
           <span className="line-v hidden h-5 sm:block" aria-hidden="true" />
           <span className="hidden truncate font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-64 sm:block">
-            FRAME-01 Campaign
+            {t("topbar.frameCampaign")}
           </span>
           <nav
             aria-label="Site"
             className="ml-2 flex items-center gap-1 font-mono text-11 font-medium uppercase tracking-[0.14em]"
           >
             <Link href="/" className="rounded-sm px-2 py-1.5 text-n-64 transition-colors hover:text-n-92">
-              Campaign
+              {t("topbar.nav.campaign")}
             </Link>
             <Link href="/me" className="rounded-sm px-2 py-1.5 text-n-64 transition-colors hover:text-n-92">
-              My batch
+              {t("topbar.nav.myBatch")}
             </Link>
             <Link href="/evidence" className="rounded-sm px-2 py-1.5 text-n-64 transition-colors hover:text-n-92">
-              Evidence
+              {t("topbar.nav.evidence")}
             </Link>
           </nav>
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setLang(lang === "en" ? "zh" : "en")}
+            aria-label={t("topbar.langToggleAria")}
+            className="flex min-h-0 items-center gap-1.5 rounded-sm border border-n-22 bg-n-00 px-2.5 py-1.5 font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-64 transition-colors hover:text-n-92"
+          >
+            <Globe size={13} aria-hidden="true" />
+            <span>{lang === "en" ? "中文" : "EN"}</span>
+          </button>
           <span className="pill hidden sm:inline-flex">
             <SourceTag tone="testnet">Testnet</SourceTag>
           </span>
@@ -110,7 +122,7 @@ export function TopBar() {
               state={connecting ? "loading" : "idle"}
               onClick={onConnect}
             >
-              Connect Wallet
+              {t("common.connectWallet")}
             </Button>
           ) : isWrongNetwork ? (
             <Button
@@ -119,7 +131,7 @@ export function TopBar() {
               state={switching ? "loading" : "error"}
               onClick={onSwitchNetwork}
             >
-              Wrong Network
+              {t("topbar.wrongNetwork")}
             </Button>
           ) : (
             <CopyValue

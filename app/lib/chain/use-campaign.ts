@@ -299,7 +299,7 @@ async function fetchOnchainView(scenario: CampaignScenario): Promise<CampaignVie
   });
 }
 
-const CACHE_TTL_MS = 15_000;
+const CACHE_TTL_MS = 120_000;
 const cache = new Map<CampaignScenario, { at: number; view: CampaignView }>();
 const inflight = new Map<CampaignScenario, Promise<CampaignView>>();
 
@@ -405,7 +405,12 @@ export function useCampaignData(
   const [fetched, setFetched] = useState<{
     scenario: CampaignScenario;
     view: CampaignView;
-  } | null>(null);
+  } | null>(() => {
+    // 挂载即先用模块缓存（即使过期）渲染，后台再校验刷新——避免页签/路由
+    // 切换时反复进出 skeleton（stale-while-revalidate）。
+    const hit = cache.get(activeScenario);
+    return hit ? { scenario: activeScenario, view: hit.view } : null;
+  });
   const [nonce, setNonce] = useState(0);
 
   useEffect(() => {

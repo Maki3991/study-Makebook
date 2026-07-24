@@ -3,6 +3,7 @@
 import { SectionHead, SourceTag } from "@/app/components/site/primitives";
 import type { DemandPoint, TierEligibility } from "@/app/lib/chain/reads";
 import { useCampaignData } from "@/app/lib/chain/use-campaign";
+import { useLang } from "@/app/lib/i18n";
 
 /**
  * "The demand curve is real money" — funded-demand step chart.
@@ -54,6 +55,7 @@ function DemandChart({
   points: DemandPoint[];
   tiers: TierEligibility[];
 }) {
+  const { t } = useLang();
   // X axis: uniform price ascending, proportional to actual price values.
   const prices = points.map((p) => Number(p.price));
   const minP = Math.min(...prices);
@@ -96,14 +98,21 @@ function DemandChart({
   });
 
   const ariaLabel =
-    `Escrowed demand curve: ` +
-    points.map((p) => `${p.orders} orders at ${p.price} test INJ`).join(", ") +
-    `. Factory MOQ tiers: ` +
+    t("demand.ariaPrefix") +
+    points
+      .map((p) => t("demand.ariaPoint", { orders: p.orders, price: p.price }))
+      .join(", ") +
+    `. ${t("demand.ariaTiersPrefix")}` +
     tiers
-      .map(
-        (t) =>
-          `${t.name} minimum ${t.quantity} at ${t.price} test INJ, ` +
-          (t.feasible ? "viable" : "short of MOQ"),
+      .map((tier) =>
+        t("demand.ariaTier", {
+          name: tier.name,
+          quantity: tier.quantity,
+          price: tier.price,
+          status: tier.feasible
+            ? t("demand.ariaViable")
+            : t("demand.ariaShort"),
+        }),
       )
       .join("; ") +
     ".";
@@ -140,7 +149,7 @@ function DemandChart({
 
       {/* axis captions */}
       <text x={MARGIN.left} y={14} fontSize={11} className="num fill-n-40">
-        ESCROWED ORDERS
+        {t("demand.axisY")}
       </text>
       <text
         x={PLOT_RIGHT}
@@ -149,7 +158,7 @@ function DemandChart({
         fontSize={11}
         className="num fill-n-40"
       >
-        UNIFORM PRICE · TEST INJ
+        {t("demand.axisX")}
       </text>
 
       {/* funded demand: step area + outline */}
@@ -225,6 +234,7 @@ function DemandChart({
 
 export function DemandCurve() {
   const { status, view } = useCampaignData("success");
+  const { t } = useLang();
   const ready = status === "ready";
   const hasOrders = view.demandPoints.length > 0;
 
@@ -232,9 +242,9 @@ export function DemandCurve() {
     <div className="reveal flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <SectionHead
-          kicker="Funded demand · the order book"
-          title="The demand curve is real money"
-          intro="Every point counts wallets that escrowed at least that price in the campaign contract. No likes, no sign-ups — locked test INJ only."
+          kicker={t("demand.kicker")}
+          title={t("demand.title")}
+          intro={t("demand.intro")}
         />
         {ready ? (
           view.source === "onchain" ? (
@@ -248,12 +258,11 @@ export function DemandCurve() {
       {!ready ? (
         <div
           className="skeleton h-[340px] w-full"
-          aria-label="Loading demand curve"
+          aria-label={t("demand.loadingAria")}
         />
       ) : !hasOrders ? (
         <div className="surface-flat flex min-h-[200px] items-center justify-center p-8 text-center text-13 text-n-52">
-          No escrowed orders yet — the curve draws itself as soon as the first
-          order lands.
+          {t("demand.empty")}
         </div>
       ) : (
         <div className="surface p-4 sm:p-6">
@@ -264,21 +273,21 @@ export function DemandCurve() {
                 aria-hidden="true"
                 className="h-0 w-6 border-t-2 border-azure"
               />
-              escrowed demand
+              {t("demand.legendEscrowed")}
             </span>
             <span className="flex items-center gap-2">
               <span
                 aria-hidden="true"
                 className="h-0 w-6 border-t-2 border-celadon-dim"
               />
-              viable tier (MOQ met)
+              {t("demand.legendViable")}
             </span>
             <span className="flex items-center gap-2">
               <span
                 aria-hidden="true"
                 className="h-0 w-6 border-t-2 border-dashed border-n-40"
               />
-              tier short of MOQ
+              {t("demand.legendShort")}
             </span>
           </div>
         </div>
@@ -287,16 +296,14 @@ export function DemandCurve() {
       {ready && hasOrders ? (
         <>
           <p className="text-13 leading-relaxed text-n-52">
-            Each bar counts wallets that escrowed at least this price. AI
-            interest samples (72) are shown separately and never enter
-            clearing.
+            {t("demand.explainer")}
           </p>
           <hr className="line" />
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-3">
               <SourceTag tone="ai">AI Generated</SourceTag>
               <p className="text-13 text-n-52">
-                {AI_SAMPLE_COUNT} interest samples · interviews and comments
+                {t("demand.aiSamples", { count: AI_SAMPLE_COUNT })}
               </p>
             </div>
             <div className="flex flex-wrap gap-[3px]" aria-hidden="true">
@@ -308,7 +315,7 @@ export function DemandCurve() {
         </>
       ) : null}
 
-      <p className="font-mono text-11 text-n-40">Hackathon scaled test data</p>
+      <p className="font-mono text-11 text-n-40">{t("common.hackathonData")}</p>
     </div>
   );
 }

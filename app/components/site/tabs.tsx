@@ -2,6 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { useLang } from "@/app/lib/i18n";
 
 /**
  * Generic campaign tabs.
@@ -23,11 +24,14 @@ export interface TabItem {
 
 export function Tabs({
   items,
-  ariaLabel = "Campaign sections",
+  ariaLabel,
 }: {
   items: TabItem[];
+  /** Defaults to the localized "Campaign sections" label. */
   ariaLabel?: string;
 }) {
+  const { t } = useLang();
+  const label = ariaLabel ?? t("tabs.defaultAria");
   const [active, setActive] = useState(items[0]?.id ?? "");
 
   // Hash sync: external anchors (status bar, footer links) both activate the
@@ -57,7 +61,7 @@ export function Tabs({
   return (
     <div className="flex flex-col">
       {/* mobile: vertical anchor list */}
-      <nav aria-label={ariaLabel} className="flex flex-col gap-2 lg:hidden">
+      <nav aria-label={label} className="flex flex-col gap-2 lg:hidden">
         {items.map((item) => (
           <a
             key={item.id}
@@ -78,7 +82,7 @@ export function Tabs({
       {/* lg+: tab list */}
       <div
         role="tablist"
-        aria-label={ariaLabel}
+        aria-label={label}
         className="hidden lg:flex lg:gap-8 lg:border-b lg:border-n-22"
       >
         {items.map((item) => {

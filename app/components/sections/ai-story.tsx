@@ -12,6 +12,7 @@ import {
   type ProductCandidate,
 } from "@/app/lib/compile-client";
 import manifestJson from "@/public/manifests/frame-01.json";
+import { useLang } from "@/app/lib/i18n";
 import { CopyValue, SectionHead, SourceTag } from "../site/primitives";
 
 /**
@@ -113,23 +114,23 @@ const STATIC_FIXTURE_CANDIDATES: ProductCandidate[] = [
 const FLOW_STEPS = [
   {
     index: "01",
-    title: "Comments",
-    description: "20 user inputs collected from interviews, forums, and surveys",
+    titleKey: "story.step1Title",
+    descriptionKey: "story.step1Desc",
   },
   {
     index: "02",
-    title: "AI compile",
-    description: "An AI compiler drafts product candidates, each tied to comment evidence",
+    titleKey: "story.step2Title",
+    descriptionKey: "story.step2Desc",
   },
   {
     index: "03",
-    title: "Human confirm",
-    description: "A person edits and confirms one spec sheet — the AI does not ship",
+    titleKey: "story.step3Title",
+    descriptionKey: "story.step3Desc",
   },
   {
     index: "04",
-    title: "Manifest hash",
-    description: "keccak256 of the confirmed sheet is written into the campaign contract",
+    titleKey: "story.step4Title",
+    descriptionKey: "story.step4Desc",
   },
 ] as const;
 
@@ -159,6 +160,7 @@ const commentChipClass =
   "border border-n-22 bg-n-04 px-1.5 font-mono text-11 leading-relaxed text-n-64";
 
 function CandidateCard({ candidate }: { candidate: ProductCandidate }) {
+  const { t } = useLang();
   return (
     <article className="surface flex min-w-0 flex-col gap-4 p-5">
       <header className="flex flex-col gap-2">
@@ -172,7 +174,7 @@ function CandidateCard({ candidate }: { candidate: ProductCandidate }) {
 
       <div className="flex flex-col gap-2">
         <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-40">
-          Specs
+          {t("story.cardSpecs")}
         </span>
         <ul className="flex flex-col gap-2">
           {candidate.specs.map((spec) => (
@@ -188,7 +190,9 @@ function CandidateCard({ candidate }: { candidate: ProductCandidate }) {
                 </span>
               ))}
               {spec.operationalAssumption ? (
-                <span className="text-11 text-n-40">operational assumption</span>
+                <span className="text-11 text-n-40">
+                  {t("story.operationalAssumption")}
+                </span>
               ) : null}
             </li>
           ))}
@@ -197,7 +201,7 @@ function CandidateCard({ candidate }: { candidate: ProductCandidate }) {
 
       <div className="flex flex-col gap-2">
         <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-40">
-          Evidence
+          {t("story.cardEvidence")}
         </span>
         <ul className="flex flex-col gap-2">
           {candidate.evidence.map((item) => (
@@ -216,7 +220,7 @@ function CandidateCard({ candidate }: { candidate: ProductCandidate }) {
 
       <div className="mt-auto flex flex-col gap-2 border-t border-n-22 pt-3">
         <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-40">
-          Unknowns
+          {t("story.cardUnknowns")}
         </span>
         <ul className="flex flex-col gap-1">
           {candidate.unknowns.map((unknown) => (
@@ -231,6 +235,7 @@ function CandidateCard({ candidate }: { candidate: ProductCandidate }) {
 }
 
 export function AiStory() {
+  const { t } = useLang();
   const [output, setOutput] = useState<CompileOutput | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -273,9 +278,9 @@ export function AiStory() {
   return (
     <div className="flex flex-col gap-10 lg:gap-12">
       <SectionHead
-        kicker="02 / The Story"
-        title="How this product was born"
-        intro="FRAME-01 started as twenty user comments, not a factory catalog. An AI compiler drafted candidates with evidence, a human confirmed one spec sheet, and its hash was locked into the campaign contract before the first order."
+        kicker={t("story.kicker")}
+        title={t("story.title")}
+        intro={t("story.intro")}
       />
 
       {/* pipeline */}
@@ -286,9 +291,11 @@ export function AiStory() {
               <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-40">
                 {step.index}
               </span>
-              <span className="text-15 font-medium text-n-92">{step.title}</span>
+              <span className="text-15 font-medium text-n-92">
+                {t(step.titleKey)}
+              </span>
               <span className="text-13 leading-relaxed text-n-64">
-                {step.description}
+                {t(step.descriptionKey)}
               </span>
             </div>
             {stepIndex < FLOW_STEPS.length - 1 ? (
@@ -313,13 +320,16 @@ export function AiStory() {
           ) : null}
           {stats ? (
             <span className="font-mono text-11 uppercase tracking-[0.14em] text-n-52">
-              {`${stats.valid} valid inputs · ${stats.duplicates} duplicates removed`}
+              {t("story.stats", {
+                valid: stats.valid,
+                duplicates: stats.duplicates,
+              })}
             </span>
           ) : null}
         </div>
         {fallbackReason ? (
           <p className="text-13 text-n-52">
-            Fallback reason: {fallbackReason}
+            {t("story.fallbackReason", { reason: fallbackReason })}
           </p>
         ) : null}
 
@@ -327,7 +337,7 @@ export function AiStory() {
           <div
             className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
             role="status"
-            aria-label="Compiling comments"
+            aria-label={t("story.loadingAria")}
           >
             <div className="skeleton h-[300px]" />
             <div className="skeleton h-[300px]" />
@@ -335,7 +345,7 @@ export function AiStory() {
           </div>
         ) : candidates.length === 0 ? (
           <p className="surface p-5 text-13 text-n-64">
-            No candidates were returned for this comment set.
+            {t("story.empty")}
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -351,7 +361,10 @@ export function AiStory() {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <SourceTag tone="human">Human confirmed</SourceTag>
           <span className="font-mono text-11 uppercase tracking-[0.14em] text-n-52">
-            {`${confirmedManifest.campaignCode} · confirmed ${confirmedManifest.humanConfirmedAt}`}
+            {t("story.confirmedLine", {
+              code: confirmedManifest.campaignCode,
+              date: confirmedManifest.humanConfirmedAt,
+            })}
           </span>
         </div>
 
@@ -382,7 +395,7 @@ export function AiStory() {
 
         <div className="flex flex-col gap-1.5">
           <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-40">
-            Still unknown
+            {t("story.stillUnknown")}
           </span>
           <ul className="flex flex-col gap-1">
             {confirmedManifest.unknowns.map((unknown) => (
@@ -395,7 +408,7 @@ export function AiStory() {
 
         <div className="flex flex-col gap-2 border-t border-n-22 pt-4">
           <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-40">
-            Manifest hash (keccak256)
+            {t("story.manifestHashLabel")}
           </span>
           <p className="num text-13 leading-relaxed break-all text-n-76">
             {successDeployment.manifestHash}
@@ -403,19 +416,17 @@ export function AiStory() {
           <div>
             <CopyValue
               value={successDeployment.manifestHash}
-              display="Copy full manifest hash"
+              display={t("story.copyHash")}
             />
           </div>
           <p className="text-13 leading-relaxed text-n-52">
-            The hash proves exactly one thing: this spec sheet has not been
-            altered since it was written into the campaign contract. It says
-            nothing about whether the specs are right.
+            {t("story.hashNote")}
           </p>
         </div>
       </div>
 
       <p className="text-11 text-n-40">
-        Comment set and campaign figures: Hackathon scaled test data.
+        {t("story.footerNote")}
       </p>
     </div>
   );

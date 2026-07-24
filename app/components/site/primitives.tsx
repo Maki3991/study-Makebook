@@ -18,6 +18,7 @@ import type { Address, Hex } from "viem";
 import { explorerAddressUrl, explorerTxUrl } from "@/app/lib/chain/chain";
 import { useCountdown } from "@/app/lib/chain/use-campaign";
 import { shortenAddress } from "@/app/lib/chain/wallet";
+import { useLang } from "@/app/lib/i18n";
 
 /**
  * Site primitives for the MAKEBOOK campaign pages.
@@ -136,18 +137,20 @@ export function Metric({
 export function Countdown({
   deadline,
   className,
-  endedLabel = "Ended",
+  endedLabel,
 }: {
   /** Seconds-level Unix timestamp; null renders the "-- : -- : --" placeholder. */
   deadline: bigint | number | null;
   className?: string;
+  /** Defaults to the localized "Ended" label. */
   endedLabel?: string;
 }) {
+  const { t } = useLang();
   const seconds = deadline === null ? null : BigInt(deadline);
   const { label, expired } = useCountdown(seconds);
   return (
     <span className={cx("num", className)} role="timer">
-      {expired ? endedLabel : label}
+      {expired ? (endedLabel ?? t("common.ended")) : label}
     </span>
   );
 }
@@ -169,6 +172,7 @@ export function CopyValue({
 }) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | null>(null);
+  const { t } = useLang();
 
   useEffect(
     () => () => {
@@ -205,7 +209,7 @@ export function CopyValue({
       type="button"
       onClick={onCopy}
       title={value}
-      aria-label={copied ? "Copied" : `Copy ${value}`}
+      aria-label={copied ? t("common.copied") : t("common.copyValue", { value })}
       className={cx(
         "inline-flex min-h-0 min-w-0 items-center gap-2 rounded-sm px-1 font-mono text-13 text-n-64 transition-colors hover:text-n-92",
         className,

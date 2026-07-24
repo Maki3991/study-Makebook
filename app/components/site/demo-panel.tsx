@@ -7,6 +7,7 @@ import {
   successDeployment,
 } from "@/app/lib/chain/deployments";
 import type { CampaignScenario } from "@/app/lib/chain/use-campaign";
+import { useLang } from "@/app/lib/i18n";
 import { useCampaignMode } from "./campaign-provider";
 import { CopyValue, SourceTag, truncateMiddle } from "./primitives";
 
@@ -37,6 +38,7 @@ export function DemoPanel() {
     playgroundAvailable,
     playgroundAddress,
   } = useCampaignMode();
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
 
   // A selected playground that is not deployed must never stick (deployments
@@ -65,22 +67,22 @@ export function DemoPanel() {
   const options: ScenarioOption[] = [
     {
       id: "success",
-      title: "Success script",
-      body: "Preloaded with 5 escrowed orders — settles to one uniform clearing price.",
+      title: t("demo.scenario.successTitle"),
+      body: t("demo.scenario.successBody"),
       address: successDeployment.address,
     },
     {
       id: "failure",
-      title: "Failure script",
-      body: "2 orders, no tier reaches MOQ — every backer claims a full refund.",
+      title: t("demo.scenario.failureTitle"),
+      body: t("demo.scenario.failureBody"),
       address: failureDeployment.address,
     },
   ];
   if (playgroundAvailable) {
     options.push({
       id: "playground",
-      title: "Playground",
-      body: "Open batch for real visitors — any wallet can place one order.",
+      title: t("demo.scenario.playgroundTitle"),
+      body: t("demo.scenario.playgroundBody"),
       address: playgroundAddress,
     });
   }
@@ -94,7 +96,7 @@ export function DemoPanel() {
     <>
       <button
         type="button"
-        aria-label="Open judge demo panel"
+        aria-label={t("demo.openAria")}
         aria-expanded={open}
         aria-controls="demo-panel-drawer"
         onClick={() => setOpen(true)}
@@ -107,7 +109,7 @@ export function DemoPanel() {
         <div className="fixed inset-0 z-50">
           <button
             type="button"
-            aria-label="Close demo panel"
+            aria-label={t("demo.closeAria")}
             onClick={() => setOpen(false)}
             className="absolute inset-0 min-h-0 min-w-0 cursor-default bg-n-92/30"
           />
@@ -115,21 +117,21 @@ export function DemoPanel() {
             id="demo-panel-drawer"
             role="dialog"
             aria-modal="true"
-            aria-label="Judge demo panel"
+            aria-label={t("demo.dialogAria")}
             className="reveal absolute top-0 right-0 flex h-full w-[min(380px,100vw)] flex-col gap-6 overflow-y-auto border-l border-n-22 bg-n-00 p-6"
           >
             <header className="flex items-start justify-between gap-4">
               <div className="flex flex-col gap-1">
                 <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-40">
-                  Judge controls
+                  {t("demo.kicker")}
                 </span>
                 <strong className="font-display text-21 font-medium text-n-92">
-                  Demo panel
+                  {t("demo.title")}
                 </strong>
               </div>
               <button
                 type="button"
-                aria-label="Close demo panel"
+                aria-label={t("demo.closeAria")}
                 autoFocus
                 onClick={() => setOpen(false)}
                 className="flex size-9 items-center justify-center rounded-[2px] border border-n-22 text-n-64 transition-colors hover:text-n-92"
@@ -139,18 +141,17 @@ export function DemoPanel() {
             </header>
 
             <p className="text-13 leading-relaxed text-n-64">
-              Judge-only switches — not part of the buyer path. Each one
-              remodes every campaign read on this page at once.
+              {t("demo.intro")}
             </p>
 
-            <section className="flex flex-col gap-3" aria-label="Campaign scenario">
+            <section className="flex flex-col gap-3" aria-label={t("demo.scenario")}>
               <div className="flex items-center justify-between gap-3">
                 <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-40">
-                  Campaign scenario
+                  {t("demo.scenario")}
                 </span>
                 <SourceTag tone="onchain">Onchain</SourceTag>
               </div>
-              <div role="radiogroup" aria-label="Campaign scenario" className="flex flex-col gap-2">
+              <div role="radiogroup" aria-label={t("demo.scenario")} className="flex flex-col gap-2">
                 {options.map((option) => {
                   const selected = scenario === option.id;
                   return (
@@ -185,23 +186,22 @@ export function DemoPanel() {
               </div>
             </section>
 
-            <section className="flex flex-col gap-3" aria-label="RPC failure simulation">
+            <section className="flex flex-col gap-3" aria-label={t("demo.rpcTitle")}>
               <div className="flex items-center justify-between gap-3">
                 <span className="font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-40">
-                  RPC failure simulation
+                  {t("demo.rpcTitle")}
                 </span>
                 <SourceTag tone="offchain">Off-chain demo</SourceTag>
               </div>
               <div className="flex items-start justify-between gap-4">
                 <p className="text-13 leading-relaxed text-n-64">
-                  Force the contract → fixtures fallback. Every number flips to
-                  its OFF-CHAIN DEMO view without touching the network.
+                  {t("demo.rpcBody")}
                 </p>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={simulateRpcFailure}
-                  aria-label="Simulate RPC failure"
+                  aria-label={t("demo.rpcSwitchAria")}
                   onClick={() => setSimulateRpcFailure(!simulateRpcFailure)}
                   className={`relative h-6 w-11 shrink-0 rounded-[2px] transition-colors ${
                     simulateRpcFailure ? "bg-azure" : "bg-n-30"
@@ -217,8 +217,8 @@ export function DemoPanel() {
               </div>
               {simulateRpcFailure ? (
                 <p className="flex items-center gap-2 text-13 text-n-52" role="status">
-                  <SourceTag tone="offchain">Fallback active</SourceTag>
-                  All campaign numbers are fixture data.
+                  <SourceTag tone="offchain">{t("demo.rpcFallbackTag")}</SourceTag>
+                  {t("demo.rpcFallback")}
                 </p>
               ) : null}
             </section>
@@ -230,10 +230,10 @@ export function DemoPanel() {
                 className="btn btn-ghost w-full"
               >
                 <RotateCcw size={14} aria-hidden="true" />
-                <span>Reset to defaults</span>
+                <span>{t("demo.reset")}</span>
               </button>
               <p className="text-11 leading-relaxed text-n-40">
-                Scenario addresses:
+                {t("demo.addresses")}
               </p>
               <div className="flex flex-col gap-1.5">
                 {options.map((option) =>
