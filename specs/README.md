@@ -27,3 +27,5 @@
 | 日期 | 变更 | 影响面 |
 |---|---|---|
 | 2026-07-24 | 初始四份 spec 建立 | 全仓 |
+| 2026-07-24 | demo 数据英文化（产品面向欧美用户）；manifestHash 重锚定 `0x92e96e07…cc6ec` | fixtures/、lib/ai/、public/manifests/、docs/、spec 002–004 |
+| 2026-07-24 | 部署流水线 `demo-pipeline.sh` + 证据渲染器 `render-evidence.sh`（anvil 全链路排练通过） | contracts/script/、deployments/、.env.example |
