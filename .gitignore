@@ -58,3 +58,4 @@ next-env.d.ts
 .env
 deployments/state.anvil.json
 deployments/receipts/anvil-*
+tsconfig.tsbuildinfo
