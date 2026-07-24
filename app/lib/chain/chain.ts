@@ -31,6 +31,11 @@ export const injectiveEvmTestnet = defineChain({
   blockExplorers: {
     default: { name: "Blockscout", url: EXPLORER_BASE_URL },
   },
+  contracts: {
+    // 规范 Multicall3 地址已部署于本测试网（实测 eth_getCode 非空）：
+    // 用 multicall 合并读调用可显著降低慢 RPC 的往返次数。
+    multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" },
+  },
   testnet: true,
 });
 

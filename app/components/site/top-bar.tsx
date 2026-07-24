@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { shortenAddress } from "@/app/lib/chain/wallet";
 import { Button, CopyValue, SourceTag } from "./primitives";
@@ -83,6 +84,20 @@ export function TopBar() {
           <span className="hidden truncate font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-64 sm:block">
             FRAME-01 Campaign
           </span>
+          <nav
+            aria-label="Site"
+            className="ml-2 flex items-center gap-1 font-mono text-11 font-medium uppercase tracking-[0.14em]"
+          >
+            <Link href="/" className="rounded-sm px-2 py-1.5 text-n-64 transition-colors hover:text-n-92">
+              Campaign
+            </Link>
+            <Link href="/me" className="rounded-sm px-2 py-1.5 text-n-64 transition-colors hover:text-n-92">
+              My batch
+            </Link>
+            <Link href="/evidence" className="rounded-sm px-2 py-1.5 text-n-64 transition-colors hover:text-n-92">
+              Evidence
+            </Link>
+          </nav>
         </div>
 
         <div className="flex shrink-0 items-center gap-3">

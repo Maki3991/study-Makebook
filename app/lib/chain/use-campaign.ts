@@ -255,7 +255,13 @@ async function fetchOnchainView(scenario: CampaignScenario): Promise<CampaignVie
   const client = createInjPublicClient();
   const summary = await readCampaignSummary(client, deployment.address);
   const latest = await client.getBlockNumber();
-  const fromBlock = latest > EVENT_LOOKBACK_BLOCKS ? latest - EVENT_LOOKBACK_BLOCKS : 0n;
+  // 事件扫描起点：优先用部署块（deployments.json 回填），否则用近端窗口。
+  const fromBlock =
+    deployment.deployBlock != null
+      ? BigInt(deployment.deployBlock)
+      : latest > EVENT_LOOKBACK_BLOCKS
+        ? latest - EVENT_LOOKBACK_BLOCKS
+        : 0n;
   const [orderEvents, evidence] = await Promise.all([
     listOrderPlacedEvents(client, deployment.address, fromBlock, latest),
     listCampaignTxEvidence(client, deployment.address, fromBlock, latest),

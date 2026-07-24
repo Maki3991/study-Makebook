@@ -19,6 +19,8 @@ export interface CampaignDeployment {
    * 路径下从合约 operator() 实读，fixture 降级时不编造、显示不可用占位。
    */
   operator?: Address;
+  /** 部署块高（可选）：事件扫描起点；缺省时回退到近端窗口。 */
+  deployBlock?: number;
 }
 
 export interface Deployments {

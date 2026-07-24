@@ -7,12 +7,14 @@
     "address": "0x378bb7d08e92317ff8a5f7750bb7a91332bab03d",
     "manifestHash": "0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec",
     "manifestURI": "https://raw.githubusercontent.com/gmy20060609-jpg/ACL-team/main/public/manifests/frame-01.json",
-    "deadline": 1785016800
+    "deadline": 1785016800,
+    "deployBlock": 134529577
   },
   "failure": {
     "address": "0x01c51b7c50dd0537933bf245b8a5ea6252735f51",
     "manifestHash": "0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec",
     "manifestURI": "https://raw.githubusercontent.com/gmy20060609-jpg/ACL-team/main/public/manifests/frame-01.json",
-    "deadline": 1785016800
+    "deadline": 1785016800,
+    "deployBlock": 134533159
   }
 }

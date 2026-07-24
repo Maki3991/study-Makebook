@@ -107,22 +107,45 @@ export async function readCampaignSummary(
   address: Address,
 ): Promise<CampaignSummary> {
   const base = { address, abi: makebookAbi } as const;
-  const [state, deadline, manifestHash, manifestURI, ordersLength, quotesLength, preview] =
-    await Promise.all([
-      client.readContract({ ...base, functionName: "state" }),
-      client.readContract({ ...base, functionName: "deadline" }),
-      client.readContract({ ...base, functionName: "manifestHash" }),
-      client.readContract({ ...base, functionName: "manifestURI" }),
-      client.readContract({ ...base, functionName: "ordersLength" }),
-      client.readContract({ ...base, functionName: "quotesLength" }),
-      client.readContract({ ...base, functionName: "previewSettlement" }),
-    ]);
+  // 一次 multicall 合并全部基础读数（该 RPC 单请求偏慢，合并可省 ~9 次往返）。
+  const results = await client.multicall({
+    allowFailure: true,
+    contracts: [
+      { ...base, functionName: "state" },
+      { ...base, functionName: "deadline" },
+      { ...base, functionName: "manifestHash" },
+      { ...base, functionName: "manifestURI" },
+      { ...base, functionName: "ordersLength" },
+      { ...base, functionName: "quotesLength" },
+      { ...base, functionName: "previewSettlement" },
+      { ...base, functionName: "getQuote", args: [0n] },
+      { ...base, functionName: "getQuote", args: [1n] },
+      { ...base, functionName: "getQuote", args: [2n] },
+    ],
+  });
 
-  const quotes = await Promise.all(
-    Array.from({ length: Number(quotesLength) }, (_, i) =>
-      client.readContract({ ...base, functionName: "getQuote", args: [BigInt(i)] }),
-    ),
-  );
+  const pick = <T,>(r: (typeof results)[number], label: string): T => {
+    if (r.status !== "success") throw new Error(`readCampaignSummary: ${label} failed`);
+    return r.result as T;
+  };
+
+  const state = pick<number>(results[0], "state");
+  const deadline = pick<bigint>(results[1], "deadline");
+  const manifestHash = pick<Hex>(results[2], "manifestHash");
+  const manifestURI = pick<string>(results[3], "manifestURI");
+  const ordersLength = pick<bigint>(results[4], "ordersLength");
+  const quotesLength = pick<bigint>(results[5], "quotesLength");
+  const preview = pick<readonly [boolean, bigint, bigint, bigint, bigint]>(results[6], "previewSettlement");
+
+  type RawQuote = {
+    factory: Address;
+    quoteHash: Hex;
+    tiers: readonly { minQty: number; unitPriceWei: bigint }[];
+  };
+  const quotes: RawQuote[] = [];
+  for (let i = 0; i < Number(quotesLength); i++) {
+    quotes.push(pick<RawQuote>(results[7 + i], `getQuote(${i})`));
+  }
 
   return {
     state,
@@ -169,17 +192,27 @@ export async function listOrderPlacedEvents(
   toBlock?: bigint,
 ): Promise<OrderPlacedEvent[]> {
   const latest = toBlock ?? (await client.getBlockNumber());
-  const events: OrderPlacedEvent[] = [];
+  // 分块并行拉取（该 RPC 单 chunk ~2.5s，串行会累到分钟级；结果按块序合并）。
+  const ranges: { from: bigint; to: bigint }[] = [];
   for (let from = fromBlock; from <= latest; from += GET_LOGS_BLOCK_CHUNK) {
-    const to =
-      from + GET_LOGS_BLOCK_CHUNK - 1n > latest ? latest : from + GET_LOGS_BLOCK_CHUNK - 1n;
-    const logs = await client.getLogs({
-      address,
-      event: orderPlacedEvent,
-      fromBlock: from,
-      toBlock: to,
-      strict: true,
+    ranges.push({
+      from,
+      to: from + GET_LOGS_BLOCK_CHUNK - 1n > latest ? latest : from + GET_LOGS_BLOCK_CHUNK - 1n,
     });
+  }
+  const chunkLogs = await Promise.all(
+    ranges.map((range) =>
+      client.getLogs({
+        address,
+        event: orderPlacedEvent,
+        fromBlock: range.from,
+        toBlock: range.to,
+        strict: true,
+      }),
+    ),
+  );
+  const events: OrderPlacedEvent[] = [];
+  for (const logs of chunkLogs) {
     for (const log of logs) {
       events.push({
         buyer: log.args.buyer,
@@ -257,26 +290,33 @@ export async function readSettlementResult(
   address: Address,
 ): Promise<SettlementResult> {
   const base = { address, abi: makebookAbi } as const;
-  const [state, winningQuoteId, winningTierIndex, clearingPrice, winnerCount, selectedFactory, factoryReceivable, factoryPayoutClaimed] =
-    await Promise.all([
-      client.readContract({ ...base, functionName: "state" }),
-      client.readContract({ ...base, functionName: "winningQuoteId" }),
-      client.readContract({ ...base, functionName: "winningTierIndex" }),
-      client.readContract({ ...base, functionName: "clearingPrice" }),
-      client.readContract({ ...base, functionName: "winnerCount" }),
-      client.readContract({ ...base, functionName: "selectedFactory" }),
-      client.readContract({ ...base, functionName: "factoryReceivable" }),
-      client.readContract({ ...base, functionName: "factoryPayoutClaimed" }),
-    ]);
+  // 一次 multicall 合并 8 个读数（同 readCampaignSummary 的合并理由）。
+  const results = await client.multicall({
+    allowFailure: true,
+    contracts: [
+      { ...base, functionName: "state" },
+      { ...base, functionName: "winningQuoteId" },
+      { ...base, functionName: "winningTierIndex" },
+      { ...base, functionName: "clearingPrice" },
+      { ...base, functionName: "winnerCount" },
+      { ...base, functionName: "selectedFactory" },
+      { ...base, functionName: "factoryReceivable" },
+      { ...base, functionName: "factoryPayoutClaimed" },
+    ],
+  });
+  const pick = <T,>(r: (typeof results)[number], label: string): T => {
+    if (r.status !== "success") throw new Error(`readSettlementResult: ${label} failed`);
+    return r.result as T;
+  };
   return {
-    success: state === 2 || state === 4,
-    winningQuoteId,
-    winningTierIndex,
-    clearingPrice,
-    winnerCount,
-    selectedFactory,
-    factoryReceivable,
-    factoryPayoutClaimed,
+    success: pick<number>(results[0], "state") === 2 || pick<number>(results[0], "state") === 4,
+    winningQuoteId: pick<bigint>(results[1], "winningQuoteId"),
+    winningTierIndex: pick<bigint>(results[2], "winningTierIndex"),
+    clearingPrice: pick<bigint>(results[3], "clearingPrice"),
+    winnerCount: pick<bigint>(results[4], "winnerCount"),
+    selectedFactory: pick<Address>(results[5], "selectedFactory"),
+    factoryReceivable: pick<bigint>(results[6], "factoryReceivable"),
+    factoryPayoutClaimed: pick<boolean>(results[7], "factoryPayoutClaimed"),
   };
 }
 
@@ -319,16 +359,26 @@ export async function listCampaignTxEvidence(
     settledTxHash: null,
     settled: null,
   };
+  // 分块并行拉取（同 listOrderPlacedEvents 的并行化理由）。
+  const ranges: { from: bigint; to: bigint }[] = [];
   for (let from = fromBlock; from <= latest; from += GET_LOGS_BLOCK_CHUNK) {
-    const to =
-      from + GET_LOGS_BLOCK_CHUNK - 1n > latest ? latest : from + GET_LOGS_BLOCK_CHUNK - 1n;
-    const logs = await client.getLogs({
-      address,
-      events: [campaignOpenedEvent, campaignSettledEvent],
-      fromBlock: from,
-      toBlock: to,
-      strict: true,
+    ranges.push({
+      from,
+      to: from + GET_LOGS_BLOCK_CHUNK - 1n > latest ? latest : from + GET_LOGS_BLOCK_CHUNK - 1n,
     });
+  }
+  const chunkLogs = await Promise.all(
+    ranges.map((range) =>
+      client.getLogs({
+        address,
+        events: [campaignOpenedEvent, campaignSettledEvent],
+        fromBlock: range.from,
+        toBlock: range.to,
+        strict: true,
+      }),
+    ),
+  );
+  for (const logs of chunkLogs) {
     for (const log of logs) {
       if (log.eventName === "CampaignOpened") {
         evidence.openedTxHash = log.transactionHash;
