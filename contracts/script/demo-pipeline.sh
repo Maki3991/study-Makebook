@@ -137,7 +137,8 @@ with_timeout() {
 broadcast() { # <cast send 参数...> → stdout: tx hash
   local i out tx
   for i in 1 2 3; do
-    out="$(with_timeout 90 "$CAST" send "$@" --async --json)" || out=""
+    # flag 必须放在位置参数之前：cast 1.7+ 的 --create 模式会把其后内容全部当位置值解析
+    out="$(with_timeout 90 "$CAST" send --async --json "$@")" || out=""
     tx="$(grep -oE '0x[0-9a-fA-F]{64}' <<<"$out" | head -1 || true)"
     [[ -n "$tx" ]] && { echo "$tx"; return 0; }
     log "广播第 ${i} 次失败或超时，3 秒后重试"
