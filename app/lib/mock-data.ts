@@ -63,65 +63,78 @@ export type Candidate = {
   unknown: string;
 };
 
+// English demo data aligned with fixtures/comments.json (c01~c20) and
+// lib/ai/fixture.ts. Every evidence string cites a traceable comment id —
+// no aggregated statistics that cannot be traced back to the comments.
 export const sourceComments = [
-  "普通相机包看起来太像器材箱，我想背去上班也不突兀。",
-  "最好能装下一机两镜，但不要大到像双肩包。",
-  "内胆可拆很重要，平时想把它当普通斜挎包。",
-  "肩带要宽一点，背久了不要勒。",
-  "黑色最稳，预算大概在 220–260 元。",
-  "希望能快速从侧面拿到相机。",
+  "Need a sling that fits one body and two lenses — 8L is about right",
+  "Removable insert is non-negotiable, otherwise commuting with it is dumb",
+  "$220-260 all sounds reasonable to me",
+  "Black goes with everything — skip the flashy colorways",
+  "Wide strap please — my shoulder dies after a full day of carrying",
+  "8L sling is the sweet spot — anything bigger kills my shoulder",
 ];
 
 export const candidates: Candidate[] = [
   {
     id: "FRAME-01",
-    name: "8L 模块摄影斜挎包",
+    name: "Black 8L Modular Camera Sling Bag",
     type: "Selected direction",
     confidence: 88,
-    specs: ["黑色", "8L", "可拆内胆", "宽肩带"],
+    specs: ["Black", "8L", "Removable insert", "Wide quick-release strap"],
     evidence: [
-      "14 / 20 条评论明确反感“器材箱”外观",
-      "9 / 20 条评论提到一机两镜与日常物品共存",
-      "价格意愿集中在 220–260 元",
+      'c03 · "8L is perfect for everyday street shooting"',
+      'c02 · "Removable insert is non-negotiable, otherwise commuting with it is dumb"',
+      'c12 · "$220-260 all sounds reasonable to me"',
     ],
-    unknown: "防水等级与侧取结构仍需打样确认",
+    unknown: "Final fabric weight and actual mass-production lead time still need confirmation",
   },
   {
     id: "FRAME-02",
-    name: "10L 城市双肩包",
+    name: "Black 10L Urban Short-trip Backpack",
     type: "Alternative",
     confidence: 64,
-    specs: ["深灰", "10L", "后开仓", "双肩"],
-    evidence: ["容量诉求明确，但双肩形态的支持样本较少"],
-    unknown: "通勤体积与器材保护之间仍有冲突",
+    specs: ["Black", "10L", "Removable insert"],
+    evidence: [
+      'c10 · "I\'d also take a 10L backpack for short trips"',
+      'c16 · "$260 is my ceiling — above that I\'d just buy a big brand"',
+    ],
+    unknown: "Harness and back-panel structure; actual mass-production lead time unconfirmed",
   },
   {
     id: "FRAME-03",
-    name: "可拆内胆托特包",
+    name: "Commuter Tote with Removable Insert",
     type: "Alternative",
     confidence: 57,
-    specs: ["米白", "12L", "独立内胆", "手提"],
-    evidence: ["生活方式感最强，但相机侧取需求无法满足"],
-    unknown: "提手承重与镜头保护方式不明确",
+    specs: ["Removable insert", "Urban commuter style", "Capacity TBD"],
+    evidence: [
+      'c13 · "A tote with a removable insert could be nice too"',
+      'c15 · "Don\'t make it look too outdoorsy — urban commuter vibe please"',
+    ],
+    unknown: "No comment evidence for capacity; opening style and anti-theft design TBD",
   },
 ];
 
+// Cumulative funded demand (orders with maxPrice >= price), aligned with
+// fixtures/success.json Buyer A–E: 0.026 / 0.024 / 0.021 / 0.019 / 0.017.
 export const demandPoints = [
-  { price: "0.017", orders: 6 },
-  { price: "0.019", orders: 5 },
+  { price: "0.017", orders: 5 },
+  { price: "0.019", orders: 4 },
   { price: "0.021", orders: 3 },
   { price: "0.024", orders: 2 },
   { price: "0.026", orders: 1 },
 ];
 
+// fixtures/success.json: Loom min3 @ 0.019 feasible (eligibleCount = 4);
+// North min3 @ 0.024 not feasible (only 2 orders >= 0.024).
 export const factoryTiers = [
   {
     id: "loom",
     name: "Factory Loom",
-    quantity: 5,
+    quantity: 3,
     price: "0.019",
     feasible: true,
-    eligible: 5,
+    eligible: 4,
   },
   {
     id: "north",

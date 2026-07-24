@@ -19,12 +19,25 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useState, type CSSProperties } from "react";
+import { parseUnits, type Address, type Hex } from "viem";
 import {
-  candidates,
-  demandPoints,
-  factoryTiers,
-  sourceComments,
-} from "../lib/mock-data";
+  INJECTIVE_EVM_TESTNET_CHAIN_ID,
+  INJ_DECIMALS,
+} from "../lib/chain/chain";
+import {
+  formatInj,
+  useCampaignData,
+  useCountdown,
+} from "../lib/chain/use-campaign";
+import {
+  describeWriteError,
+  shortenAddress,
+  switchToInjectiveNetwork,
+  writeCampaignAction,
+  type CampaignWriteAction,
+  type ConnectedWallet,
+} from "../lib/chain/wallet";
+import { candidates, sourceComments } from "../lib/mock-data";
 import type {
   ContractReadState,
   DemoNetworkState,
@@ -41,15 +54,13 @@ import {
   WeiDebug,
 } from "./ui";
 
-const demoWallet = "0x7F2A9c70B4F22E6A1D640bc7A64E2F44AC0D41C2";
+const demoWallet: Address = "0x7F2A9c70B4F22E6A1D640bc7A64E2F44AC0D41C2";
 const orderTx =
   "0xb7e4a907dd3aab90bf47e4ae41206935894d57f2652be72492da95fdc18e9c21";
 const campaignTx =
   "0x98e219d3128ff183f4a0d45ca0d31fa764449259abb1bc43153475c4ad54b771";
 const settlementTx =
   "0x43a90f856e8c0ddcb4af2e7d2fe812936f21159c25df5f8c1683cae0444fec18";
-const manifestHash =
-  "0x7a19d62642359562ca0612e56b9f04171a802f5d2200b4e9867cbc6445c4be42";
 
 function decimalToWei(value: string) {
   const [whole = "0", decimal = ""] = value.split(".");
@@ -309,10 +320,78 @@ function ContractReadFallback({
 export function CampaignScreen({
   readState = "ready",
   onRetry = () => undefined,
+  mode = "success",
 }: {
   readState?: ContractReadState;
   onRetry?: () => void;
+  mode?: DemoSettlementMode;
 }) {
+  // demo-panel 清算场景开关决定读 success/failure 哪套合约（spec 003 第 3 节）；
+  // readState ≠ ready 时暂停读取，走三态演示壳。
+  const { status, view } = useCampaignData(mode, readState === "ready");
+  const countdown = useCountdown(view.deadline);
+  const onchain = view.source === "onchain";
+  const { preview } = view;
+  const points = view.demandPoints;
+  // 需求曲线坐标系：y 轴 0~5 单、每单 48px（spec 003 第 2 节）；x 轴按价格点均布。
+  const spacing = points.length > 1 ? 448 / (points.length - 1) : 0;
+  const pointX = (index: number) => 94 + index * spacing;
+  const levelY = (level: number) => 280 - level * 48;
+  const priceIndexOf = (priceWei: bigint) => {
+    const exact = points.findIndex(
+      (point) => parseUnits(point.price, INJ_DECIMALS) === priceWei,
+    );
+    if (exact >= 0) return exact;
+    const greater = points.findIndex(
+      (point) => parseUnits(point.price, INJ_DECIMALS) > priceWei,
+    );
+    return greater >= 0 ? greater : 0;
+  };
+
+  const winnerQuoteIndex = Number(preview.quoteId);
+  const winnerQuote = preview.feasible ? view.quotes[winnerQuoteIndex] : undefined;
+  const winnerTier = winnerQuote?.tiers[Number(preview.tierIndex)];
+  const winnerName = view.quoteNames[winnerQuoteIndex] ?? "Factory";
+  const winnerOverlay =
+    preview.feasible && winnerTier
+      ? {
+          name: winnerName.replace(/^Factory\s+/i, "").toUpperCase(),
+          moq: winnerTier.minQty,
+          price: formatInj(preview.clearingPrice),
+          xIndex: priceIndexOf(winnerTier.unitPriceWei),
+          level: Number(preview.winnerCount),
+        }
+      : null;
+  const missedOverlays = view.factoryTiers
+    .filter((tier) => !tier.feasible)
+    .map((tier) => ({
+      id: tier.id,
+      name: tier.name.replace(/^Factory\s+/i, "").toUpperCase(),
+      moq: tier.quantity,
+      price: tier.price,
+      xIndex: priceIndexOf(parseUnits(tier.price, INJ_DECIMALS)),
+    }));
+
+  const stepPath = points
+    .map((point, index) =>
+      index === 0
+        ? `M${pointX(0)} ${levelY(point.orders)}`
+        : `H${pointX(index)} V${levelY(point.orders)}`,
+    )
+    .join(" ");
+
+  const ariaTiers = view.factoryTiers
+    .map((tier) => {
+      const isWinner =
+        preview.feasible &&
+        tier.feasible &&
+        parseUnits(tier.price, INJ_DECIMALS) === preview.clearingPrice;
+      return `${tier.name} 的 ${tier.quantity} 件档位在 ${tier.price} test INJ ${
+        tier.feasible ? (isWinner ? "可行并中标" : "可行") : "不可行"
+      }`;
+    })
+    .join("，");
+
   return (
     <div className="screen-stack">
       <section className="product-hero">
@@ -338,12 +417,18 @@ export function CampaignScreen({
       <section className="surface campaign-clock">
         <div>
           <span className="mono-note">ORDER WINDOW</span>
-          <strong>12 : 36 : 08</strong>
+          <strong>{countdown.label}</strong>
         </div>
-        <span className="clock-state">正在接单</span>
+        <span className="clock-state">
+          {countdown.expired ? "已截止，可发起清算" : "正在接单"}
+        </span>
       </section>
 
-      {readState === "ready" ? (
+      {readState !== "ready" ? (
+        <ContractReadFallback state={readState} onRetry={onRetry} />
+      ) : status === "loading" ? (
+        <ContractReadFallback state="loading" onRetry={onRetry} />
+      ) : (
         <>
       <section>
         <SectionLabel index="01">两种需求，分开看</SectionLabel>
@@ -354,8 +439,12 @@ export function CampaignScreen({
             <p>说明方向值得研究，不参与清算。</p>
           </div>
           <div className="surface signal-card">
-            <SourceTag tone="onchain">Onchain</SourceTag>
-            <Metric label="已预锁资金订单" value="6" suffix="笔" />
+            {onchain ? (
+              <SourceTag tone="onchain">Onchain</SourceTag>
+            ) : (
+              <SourceTag tone="offchain">Off-chain Demo</SourceTag>
+            )}
+            <Metric label="已预锁资金订单" value={String(view.ordersLength)} suffix="笔" />
             <p>钱包已预锁 maxPrice，进入清算。</p>
           </div>
         </div>
@@ -364,7 +453,11 @@ export function CampaignScreen({
       <section className="surface demand-curve-card">
         <SectionLabel
           index="02"
-          aside={<span className="mono-note">ORDER BOOK / LIVE</span>}
+          aside={
+            <span className="mono-note">
+              {onchain ? "ORDER BOOK / LIVE" : "ORDER BOOK / FIXTURE"}
+            </span>
+          }
         >
           资金需求曲线
         </SectionLabel>
@@ -376,7 +469,7 @@ export function CampaignScreen({
         <div
           className="demand-chart"
           role="img"
-          aria-label="AI 兴趣样本与链上预锁订单分别显示。链上曲线表示价格越高，满足最高愿付价的订单越少。Factory Loom 的 5 件档位在 0.019 test INJ 可行并中标，Factory North 的 3 件档位在 0.024 test INJ 不可行。"
+          aria-label={`AI 兴趣样本与链上预锁订单分别显示。链上曲线表示价格越高，满足最高愿付价的订单越少。${ariaTiers}。`}
         >
           <div className="interest-band">
             <div>
@@ -396,7 +489,11 @@ export function CampaignScreen({
 
           <div className="funded-chart-head">
             <div>
-              <SourceTag tone="onchain">Onchain</SourceTag>
+              {onchain ? (
+                <SourceTag tone="onchain">Onchain</SourceTag>
+              ) : (
+                <SourceTag tone="offchain">Off-chain Demo</SourceTag>
+              )}
               <strong>真实测试网订单</strong>
             </div>
             <span>maxPrice ≥ 该价格</span>
@@ -409,21 +506,21 @@ export function CampaignScreen({
             aria-hidden="true"
           >
             <g className="chart-grid">
-              {[40, 80, 120, 160, 200, 240, 280].map((y) => (
+              {[40, 88, 136, 184, 232, 280].map((y) => (
                 <line key={y} x1="64" x2="586" y1={y} y2={y} />
               ))}
             </g>
 
             <g className="chart-axis-labels">
-              {["6", "5", "4", "3", "2", "1", "0"].map((value, index) => (
-                <text key={value} x="44" y={44 + index * 40} textAnchor="end">
+              {["5", "4", "3", "2", "1", "0"].map((value, index) => (
+                <text key={value} x="44" y={44 + index * 48} textAnchor="end">
                   {value}
                 </text>
               ))}
-              {demandPoints.map((point, index) => (
+              {points.map((point, index) => (
                 <text
                   key={point.price}
-                  x={94 + index * 112}
+                  x={pointX(index)}
                   y="306"
                   textAnchor="middle"
                 >
@@ -433,18 +530,23 @@ export function CampaignScreen({
             </g>
 
             <g className="chart-order-bars">
-              {demandPoints.map((point, index) => {
-                const height = point.orders * 40;
+              {points.map((point, index) => {
+                const height = point.orders * 48;
                 return (
-                  <g data-winner={point.price === "0.019"} key={point.price}>
+                  <g
+                    data-winner={
+                      winnerOverlay ? point.price === winnerOverlay.price : false
+                    }
+                    key={point.price}
+                  >
                     <rect
-                      x={67 + index * 112}
+                      x={pointX(index) - 27}
                       y={280 - height}
                       width="54"
                       height={height}
                     />
                     <text
-                      x={94 + index * 112}
+                      x={pointX(index)}
                       y={270 - height}
                       textAnchor="middle"
                     >
@@ -455,69 +557,78 @@ export function CampaignScreen({
               })}
             </g>
 
-            <path
-              className="funded-step-line"
-              d="M94 40 H206 V80 H318 V160 H430 V200 H542 V240"
-            />
+            {stepPath ? (
+              <path className="funded-step-line" d={stepPath} />
+            ) : null}
 
-            <g className="factory-threshold factory-threshold-winner">
-              <line
-                className="clearing-line-svg"
-                x1="166"
-                x2="586"
-                y1="80"
-                y2="80"
-              />
-              <rect
-                className="threshold-point"
-                x="202"
-                y="76"
-                width="8"
-                height="8"
-              />
-              <text
-                className="chart-threshold-label chart-threshold-label-full"
-                x="566"
-                y="66"
-                textAnchor="end"
-              >
-                WINNER · LOOM · MOQ 5 @ 0.019
-              </text>
-              <text
-                className="chart-threshold-label chart-threshold-label-short"
-                x="566"
-                y="66"
-                textAnchor="end"
-              >
-                LOOM · MOQ 5
-              </text>
-            </g>
+            {winnerOverlay ? (
+              <g className="factory-threshold factory-threshold-winner">
+                <line
+                  className="clearing-line-svg"
+                  x1={pointX(winnerOverlay.xIndex) - 40}
+                  x2="586"
+                  y1={levelY(winnerOverlay.level)}
+                  y2={levelY(winnerOverlay.level)}
+                />
+                <rect
+                  className="threshold-point"
+                  x={pointX(winnerOverlay.xIndex) - 4}
+                  y={levelY(winnerOverlay.level) - 4}
+                  width="8"
+                  height="8"
+                />
+                <text
+                  className="chart-threshold-label chart-threshold-label-full"
+                  x="566"
+                  y={levelY(winnerOverlay.level) - 14}
+                  textAnchor="end"
+                >
+                  WINNER · {winnerOverlay.name} · MOQ {winnerOverlay.moq} @{" "}
+                  {winnerOverlay.price}
+                </text>
+                <text
+                  className="chart-threshold-label chart-threshold-label-short"
+                  x="566"
+                  y={levelY(winnerOverlay.level) - 14}
+                  textAnchor="end"
+                >
+                  {winnerOverlay.name} · MOQ {winnerOverlay.moq}
+                </text>
+              </g>
+            ) : null}
 
-            <g className="factory-threshold factory-threshold-missed">
-              <line
-                x1="390"
-                x2="586"
-                y1="160"
-                y2="160"
-              />
-              <path d="M426 154 l12 12 M438 154 l-12 12" />
-              <text
-                className="chart-threshold-label chart-threshold-label-full"
-                x="566"
-                y="185"
-                textAnchor="end"
+            {missedOverlays.map((overlay, overlayIndex) => (
+              <g
+                className="factory-threshold factory-threshold-missed"
+                key={overlay.id}
               >
-                MISSED · NORTH · MOQ 3 @ 0.024
-              </text>
-              <text
-                className="chart-threshold-label chart-threshold-label-short"
-                x="566"
-                y="185"
-                textAnchor="end"
-              >
-                NORTH · MOQ 3
-              </text>
-            </g>
+                <line
+                  x1={pointX(overlay.xIndex) - 40}
+                  x2="586"
+                  y1={levelY(overlay.moq)}
+                  y2={levelY(overlay.moq)}
+                />
+                <path
+                  d={`M${pointX(overlay.xIndex) - 4} ${levelY(overlay.moq) - 6} l12 12 M${pointX(overlay.xIndex) + 8} ${levelY(overlay.moq) - 6} l-12 12`}
+                />
+                <text
+                  className="chart-threshold-label chart-threshold-label-full"
+                  x="566"
+                  y={levelY(overlay.moq) + 25 + overlayIndex * 18}
+                  textAnchor="end"
+                >
+                  MISSED · {overlay.name} · MOQ {overlay.moq} @ {overlay.price}
+                </text>
+                <text
+                  className="chart-threshold-label chart-threshold-label-short"
+                  x="566"
+                  y={levelY(overlay.moq) + 25 + overlayIndex * 18}
+                  textAnchor="end"
+                >
+                  {overlay.name} · MOQ {overlay.moq}
+                </text>
+              </g>
+            ))}
 
             <text className="chart-y-title" x="66" y="19">
               预锁订单数
@@ -538,7 +649,7 @@ export function CampaignScreen({
       <section>
         <SectionLabel index="03">工厂 MOQ 报价</SectionLabel>
         <div className="factory-list">
-          {factoryTiers.map((tier) => (
+          {view.factoryTiers.map((tier) => (
             <article
               className="surface factory-tier"
               data-feasible={tier.feasible}
@@ -579,13 +690,15 @@ export function CampaignScreen({
         </div>
         <div>
           <span>当前可行性预览</span>
-          <strong>如果现在截止，Factory Loom 的 5 件档位可成批。</strong>
+          <strong>
+            {preview.feasible && winnerTier
+              ? `如果现在截止，${winnerName} 的 ${winnerTier.minQty} 件档位可成批。`
+              : "如果现在截止，没有任何档位达到 MOQ。"}
+          </strong>
           <p>最终结果只在截止后由合约清算；此处不是承诺。</p>
         </div>
       </section>
         </>
-      ) : (
-        <ContractReadFallback state={readState} onRetry={onRetry} />
       )}
     </div>
   );
@@ -596,9 +709,11 @@ const priceOptions = ["0.019", "0.021", "0.024", "0.026"];
 export function OrderScreen({
   networkState = "correct",
   signatureMode = "success",
+  wallet = null,
 }: {
   networkState?: DemoNetworkState;
   signatureMode?: DemoSignatureMode;
+  wallet?: ConnectedWallet | null;
 }) {
   const [maxPrice, setMaxPrice] = useState("0.024");
   const [acknowledged, setAcknowledged] = useState(false);
@@ -606,6 +721,12 @@ export function OrderScreen({
   const [status, setStatus] = useState<
     "idle" | "pending" | "success" | "error"
   >("idle");
+  const [switching, setSwitching] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
+  // 连接钱包后以真实 chainId 为准；未连接时沿用 demo-panel 的网络演示开关（spec 003 第 3 节）。
+  const wrongNetwork = wallet
+    ? wallet.chainId !== INJECTIVE_EVM_TESTNET_CHAIN_ID
+    : networkState === "wrong";
   const clearingPrice = 0.019;
   const numericPrice = Number(maxPrice) || 0;
   const estimatedRefund = Math.max(numericPrice - clearingPrice, 0);
@@ -613,10 +734,23 @@ export function OrderScreen({
     acknowledged &&
     publicAcknowledged &&
     numericPrice > 0 &&
-    networkState === "correct" &&
+    !wrongNetwork &&
     status === "idle";
   const orderDisabled =
     status === "pending" || (status === "idle" && !canSubmit);
+
+  async function switchNetwork() {
+    if (switching) return;
+    setSwitching(true);
+    setSwitchError(null);
+    try {
+      await switchToInjectiveNetwork();
+    } catch {
+      setSwitchError("切换网络失败，请在钱包中手动切换到 Chain ID 1439。");
+    } finally {
+      setSwitching(false);
+    }
+  }
 
   function submitOrder() {
     if (!canSubmit) return;
@@ -631,7 +765,7 @@ export function OrderScreen({
     <div className="screen-stack">
       <section
         className="surface wallet-status-card"
-        data-network-error={networkState === "wrong"}
+        data-network-error={wrongNetwork}
       >
         <div className="wallet-status-icon">
           <WalletCards size={20} aria-hidden="true" />
@@ -639,28 +773,47 @@ export function OrderScreen({
         <div>
           <span className="mono-note">CONNECTED WALLET</span>
           <CopyValue
-            value={demoWallet}
-            display="0x7F2A…41C2"
+            value={wallet?.address ?? demoWallet}
+            display={shortenAddress(wallet?.address ?? demoWallet)}
             label="复制完整钱包地址"
           />
           <p>
-            {networkState === "correct"
-              ? "Injective EVM Testnet · Chain ID 1439"
-              : "Unknown network · Chain ID 1"}
+            {wrongNetwork
+              ? `Unknown network · Chain ID ${wallet ? wallet.chainId : 1}`
+              : "Injective EVM Testnet · Chain ID 1439"}
           </p>
         </div>
         <SourceTag tone="testnet">
-          {networkState === "correct" ? "Testnet" : "Wrong Network"}
+          {wrongNetwork ? "Wrong Network" : "Testnet"}
         </SourceTag>
       </section>
 
-      {networkState === "wrong" ? (
+      {wrongNetwork ? (
         <section className="inline-error" role="status">
           <AlertCircle size={18} aria-hidden="true" />
           <p>
             当前不是 Injective EVM Testnet（Chain ID
             1439）。切换网络后再继续。
           </p>
+          {wallet ? (
+            <button
+              className="action-button"
+              type="button"
+              aria-busy={switching}
+              disabled={switching}
+              onClick={switchNetwork}
+            >
+              {switching ? (
+                <LoaderCircle className="spin" size={16} aria-hidden="true" />
+              ) : (
+                <RotateCcw size={16} aria-hidden="true" />
+              )}
+              {switching
+                ? "正在请求钱包切换…"
+                : "一键切换到 Injective EVM Testnet"}
+            </button>
+          ) : null}
+          {switchError ? <p>{switchError}</p> : null}
         </section>
       ) : null}
 
@@ -834,19 +987,120 @@ export function OrderScreen({
 
 export function SettlementScreen({
   mode = "success",
+  wallet = null,
+  onConnect = () => undefined,
 }: {
   mode?: DemoSettlementMode;
+  wallet?: ConnectedWallet | null;
+  onConnect?: () => void;
 }) {
+  const { view, reload } = useCampaignData(mode);
+  const countdown = useCountdown(view.deadline);
+  const onchain = view.source === "onchain";
   const [claimStatus, setClaimStatus] = useState<"idle" | "pending" | "claimed">(
     "idle",
   );
-  const success = mode === "success";
-  const refund = success ? "0.005" : "0.024";
+  const [txFeedback, setTxFeedback] = useState<{
+    action: CampaignWriteAction;
+    kind: "pending" | "error" | "confirmed";
+    message?: string;
+    hash?: Hex;
+  } | null>(null);
 
+  // 结果口径：已清算（state ≥ Succeeded）读链上写入值；未清算读 previewSettlement
+  // 实时预览并明示"清算未发生"。金额全程 wei bigint，显示才 formatUnits。
+  const settled = view.settled;
+  const success = settled ? (view.settlement?.success ?? false) : view.preview.feasible;
+  const feasibleCount = view.factoryTiers.filter((tier) => tier.feasible).length;
+  const clearingWei = settled
+    ? (view.settlement?.clearingPrice ?? 0n)
+    : view.preview.feasible
+      ? view.preview.clearingPrice
+      : 0n;
+  const winnerCount = settled
+    ? (view.settlement?.winnerCount ?? 0n)
+    : view.preview.feasible
+      ? view.preview.winnerCount
+      : 0n;
+  const receivableWei = settled
+    ? (view.settlement?.factoryReceivable ?? 0n)
+    : view.preview.feasible
+      ? view.preview.clearingPrice * view.preview.winnerCount
+      : 0n;
+  const winningQuoteIndex = Number(
+    settled ? (view.settlement?.winningQuoteId ?? 0n) : view.preview.quoteId,
+  );
+  const winningTierIndex = Number(
+    settled ? (view.settlement?.winningTierIndex ?? 0n) : view.preview.tierIndex,
+  );
+  const winningTier = success
+    ? view.quotes[winningQuoteIndex]?.tiers[winningTierIndex]
+    : undefined;
+  const winnerName = view.quoteNames[winningQuoteIndex] ?? "Factory";
+  const minMoq = view.factoryTiers.reduce(
+    (min, tier) => Math.min(min, tier.quantity),
+    Number.POSITIVE_INFINITY,
+  );
+  const minMoqText = Number.isFinite(minMoq) ? String(minMoq) : "0";
+
+  // 连接钱包的凭证：买家订单或中标工厂身份（接口文档 2.1 领取权限）。
+  const myOrder = wallet
+    ? view.orders.find(
+        (order) => order.buyer.toLowerCase() === wallet.address.toLowerCase(),
+      )
+    : undefined;
+  const isSelectedFactory = Boolean(
+    settled &&
+      success &&
+      wallet &&
+      view.settlement &&
+      view.settlement.selectedFactory.toLowerCase() === wallet.address.toLowerCase(),
+  );
+  const isWinner = Boolean(success && myOrder && myOrder.maxPriceWei >= clearingWei);
+  const refundWei = !myOrder
+    ? 0n
+    : !settled
+      ? 0n
+      : success
+        ? isWinner
+          ? myOrder.maxPriceWei - clearingWei
+          : myOrder.maxPriceWei
+        : myOrder.maxPriceWei;
+  const fixtureRefund = mode === "success" ? "0.005" : "0.024";
+  const pendingAction = txFeedback?.kind === "pending" ? txFeedback.action : null;
+
+  // fixture 降级路径保留演示用模拟领取（页面标 OFF-CHAIN DEMO）。
   function claimRefund() {
     if (claimStatus !== "idle") return;
     setClaimStatus("pending");
     window.setTimeout(() => setClaimStatus("claimed"), 1000);
+  }
+
+  async function runWrite(action: CampaignWriteAction) {
+    if (!wallet) {
+      onConnect();
+      return;
+    }
+    if (wallet.chainId !== INJECTIVE_EVM_TESTNET_CHAIN_ID) {
+      try {
+        await switchToInjectiveNetwork();
+      } catch {
+        setTxFeedback({
+          action,
+          kind: "error",
+          message: "请先切换到 Injective EVM Testnet（Chain ID 1439）。",
+        });
+        return;
+      }
+    }
+    setTxFeedback({ action, kind: "pending" });
+    try {
+      const hash = await writeCampaignAction(action, view.address, wallet.address);
+      setTxFeedback({ action, kind: "confirmed", hash });
+      reload();
+    } catch (err) {
+      setTxFeedback({ action, kind: "error", message: describeWriteError(err) });
+    }
   }
 
   return (
@@ -859,47 +1113,134 @@ export function SettlementScreen({
             <RotateCcw size={28} aria-hidden="true" />
           )}
         </div>
-        <SourceTag tone="onchain">Onchain Result</SourceTag>
+        {onchain ? (
+          <SourceTag tone="onchain">Onchain Result</SourceTag>
+        ) : (
+          <SourceTag tone="offchain">Off-chain Demo</SourceTag>
+        )}
         <span className="settlement-code">
-          {success ? "SETTLED / SUCCESS" : "SETTLED / FAILED"}
+          {settled
+            ? success
+              ? "SETTLED / SUCCESS"
+              : "SETTLED / FAILED"
+            : "OPEN / PREVIEW"}
         </span>
         <h2>
-          {success ? "生产批次成立" : "清算未达到生产门槛"}
+          {settled
+            ? success
+              ? "生产批次成立"
+              : "清算未达到生产门槛"
+            : "清算尚未发生"}
         </h2>
         <p>
-          {success
-            ? "生产批次成立：Factory Loom 的 5 件档位可行，统一价为 0.019 test INJ。"
-            : "没有任何 MOQ 档位获得足够的已担保订单。所有参与者均可领取全额退款。"}
+          {settled
+            ? success
+              ? `生产批次成立：${winnerName} 的 ${winningTier?.minQty ?? 0} 件档位可行，统一价为 ${formatInj(clearingWei)} test INJ。`
+              : "没有任何 MOQ 档位获得足够的已担保订单。所有参与者均可领取全额退款。"
+            : view.preview.feasible
+              ? `未到 deadline，清算未发生。当前预览：${winnerName} 的 ${winningTier?.minQty ?? 0} 件档位可成批，预览统一价 ${formatInj(view.preview.clearingPrice)} test INJ。`
+              : "未到 deadline，清算未发生。当前预览：没有任何档位达到 MOQ。"}
         </p>
       </section>
 
       {success ? (
         <section className="surface settlement-metrics">
-          <SectionLabel index="01">最终清算</SectionLabel>
+          <SectionLabel index="01">
+            {settled ? "最终清算" : "当前预览"}
+          </SectionLabel>
           <div className="settlement-grid">
-            <Metric label="统一成交价" value="0.019" suffix="INJ" />
-            <Metric label="成交订单" value="5" suffix="笔" />
-            <Metric label="中标 MOQ" value="5" suffix="件" />
-            <Metric label="工厂应收" value="0.095" suffix="INJ" />
+            <Metric label="统一成交价" value={formatInj(clearingWei)} suffix="INJ" />
+            <Metric label="成交订单" value={String(winnerCount)} suffix="笔" />
+            <Metric
+              label="中标 MOQ"
+              value={String(winningTier?.minQty ?? 0)}
+              suffix="件"
+            />
+            <Metric label="工厂应收" value={formatInj(receivableWei)} suffix="INJ" />
           </div>
         </section>
       ) : (
         <section className="surface failure-summary">
-          <SectionLabel index="01">失败原因</SectionLabel>
+          <SectionLabel index="01">
+            {settled ? "失败原因" : "当前预览"}
+          </SectionLabel>
           <div className="failure-row">
             <span>最低 MOQ</span>
-            <strong>5 件</strong>
+            <strong>{minMoqText} 件</strong>
           </div>
           <div className="failure-row">
             <span>有效资金订单</span>
-            <strong>2 笔</strong>
+            <strong>{view.ordersLength} 笔</strong>
           </div>
           <div className="failure-row">
             <span>工厂应收</span>
-            <strong>0 test INJ</strong>
+            <strong>{formatInj(receivableWei)} test INJ</strong>
           </div>
         </section>
       )}
+
+      {!settled ? (
+        <section className="surface">
+          <span className="mono-note">PUBLIC SETTLEMENT</span>
+          <div className="money-flow">
+            <div>
+              <span>距离截止</span>
+              <strong>{countdown.label}</strong>
+            </div>
+            <div>
+              <span>清算状态</span>
+              <strong>{countdown.expired ? "已截止，可清算" : "未发生"}</strong>
+            </div>
+          </div>
+          <p className="field-help">
+            未到 deadline，清算未发生。截止后任何人都可以发起这笔公开 settle
+            交易，结果由合约唯一确定。
+          </p>
+          <button
+            className="action-button action-button-dark"
+            type="button"
+            aria-busy={pendingAction === "settle"}
+            disabled={pendingAction === "settle"}
+            onClick={() => runWrite("settle")}
+          >
+            {pendingAction === "settle" ? (
+              <LoaderCircle className="spin" size={17} aria-hidden="true" />
+            ) : (
+              <LockKeyhole size={17} aria-hidden="true" />
+            )}
+            {pendingAction === "settle"
+              ? "交易已提交，等待 Injective 确认…"
+              : wallet
+                ? "发起清算 settle"
+                : "连接钱包发起清算"}
+          </button>
+          {txFeedback?.action === "settle" && txFeedback.kind === "error" ? (
+            <div className="tx-error" role="status">
+              <AlertCircle size={16} aria-hidden="true" />
+              <p>{txFeedback.message}</p>
+            </div>
+          ) : null}
+          {txFeedback?.action === "settle" &&
+          txFeedback.kind === "confirmed" &&
+          txFeedback.hash ? (
+            <div className="tx-proof">
+              <div>
+                <SourceTag tone="onchain">Onchain</SourceTag>
+                <CopyValue
+                  value={txFeedback.hash}
+                  display={shortenAddress(txFeedback.hash)}
+                  label="复制清算交易哈希"
+                />
+              </div>
+              <ExplorerLink
+                hash={txFeedback.hash}
+                display="Explorer"
+                label="清算交易"
+              />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="surface explanation-card">
         <SectionLabel index="02">为什么是这个结果</SectionLabel>
@@ -907,24 +1248,30 @@ export function SettlementScreen({
           <li>
             <span>01</span>
             <p>
-              合约冻结了 <strong>{success ? "5" : "2"} 笔</strong>消费者订单与
-              2 家工厂报价。
+              合约冻结了 <strong>{view.ordersLength} 笔</strong>消费者订单与{" "}
+              {view.factoriesCount} 家工厂报价。
             </p>
           </li>
           <li>
             <span>02</span>
             <p>
               {success
-                ? "在 0.019 的价格点，有 5 笔 maxPrice 足够的订单。"
-                : "任何价格点都没有至少 5 笔满足条件的订单。"}
+                ? `在 ${formatInj(clearingWei)} 的价格点，有 ${Number(winnerCount)} 笔 maxPrice 足够的订单。`
+                : `任何价格点都没有至少 ${minMoqText} 笔满足条件的订单。`}
             </p>
           </li>
           <li>
             <span>03</span>
             <p>
-              {success
-                ? "Factory Loom 满足 MOQ，且总成本最低，因此成为唯一中标档位。"
-                : "没有工厂满足开工门槛，因此 Campaign 进入 Failed。"}
+              {settled
+                ? success
+                  ? feasibleCount === 1
+                    ? `${winnerName} 满足 MOQ，且为唯一可行档位，因此成为唯一中标档位。`
+                    : `${winnerName} 满足 MOQ，且总成本最低，因此成为唯一中标档位。`
+                  : "没有工厂满足开工门槛，因此 Campaign 进入 Failed。"
+                : success
+                  ? `${winnerName} 当前满足 MOQ，若现在截止将成为中标档位。`
+                  : "当前没有工厂满足开工门槛；截止时仍无则 Campaign 进入 Failed。"}
             </p>
           </li>
         </ol>
@@ -938,91 +1285,329 @@ export function SettlementScreen({
           <div>
             <span className="mono-note">MY RECEIPT</span>
             <CopyValue
-              value={demoWallet}
-              display="0x7F2A…41C2"
+              value={wallet?.address ?? demoWallet}
+              display={shortenAddress(wallet?.address ?? demoWallet)}
               label="复制完整钱包地址"
             />
           </div>
-          <SourceTag tone="onchain">Onchain</SourceTag>
-        </div>
-        <div className="receipt-lines">
-          <div>
-            <span>预锁上限</span>
-            <strong>0.024 test INJ</strong>
-          </div>
-          <div>
-            <span>{success ? "最终应付" : "最终应付"}</span>
-            <strong>{success ? "0.019" : "0"} test INJ</strong>
-          </div>
-          <div className="receipt-refund">
-            <span>可领取退款</span>
-            <strong>{refund} test INJ</strong>
-          </div>
-        </div>
-        <WeiDebug
-          amount={refund}
-          wei={success ? "5000000000000000" : "24000000000000000"}
-        />
-        <button
-          className="action-button receipt-claim"
-          data-claimed={claimStatus === "claimed"}
-          type="button"
-          aria-busy={claimStatus === "pending"}
-          disabled={claimStatus !== "idle"}
-          onClick={claimRefund}
-        >
-          {claimStatus === "pending" ? (
-            <LoaderCircle className="spin" size={17} aria-hidden="true" />
-          ) : claimStatus === "claimed" ? (
-            <CheckCircle2 size={17} aria-hidden="true" />
+          {onchain ? (
+            <SourceTag tone="onchain">Onchain</SourceTag>
           ) : (
-            <CircleDollarSign size={17} aria-hidden="true" />
+            <SourceTag tone="offchain">Off-chain Demo</SourceTag>
           )}
-          {claimStatus === "pending"
-            ? "等待钱包确认…"
-            : claimStatus === "claimed"
-              ? "退款已领取"
-              : `领取 ${refund} test INJ`}
-        </button>
-        <p className="honesty-note">
-          <AlertCircle size={14} aria-hidden="true" />
-          这是一笔主动领取交易。其他人的领取失败不会影响你。
-        </p>
+        </div>
+
+        {!onchain ? (
+          <>
+            <div className="receipt-lines">
+              <div>
+                <span>预锁上限</span>
+                <strong>0.024 test INJ</strong>
+              </div>
+              <div>
+                <span>最终应付</span>
+                <strong>{success ? "0.019" : "0"} test INJ</strong>
+              </div>
+              <div className="receipt-refund">
+                <span>可领取退款</span>
+                <strong>{fixtureRefund} test INJ</strong>
+              </div>
+            </div>
+            <WeiDebug
+              amount={fixtureRefund}
+              wei={success ? "5000000000000000" : "24000000000000000"}
+            />
+            <button
+              className="action-button receipt-claim"
+              data-claimed={claimStatus === "claimed"}
+              type="button"
+              aria-busy={claimStatus === "pending"}
+              disabled={claimStatus !== "idle"}
+              onClick={claimRefund}
+            >
+              {claimStatus === "pending" ? (
+                <LoaderCircle className="spin" size={17} aria-hidden="true" />
+              ) : claimStatus === "claimed" ? (
+                <CheckCircle2 size={17} aria-hidden="true" />
+              ) : (
+                <CircleDollarSign size={17} aria-hidden="true" />
+              )}
+              {claimStatus === "pending"
+                ? "等待钱包确认…"
+                : claimStatus === "claimed"
+                  ? "退款已领取"
+                  : `领取 ${fixtureRefund} test INJ`}
+            </button>
+            <p className="honesty-note">
+              <AlertCircle size={14} aria-hidden="true" />
+              这是一笔主动领取交易。其他人的领取失败不会影响你。
+            </p>
+          </>
+        ) : !wallet ? (
+          <>
+            <div className="receipt-lines">
+              <div>
+                <span>钱包</span>
+                <strong>未连接 · 只读</strong>
+              </div>
+            </div>
+            <button
+              className="action-button receipt-claim"
+              type="button"
+              onClick={onConnect}
+            >
+              <WalletCards size={17} aria-hidden="true" />
+              连接钱包查看凭证
+            </button>
+            <p className="honesty-note">
+              <AlertCircle size={14} aria-hidden="true" />
+              未连接钱包时结果页只读可用；连接后显示你的订单与可领取金额。
+            </p>
+          </>
+        ) : myOrder ? (
+          <>
+            <div className="receipt-lines">
+              <div>
+                <span>预锁上限</span>
+                <strong>{formatInj(myOrder.maxPriceWei)} test INJ</strong>
+              </div>
+              <div>
+                <span>最终应付</span>
+                <strong>
+                  {settled
+                    ? `${isWinner ? formatInj(clearingWei) : "0"} test INJ`
+                    : "待清算"}
+                </strong>
+              </div>
+              <div className="receipt-refund">
+                <span>可领取退款</span>
+                <strong>
+                  {settled ? `${formatInj(refundWei)} test INJ` : "待清算"}
+                </strong>
+              </div>
+            </div>
+            <WeiDebug
+              amount={settled ? formatInj(refundWei) : "待清算"}
+              wei={settled ? refundWei.toString() : "—"}
+            />
+            <button
+              className="action-button receipt-claim"
+              data-claimed={myOrder.refundClaimed}
+              type="button"
+              aria-busy={pendingAction === "claimRefund"}
+              disabled={
+                !settled ||
+                myOrder.refundClaimed ||
+                pendingAction === "claimRefund"
+              }
+              onClick={() => runWrite("claimRefund")}
+            >
+              {pendingAction === "claimRefund" ? (
+                <LoaderCircle className="spin" size={17} aria-hidden="true" />
+              ) : myOrder.refundClaimed ? (
+                <CheckCircle2 size={17} aria-hidden="true" />
+              ) : (
+                <CircleDollarSign size={17} aria-hidden="true" />
+              )}
+              {pendingAction === "claimRefund"
+                ? "等待钱包确认…"
+                : myOrder.refundClaimed
+                  ? "退款已领取"
+                  : !settled
+                    ? "清算完成后才能领取"
+                    : refundWei === 0n
+                      ? "无需退款 · 点击标记领取"
+                      : `领取 ${formatInj(refundWei)} test INJ`}
+            </button>
+            {txFeedback?.action === "claimRefund" &&
+            txFeedback.kind === "error" ? (
+              <div className="tx-error" role="status">
+                <AlertCircle size={16} aria-hidden="true" />
+                <p>{txFeedback.message}</p>
+              </div>
+            ) : null}
+            {txFeedback?.action === "claimRefund" &&
+            txFeedback.kind === "confirmed" &&
+            txFeedback.hash ? (
+              <div className="tx-proof">
+                <div>
+                  <SourceTag tone="onchain">Onchain</SourceTag>
+                  <CopyValue
+                    value={txFeedback.hash}
+                    display={shortenAddress(txFeedback.hash)}
+                    label="复制领取交易哈希"
+                  />
+                </div>
+                <ExplorerLink
+                  hash={txFeedback.hash}
+                  display="Explorer"
+                  label="领取交易"
+                />
+              </div>
+            ) : null}
+            <p className="honesty-note">
+              <AlertCircle size={14} aria-hidden="true" />
+              这是一笔主动领取交易。其他人的领取失败不会影响你。
+            </p>
+          </>
+        ) : isSelectedFactory && view.settlement ? (
+          <>
+            <div className="receipt-lines">
+              <div>
+                <span>角色</span>
+                <strong>中标工厂</strong>
+              </div>
+              <div className="receipt-refund">
+                <span>可领取应收</span>
+                <strong>{formatInj(receivableWei)} test INJ</strong>
+              </div>
+            </div>
+            <WeiDebug
+              amount={formatInj(receivableWei)}
+              wei={receivableWei.toString()}
+            />
+            <button
+              className="action-button receipt-claim"
+              data-claimed={view.settlement.factoryPayoutClaimed}
+              type="button"
+              aria-busy={pendingAction === "claimPayout"}
+              disabled={
+                view.settlement.factoryPayoutClaimed ||
+                pendingAction === "claimPayout"
+              }
+              onClick={() => runWrite("claimPayout")}
+            >
+              {pendingAction === "claimPayout" ? (
+                <LoaderCircle className="spin" size={17} aria-hidden="true" />
+              ) : view.settlement.factoryPayoutClaimed ? (
+                <CheckCircle2 size={17} aria-hidden="true" />
+              ) : (
+                <CircleDollarSign size={17} aria-hidden="true" />
+              )}
+              {pendingAction === "claimPayout"
+                ? "等待钱包确认…"
+                : view.settlement.factoryPayoutClaimed
+                  ? "货款已领取"
+                  : `领取工厂应收 ${formatInj(receivableWei)} test INJ`}
+            </button>
+            {txFeedback?.action === "claimPayout" &&
+            txFeedback.kind === "error" ? (
+              <div className="tx-error" role="status">
+                <AlertCircle size={16} aria-hidden="true" />
+                <p>{txFeedback.message}</p>
+              </div>
+            ) : null}
+            {txFeedback?.action === "claimPayout" &&
+            txFeedback.kind === "confirmed" &&
+            txFeedback.hash ? (
+              <div className="tx-proof">
+                <div>
+                  <SourceTag tone="onchain">Onchain</SourceTag>
+                  <CopyValue
+                    value={txFeedback.hash}
+                    display={shortenAddress(txFeedback.hash)}
+                    label="复制领取交易哈希"
+                  />
+                </div>
+                <ExplorerLink
+                  hash={txFeedback.hash}
+                  display="Explorer"
+                  label="领取交易"
+                />
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <div className="receipt-lines">
+              <div>
+                <span>订单</span>
+                <strong>当前钱包在此 Campaign 没有订单</strong>
+              </div>
+            </div>
+            <p className="honesty-note">
+              <AlertCircle size={14} aria-hidden="true" />
+              只有下单地址与中标工厂有领取操作；结果页保持只读。
+            </p>
+          </>
+        )}
       </section>
 
       <section className="surface evidence-list">
         <SectionLabel index="03">链上证据</SectionLabel>
         <div className="evidence-row">
           <span>Campaign tx</span>
-          <CopyValue
-            value={campaignTx}
-            display="0x98E2…B771"
-            label="复制 Campaign 交易哈希"
-          />
-          <ExplorerLink
-            hash={campaignTx}
-            display="Explorer"
-            label="Campaign 交易"
-          />
+          {onchain ? (
+            view.openedTxHash ? (
+              <>
+                <CopyValue
+                  value={view.openedTxHash}
+                  display={shortenAddress(view.openedTxHash)}
+                  label="复制 Campaign 交易哈希"
+                />
+                <ExplorerLink
+                  hash={view.openedTxHash}
+                  display="Explorer"
+                  label="Campaign 交易"
+                />
+              </>
+            ) : (
+              <span>—</span>
+            )
+          ) : (
+            <>
+              <CopyValue
+                value={campaignTx}
+                display="0x98E2…B771"
+                label="复制 Campaign 交易哈希"
+              />
+              <ExplorerLink
+                hash={campaignTx}
+                display="Explorer"
+                label="Campaign 交易"
+              />
+            </>
+          )}
         </div>
         <div className="evidence-row">
           <span>Settlement tx</span>
-          <CopyValue
-            value={settlementTx}
-            display="0x43a9…ec18"
-            label="复制清算交易哈希"
-          />
-          <ExplorerLink
-            hash={settlementTx}
-            display="Explorer"
-            label="清算交易"
-          />
+          {onchain ? (
+            settled && view.settledTxHash ? (
+              <>
+                <CopyValue
+                  value={view.settledTxHash}
+                  display={shortenAddress(view.settledTxHash)}
+                  label="复制清算交易哈希"
+                />
+                <ExplorerLink
+                  hash={view.settledTxHash}
+                  display="Explorer"
+                  label="清算交易"
+                />
+              </>
+            ) : (
+              <span>清算未发生</span>
+            )
+          ) : (
+            <>
+              <CopyValue
+                value={settlementTx}
+                display="0x43a9…ec18"
+                label="复制清算交易哈希"
+              />
+              <ExplorerLink
+                hash={settlementTx}
+                display="Explorer"
+                label="清算交易"
+              />
+            </>
+          )}
         </div>
         <div className="evidence-row">
           <span>Manifest hash</span>
           <CopyValue
-            value={manifestHash}
-            display="0x7a19…be42"
+            value={view.manifestHash}
+            display={shortenAddress(view.manifestHash)}
             label="复制完整 Manifest hash"
           />
           <SourceTag tone="human">HUMAN CONFIRMED</SourceTag>

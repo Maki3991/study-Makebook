@@ -1,8 +1,10 @@
 "use client";
 
-import { ArrowRight, Settings2, WalletCards } from "lucide-react";
+import { ArrowRight, Check, Settings2, WalletCards } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { useCampaignData } from "../lib/chain/use-campaign";
+import { shortenAddress, useWallet } from "../lib/chain/wallet";
 import { storySteps, type StoryStepId } from "../lib/mock-data";
 import {
   DemoPanel,
@@ -30,9 +32,25 @@ export function MakebookApp() {
     useState<DemoSettlementMode>("success");
   const [signatureMode, setSignatureMode] =
     useState<DemoSignatureMode>("success");
+  // 真实浏览器钱包（EIP-1193）；header 按钮连接后显示截断地址、点击复制。
+  const { wallet, connecting, connect } = useWallet();
+  const [walletCopied, setWalletCopied] = useState(false);
+  // hero 的"测试网资金订单"固定读 success Campaign 的 ordersLength（降级时回落 fixtures）。
+  const { view: heroCampaign } = useCampaignData("success");
   const activeIndex = storySteps.findIndex((step) => step.id === activeStep);
   const active = storySteps[activeIndex];
   const next = storySteps[activeIndex + 1];
+
+  async function copyWalletAddress() {
+    if (!wallet) return;
+    try {
+      await navigator.clipboard.writeText(wallet.address);
+      setWalletCopied(true);
+      window.setTimeout(() => setWalletCopied(false), 1200);
+    } catch {
+      setWalletCopied(false);
+    }
+  }
 
   function goToStep(stepId: StoryStepId) {
     const targetIndex = storySteps.findIndex((step) => step.id === stepId);
@@ -67,6 +85,7 @@ export function MakebookApp() {
       return (
         <CampaignScreen
           readState={readState}
+          mode={settlementMode}
           onRetry={() => {
             setReadState("loading");
             window.setTimeout(() => setReadState("ready"), 900);
@@ -79,10 +98,18 @@ export function MakebookApp() {
         <OrderScreen
           networkState={networkState}
           signatureMode={signatureMode}
+          wallet={wallet}
         />
       );
     }
-    return <SettlementScreen key={settlementMode} mode={settlementMode} />;
+    return (
+      <SettlementScreen
+        key={settlementMode}
+        mode={settlementMode}
+        wallet={wallet}
+        onConnect={connect}
+      />
+    );
   }
 
   return (
@@ -106,9 +133,25 @@ export function MakebookApp() {
             <Settings2 size={15} strokeWidth={1.8} aria-hidden="true" />
             <span className="header-action-label">演示设置</span>
           </button>
-          <button className="wallet-pill" type="button" aria-label="连接钱包">
-            <WalletCards size={15} strokeWidth={1.8} aria-hidden="true" />
-            <span className="header-action-label">连接钱包</span>
+          <button
+            className="wallet-pill"
+            type="button"
+            aria-label={wallet ? `复制钱包地址 ${wallet.address}` : "连接钱包"}
+            aria-busy={connecting}
+            onClick={wallet ? copyWalletAddress : connect}
+          >
+            {walletCopied ? (
+              <Check size={15} strokeWidth={1.8} aria-hidden="true" />
+            ) : (
+              <WalletCards size={15} strokeWidth={1.8} aria-hidden="true" />
+            )}
+            <span className="header-action-label">
+              {wallet
+                ? shortenAddress(wallet.address)
+                : connecting
+                  ? "连接中…"
+                  : "连接钱包"}
+            </span>
           </button>
         </div>
       </header>
@@ -196,7 +239,9 @@ export function MakebookApp() {
                   <span>真实评论输入</span>
                 </div>
                 <div>
-                  <strong>06</strong>
+                  <strong>
+                    {String(heroCampaign.ordersLength).padStart(2, "0")}
+                  </strong>
                   <span>测试网资金订单</span>
                 </div>
                 <div>
