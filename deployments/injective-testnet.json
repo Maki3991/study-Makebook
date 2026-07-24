@@ -4,17 +4,15 @@
   "rpc": "https://k8s.testnet.json-rpc.injective.network/",
   "explorer": "https://testnet.blockscout.injective.network/",
   "success": {
-    "address": "0x0000000000000000000000000000000000000000",
-    "manifestHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "manifestURI": "https://example.com/manifests/frame-01.json",
-    "deadline": 0,
-    "note": "占位：部署后由合约任务回填 address / manifestHash / deadline"
+    "address": "0x378bb7d08e92317ff8a5f7750bb7a91332bab03d",
+    "manifestHash": "0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec",
+    "manifestURI": "https://raw.githubusercontent.com/gmy20060609-jpg/ACL-team/main/public/manifests/frame-01.json",
+    "deadline": 1785016800
   },
   "failure": {
-    "address": "0x0000000000000000000000000000000000000000",
-    "manifestHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "manifestURI": "https://example.com/manifests/frame-01.json",
-    "deadline": 0,
-    "note": "占位：失败演示用 Campaign，MOQ=3 仅 2 单"
+    "address": "0x01c51b7c50dd0537933bf245b8a5ea6252735f51",
+    "manifestHash": "0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec",
+    "manifestURI": "https://raw.githubusercontent.com/gmy20060609-jpg/ACL-team/main/public/manifests/frame-01.json",
+    "deadline": 1785016800
   }
 }

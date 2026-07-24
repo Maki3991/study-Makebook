@@ -39,8 +39,8 @@ case "$NETWORK" in
   *) echo "未知网络: ${NETWORK}（应为 anvil 或 testnet）" >&2; exit 1 ;;
 esac
 
-# 加载 .env（若存在）
-if [[ -f "$ROOT/.env" ]]; then set -a; source "$ROOT/.env"; set +a; fi
+# 加载 .env（若存在）；显式传入的环境变量优先（已设置 OPERATOR_KEY 时跳过 .env）
+if [[ -z "${OPERATOR_KEY:-}" && -f "$ROOT/.env" ]]; then set -a; source "$ROOT/.env"; set +a; fi
 
 : "${MANIFEST_HASH:?需要在 .env 配置 MANIFEST_HASH（lib/schema 锚点值）}"
 : "${MANIFEST_URI:?需要在 .env 配置 MANIFEST_URI（manifest JSON 的公开 URL）}"
@@ -74,18 +74,86 @@ record() {
 
 addr_of() { "$CAST" wallet address --private-key "$1"; }
 
+# 用 curl 直连 JSON-RPC 读 receipt（--max-time 硬超时；cast receipt 在 Injective RPC 上会整个挂住）
+rpc_receipt() { # <tx> → receipt JSON 或空
+  curl -s --max-time 12 -X POST "$RPC_URL" -H 'content-type: application/json' \
+    -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getTransactionReceipt\",\"params\":[\"$1\"]}" \
+    | "$JQ" -c '.result // empty' 2>/dev/null
+}
+
+EXPLORER_API="${EXPLORER_API:-https://testnet.blockscout-api.injective.network}"
+
+# Blockscout 兜底确认（直接 RPC 的 receipt 经常看不到已上链交易）
+blockscout_status() { # <tx> → "1"/"0"/""
+  curl -s --max-time 12 "$EXPLORER_API/api?module=transaction&action=gettxreceiptstatus&txhash=$1" \
+    | "$JQ" -r '.result.status // empty' 2>/dev/null
+}
+
+# 等交易上链：0=成功 1=失败/超时。RPC receipt 为主，Blockscout 每 3 轮兜底
+wait_mined() {
+  local tx="$1" i st
+  for i in $(seq 1 50); do
+    st="$(rpc_receipt "$tx" | "$JQ" -r '.status // empty' 2>/dev/null)"
+    case "$st" in
+      0x1|1) return 0 ;;
+      0x0|0) return 1 ;;
+    esac
+    if (( i % 3 == 0 )); then
+      st="$(blockscout_status "$tx")"
+      case "$st" in
+        1) return 0 ;;
+        0) return 1 ;;
+      esac
+    fi
+    sleep 3
+  done
+  return 1
+}
+
+# 读取部署交易的 contractAddress
+wait_contract_address() {
+  local tx="$1" i addr
+  for i in $(seq 1 10); do
+    addr="$(rpc_receipt "$tx" | "$JQ" -r '.contractAddress // empty' 2>/dev/null)"
+    [[ -n "$addr" && "$addr" != "null" ]] && { echo "$addr"; return 0; }
+    sleep 2
+  done
+  return 1
+}
+
+# macOS 无 GNU timeout：后台跑 + 看门狗 kill，超时返回 124
+with_timeout() {
+  local secs="$1"; shift
+  "$@" & local pid=$!
+  local i=0
+  while (( i < secs )); do
+    kill -0 "$pid" 2>/dev/null || { wait "$pid"; return $?; }
+    sleep 1; i=$((i+1))
+  done
+  kill -9 "$pid" 2>/dev/null; wait "$pid" 2>/dev/null; return 124
+}
+
+# 带重试的广播：同一账户同一 nonce 的同一交易重发产生同一 hash，节点去重，安全
+broadcast() { # <cast send 参数...> → stdout: tx hash
+  local i out tx
+  for i in 1 2 3; do
+    out="$(with_timeout 90 "$CAST" send "$@" --async --json)" || out=""
+    tx="$(grep -oE '0x[0-9a-fA-F]{64}' <<<"$out" | head -1 || true)"
+    [[ -n "$tx" ]] && { echo "$tx"; return 0; }
+    log "广播第 ${i} 次失败或超时，3 秒后重试"
+    sleep 3
+  done
+  return 1
+}
+
 # send <campaign> <actorLabel> <privateKey> <contract> <sig> [args...] [--value Xether]
 send() {
   local campaign="$1" actor="$2" key="$3" contract="$4" sig="$5"; shift 5
-  local out tx
-  out="$("$CAST" send "$contract" "$sig" "$@" \
-    --private-key "$key" --rpc-url "$RPC_URL" "${GAS_FLAGS[@]}" --json)"
-  tx="$("$JQ" -r '.transactionHash' <<<"$out")"
-  local status
-  status="$("$JQ" -r '.status' <<<"$out")"
-  if [[ "$status" != "0x1" && "$status" != "1" ]]; then
-    echo "!! ${campaign} 交易失败（${sig}）: ${tx}" >&2; return 1
-  fi
+  local tx
+  tx="$(broadcast "$contract" "$sig" "$@" \
+    --private-key "$key" --rpc-url "$RPC_URL" "${GAS_FLAGS[@]}")" \
+    || { echo "!! ${campaign} 广播失败（${sig}）" >&2; return 1; }
+  wait_mined "$tx" || { echo "!! ${campaign} 交易未确认或已 revert（${sig}）: ${tx}" >&2; return 1; }
   record "$campaign" "$sig" "$actor" "$contract" "$tx"
   log "$campaign: $sig → $tx"
 }
@@ -93,43 +161,67 @@ send() {
 # ---------------------------------------------------------------- 部署与开盘
 
 deploy_campaign() { # <label> → stdout: 合约地址
-  local label="$1" out addr tx
-  out="$(cd "$ROOT/contracts" && "$FORGE" create \
-    src/MakebookCampaign.sol:MakebookCampaign \
-    --broadcast \
-    --rpc-url "$RPC_URL" --private-key "$OPERATOR_KEY" "${GAS_FLAGS[@]}" \
-    --constructor-args "$OPERATOR_ADDR" "$MANIFEST_HASH" "$MANIFEST_URI" "$DEADLINE")"
-  addr="$(grep -oE 'Deployed to: 0x[0-9a-fA-F]+' <<<"$out" | awk '{print $3}')"
-  tx="$(grep -oE 'Transaction hash: 0x[0-9a-fA-F]+' <<<"$out" | awk '{print $3}')"
-  [[ -n "$addr" && -n "$tx" ]] || { echo "!! 部署输出解析失败: $out" >&2; return 1; }
+  local label="$1" bytecode args tx addr
+  # 不用 forge create（其 receipt 等待在 Injective RPC 上不可靠），改用 cast --create + 看门狗重试
+  [[ -f "$ROOT/contracts/out/MakebookCampaign.sol/MakebookCampaign.json" ]] || \
+    (cd "$ROOT/contracts" && "$FORGE" build >/dev/null)
+  bytecode="$("$JQ" -r '.bytecode.object' "$ROOT/contracts/out/MakebookCampaign.sol/MakebookCampaign.json")"
+  args="$("$CAST" abi-encode "constructor(address,bytes32,string,uint64)" \
+    "$OPERATOR_ADDR" "$MANIFEST_HASH" "$MANIFEST_URI" "$DEADLINE")"
+  tx="$(broadcast --private-key "$OPERATOR_KEY" --rpc-url "$RPC_URL" "${GAS_FLAGS[@]}" \
+    --create "${bytecode}${args:2}")" || { echo "!! ${label} 部署广播失败" >&2; return 1; }
+  wait_mined "$tx" || { echo "!! ${label} 部署交易未确认或已 revert: ${tx}" >&2; return 1; }
+  addr="$(wait_contract_address "$tx")" || { echo "!! ${label} 无法读取 contractAddress: ${tx}" >&2; return 1; }
   record "$label" "deploy(operator=$OPERATOR_ADDR,manifestHash=$MANIFEST_HASH,deadline=$DEADLINE)" "operator" "$addr" "$tx"
   log "$label: 部署于 $addr (tx $tx)"
   echo "$addr"
 }
 
-setup_campaign() { # <label> <addr>
+# 带看门狗的合约读（cast call 也可能卡）
+read_call() { with_timeout 30 "$CAST" call "$@" --rpc-url "$RPC_URL" 2>/dev/null; }
+
+setup_campaign() { # <label> <addr>（幂等：已完成的步骤自动跳过，支持中断续跑）
   local label="$1" addr="$2"
-  send "$label" "operator" "$OPERATOR_KEY" "$addr" "registerFactory(address,bytes32)" "$NORTH_ADDR" "$NORTH_PROFILE_HASH"
-  send "$label" "operator" "$OPERATOR_KEY" "$addr" "registerFactory(address,bytes32)" "$LOOM_ADDR" "$LOOM_PROFILE_HASH"
-  send "$label" "north" "$NORTH_KEY" "$addr" "submitQuote(bytes32,(uint32,uint256)[])" "$NORTH_QUOTE_HASH" "[(3,$NORTH_PRICE_WEI)]"
-  send "$label" "loom" "$LOOM_KEY" "$addr" "submitQuote(bytes32,(uint32,uint256)[])" "$LOOM_QUOTE_HASH" "[(3,$LOOM_PRICE_WEI)]"
-  send "$label" "operator" "$OPERATOR_KEY" "$addr" "openCampaign()"
+  if [[ "$(read_call "$addr" "isRegisteredFactory(address)(bool)" "$NORTH_ADDR")" == "true" ]]; then
+    log "$label: North 已登记，跳过 registerFactory"
+  else
+    send "$label" "operator" "$OPERATOR_KEY" "$addr" "registerFactory(address,bytes32)" "$NORTH_ADDR" "$NORTH_PROFILE_HASH"
+  fi
+  if [[ "$(read_call "$addr" "isRegisteredFactory(address)(bool)" "$LOOM_ADDR")" == "true" ]]; then
+    log "$label: Loom 已登记，跳过 registerFactory"
+  else
+    send "$label" "operator" "$OPERATOR_KEY" "$addr" "registerFactory(address,bytes32)" "$LOOM_ADDR" "$LOOM_PROFILE_HASH"
+  fi
+  if [[ "$(read_call "$addr" "hasQuoted(address)(bool)" "$NORTH_ADDR")" == "true" ]]; then
+    log "$label: North 已报价，跳过 submitQuote"
+  else
+    send "$label" "north" "$NORTH_KEY" "$addr" "submitQuote(bytes32,(uint32,uint256)[])" "$NORTH_QUOTE_HASH" "[(3,$NORTH_PRICE_WEI)]"
+  fi
+  if [[ "$(read_call "$addr" "hasQuoted(address)(bool)" "$LOOM_ADDR")" == "true" ]]; then
+    log "$label: Loom 已报价，跳过 submitQuote"
+  else
+    send "$label" "loom" "$LOOM_KEY" "$addr" "submitQuote(bytes32,(uint32,uint256)[])" "$LOOM_QUOTE_HASH" "[(3,$LOOM_PRICE_WEI)]"
+  fi
+  local st; st="$(read_call "$addr" "state()(uint8)" | awk '{print $1}')"
+  if [[ "$st" != "0" && -n "$st" ]]; then
+    log "$label: 已开盘（state=${st}），跳过 openCampaign"
+  else
+    send "$label" "operator" "$OPERATOR_KEY" "$addr" "openCampaign()"
+  fi
 }
 
-place_order() { # <label> <addr> <buyerLabel> <key> <priceEther>
+place_order() { # <label> <addr> <buyerLabel> <key> <priceEther>（幂等：已下单自动跳过）
   local label="$1" addr="$2" buyer="$3" key="$4" price="$5"
+  local buyer_addr; buyer_addr="$(addr_of "$key")"
+  if read_call "$addr" "getOrder(address)((address,bytes32,uint256,bool))" "$buyer_addr" >/dev/null 2>&1; then
+    log "$label: ${buyer} 已下单，跳过"
+    return 0
+  fi
   local wei; wei="$("$CAST" --to-wei "$price" ether)"
   send "$label" "$buyer" "$key" "$addr" "placeOrder(bytes32,uint256)" "$MANIFEST_HASH" "$wei" --value "${price}ether"
 }
 
-up() {
-  log "=== ${NETWORK} up：部署两套 Campaign（deadline=${DEADLINE}）==="
-  SUCCESS_ADDR="$(deploy_campaign success)"
-  FAILURE_ADDR="$(deploy_campaign failure)"
-
-  setup_campaign success "$SUCCESS_ADDR"
-  setup_campaign failure "$FAILURE_ADDR"
-
+place_all_orders() {
   # 成功线：A–E 五单（fixtures/success.json）
   place_order success "$SUCCESS_ADDR" buyerA "$BUYER_A_KEY" 0.026
   place_order success "$SUCCESS_ADDR" buyerB "$BUYER_B_KEY" 0.024
@@ -139,8 +231,9 @@ up() {
   # 失败线：A、B 两单（fixtures/failure.json，MOQ=3 达不到）
   place_order failure "$FAILURE_ADDR" buyerA "$BUYER_A_KEY" 0.026
   place_order failure "$FAILURE_ADDR" buyerB "$BUYER_B_KEY" 0.024
+}
 
-  # 回填状态文件（testnet 即 deployments/injective-testnet.json）
+backfill_state() {
   "$JQ" -cn \
     --argjson chainId "$("$CAST" chain-id --rpc-url "$RPC_URL")" \
     --arg network "$NETWORK_LABEL" --arg rpc "$RPC_URL" \
@@ -153,12 +246,36 @@ up() {
       failure:{address:$faddr,manifestHash:$mhash,manifestURI:$muri,deadline:$deadline}}' \
     > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
   log "地址已回填 $STATE_FILE"
-  log "receipts: $RECEIPTS"
+}
 
+maybe_verify() {
   if [[ "$NETWORK" == "testnet" ]]; then
     verify_contract "$SUCCESS_ADDR" || log "verify success 失败（可稍后重试：$0 testnet verify）"
     verify_contract "$FAILURE_ADDR" || log "verify failure 失败（可稍后重试：$0 testnet verify）"
   fi
+}
+
+up() {
+  log "=== ${NETWORK} up：部署两套 Campaign（deadline=${DEADLINE}）==="
+  SUCCESS_ADDR="$(deploy_campaign success)"
+  FAILURE_ADDR="$(deploy_campaign failure)"
+
+  setup_campaign success "$SUCCESS_ADDR"
+  setup_campaign failure "$FAILURE_ADDR"
+  place_all_orders
+  backfill_state
+  log "receipts: $RECEIPTS"
+  maybe_verify
+}
+
+# 部署中断后的续跑：状态文件已有两套合约地址时，只做登记/报价/开盘/下单 + verify
+setup() {
+  require_state
+  log "=== ${NETWORK} setup：续跑登记/报价/开盘/下单 ==="
+  setup_campaign success "$SUCCESS_ADDR"
+  setup_campaign failure "$FAILURE_ADDR"
+  place_all_orders
+  maybe_verify
 }
 
 verify_contract() { # <addr>
@@ -246,6 +363,7 @@ require_keys() {
 
 case "$PHASE" in
   up) require_keys; up ;;
+  setup) require_keys; setup ;;
   settle) require_keys; settle_all ;;
   claims) require_keys; claims ;;
   status) status ;;
