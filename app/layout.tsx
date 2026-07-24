@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource-variable/noto-sans-sc/wght.css";
 import "./globals.css";
+import "./art-direction.css";
 
 export const metadata: Metadata = {
   title: "MAKEBOOK · 造物簿",
@@ -15,7 +17,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#eeece5",
+  themeColor: "#DFE3E6",
 };
 
 export default function RootLayout({
