@@ -21,22 +21,33 @@ import {
 import { useState, type CSSProperties } from "react";
 import { parseUnits, type Address, type Hex } from "viem";
 import {
+  createInjPublicClient,
   INJECTIVE_EVM_TESTNET_CHAIN_ID,
   INJ_DECIMALS,
 } from "../lib/chain/chain";
+import { isDemoMode } from "../lib/chain/deployments";
+import { readOrder, type Order } from "../lib/chain/reads";
 import {
   formatInj,
   useCampaignData,
   useCountdown,
 } from "../lib/chain/use-campaign";
 import {
+  describePlaceOrderError,
   describeWriteError,
+  placeOrder,
+  requestAccounts,
   shortenAddress,
   switchToInjectiveNetwork,
   writeCampaignAction,
   type CampaignWriteAction,
   type ConnectedWallet,
 } from "../lib/chain/wallet";
+import {
+  compileCommentsViaApi,
+  type CompileStats,
+  type ProductCandidate,
+} from "../lib/compile-client";
 import { candidates, sourceComments } from "../lib/mock-data";
 import type {
   ContractReadState,
@@ -71,6 +82,47 @@ function decimalToWei(value: string) {
   ).toString();
 }
 
+// AI 候选 → 现有候选卡视图模型（结构与 mock 一致，只换数据源）。
+interface StudioCandidate {
+  id: string;
+  name: string;
+  /** mock 为百分比数字字符串；真实数据为 high/medium/low 枚举文本。 */
+  confidence: string;
+  /** true 时按枚举文本展示，不追加 % 与 / 100 后缀。 */
+  confidenceIsEnum: boolean;
+  specs: string[];
+  evidence: string[];
+  unknown: string;
+}
+
+const mockStudioCandidates: StudioCandidate[] = candidates.map((candidate) => ({
+  id: candidate.id,
+  name: candidate.name,
+  confidence: String(candidate.confidence),
+  confidenceIsEnum: false,
+  specs: candidate.specs,
+  evidence: candidate.evidence,
+  unknown: candidate.unknown,
+}));
+
+/** /api/compile 的 ProductCandidate → 候选卡形状；编号沿用 FRAME-0N（FRAME-01 = 首选方向）。 */
+function toStudioCandidate(
+  candidate: ProductCandidate,
+  index: number,
+): StudioCandidate {
+  return {
+    id: `FRAME-0${index + 1}`,
+    name: candidate.title,
+    confidence: candidate.confidence,
+    confidenceIsEnum: true,
+    specs: candidate.specs.map((spec) => `${spec.key}: ${spec.value}`),
+    evidence: candidate.evidence.map(
+      (item) => `${item.commentId} · "${item.excerpt}"`,
+    ),
+    unknown: candidate.unknowns.join("; "),
+  };
+}
+
 export function StudioScreen({
   confirmed,
   onConfirmedChange,
@@ -80,13 +132,40 @@ export function StudioScreen({
 }) {
   const [selectedId, setSelectedId] = useState("FRAME-01");
   const [status, setStatus] = useState<"idle" | "compiling" | "ready">("ready");
+  // 真实编译结果：apiCandidates 非空即替换 mock 候选；fixture 标记 FR-AI-07 降级来源；
+  // compileFailed 表示 /api/compile 失败/超时，回落 mock 并标 Fixture / OFF-CHAIN DEMO。
+  const [apiCandidates, setApiCandidates] = useState<StudioCandidate[] | null>(
+    null,
+  );
+  const [stats, setStats] = useState<CompileStats | null>(null);
+  const [fixture, setFixture] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [compileFailed, setCompileFailed] = useState(false);
+  const displayed = apiCandidates ?? mockStudioCandidates;
   const selected =
-    candidates.find((candidate) => candidate.id === selectedId) ?? candidates[0];
+    displayed.find((candidate) => candidate.id === selectedId) ?? displayed[0];
 
-  function compileDemand() {
+  async function compileDemand() {
+    if (status === "compiling") return;
     setStatus("compiling");
     onConfirmedChange(false);
-    window.setTimeout(() => setStatus("ready"), 850);
+    try {
+      const output = await compileCommentsViaApi();
+      setApiCandidates(output.result.candidates.map(toStudioCandidate));
+      setStats(output.stats);
+      setFixture(output.fixture);
+      setApiError(output.error ?? null);
+      setCompileFailed(false);
+    } catch {
+      // /api/compile 失败/超时 → 回落 mock 候选并标 Fixture / OFF-CHAIN DEMO。
+      setApiCandidates(null);
+      setStats(null);
+      setFixture(false);
+      setApiError(null);
+      setCompileFailed(true);
+    } finally {
+      setStatus("ready");
+    }
   }
 
   return (
@@ -95,8 +174,13 @@ export function StudioScreen({
         <div className="studio-source-head">
           <SectionLabel index="01">原始需求</SectionLabel>
           <div className="studio-source-count">
-            <strong>20</strong>
-            <span>VALID INPUTS</span>
+            <strong>{stats ? stats.valid : 20}</strong>
+            <span>
+              VALID INPUTS
+              {stats && stats.duplicates > 0
+                ? ` · 已剔除 ${stats.duplicates} 条重复`
+                : ""}
+            </span>
           </div>
         </div>
         <p className="studio-source-intro">
@@ -129,7 +213,13 @@ export function StudioScreen({
         </button>
         <p className="honesty-note">
           <AlertCircle size={14} aria-hidden="true" />
-          当前展示固定演示样本；接入 AI 后仍保留相同结构与人工闸门。
+          {compileFailed
+            ? "AI 编译请求失败或超时，当前展示固定演示样本（Fixture / OFF-CHAIN DEMO）。"
+            : apiCandidates
+              ? fixture
+                ? `AI 未配置或编译超时，已降级为固定 Fixture 样本${apiError ? `（${apiError}）` : ""}；结构与人工闸门不变。`
+                : "评论经脱敏后由 AI 编译；候选仅作建议，人工确认后才进入资金流程。"
+              : "当前展示固定演示样本；接入 AI 后仍保留相同结构与人工闸门。"}
         </p>
       </section>
 
@@ -140,9 +230,13 @@ export function StudioScreen({
             <p>AI 提取三个可制造方向，选择一项进入人工复核。</p>
           </div>
           <SourceTag tone="ai">AI Generated</SourceTag>
+          {fixture ? <SourceTag tone="offchain">Fixture</SourceTag> : null}
+          {compileFailed ? (
+            <SourceTag tone="offchain">Fixture · Off-chain Demo</SourceTag>
+          ) : null}
         </div>
         <div className="candidate-strip">
-          {candidates.map((candidate, index) => (
+          {displayed.map((candidate, index) => (
             <button
               className="candidate-mini"
               data-selected={candidate.id === selectedId}
@@ -160,7 +254,7 @@ export function StudioScreen({
               </span>
               <span className="candidate-score">
                 {candidate.confidence}
-                <small>%</small>
+                {candidate.confidenceIsEnum ? null : <small>%</small>}
               </span>
             </button>
           ))}
@@ -172,17 +266,18 @@ export function StudioScreen({
               <div className="candidate-title-meta">
                 <span className="mono-note">{selected.id} / MANIFEST DRAFT</span>
                 <SourceTag tone="ai">AI Generated</SourceTag>
+                {fixture ? <SourceTag tone="offchain">Fixture</SourceTag> : null}
               </div>
               <h2>{selected.name}</h2>
               <p>把分散的“想要”压缩成可以报价、打样和确认的规格草案。</p>
             </div>
             <div
               className="confidence-readout"
-              aria-label={`置信度 ${selected.confidence}%`}
+              aria-label={`置信度 ${selected.confidence}${selected.confidenceIsEnum ? "" : "%"}`}
             >
               <span>CONFIDENCE</span>
               <strong>{selected.confidence}</strong>
-              <small>/ 100</small>
+              {selected.confidenceIsEnum ? null : <small>/ 100</small>}
             </div>
           </div>
 
@@ -723,10 +818,35 @@ export function OrderScreen({
   >("idle");
   const [switching, setSwitching] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
+  // 真实下单状态：链上 tx hash、§2.1 映射后的错误文案、预检查到的已有订单。
+  const [orderTxHash, setOrderTxHash] = useState<Hex | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [duplicateOrder, setDuplicateOrder] = useState<Order | null>(null);
+  const [connectingWallet, setConnectingWallet] = useState(false);
+  // 下单固定走 success Campaign（FRAME-01 市场）；reload 用于成交后刷新链上数据。
+  const { view, reload } = useCampaignData("success");
   // 连接钱包后以真实 chainId 为准；未连接时沿用 demo-panel 的网络演示开关（spec 003 第 3 节）。
   const wrongNetwork = wallet
     ? wallet.chainId !== INJECTIVE_EVM_TESTNET_CHAIN_ID
     : networkState === "wrong";
+  // 链上已存在的本人订单（OrderPlaced 事件 + getOrder 合并结果，接口文档 2.2）。
+  const myOrder = wallet
+    ? view.orders.find(
+        (order) => order.buyer.toLowerCase() === wallet.address.toLowerCase(),
+      )
+    : undefined;
+  const existingOrder = duplicateOrder ?? myOrder ?? null;
+  const existingOrderTxHash = myOrder?.txHash ?? null;
+  const walletAddress = wallet?.address;
+  // 切换钱包账户后清空上一账户的下单状态（render 期调节，替代 effect）。
+  const [prevWalletAddress, setPrevWalletAddress] = useState(walletAddress);
+  if (prevWalletAddress !== walletAddress) {
+    setPrevWalletAddress(walletAddress);
+    setDuplicateOrder(null);
+    setOrderTxHash(null);
+    setOrderError(null);
+    setStatus("idle");
+  }
   const clearingPrice = 0.019;
   const numericPrice = Number(maxPrice) || 0;
   const estimatedRefund = Math.max(numericPrice - clearingPrice, 0);
@@ -735,9 +855,12 @@ export function OrderScreen({
     publicAcknowledged &&
     numericPrice > 0 &&
     !wrongNetwork &&
+    !existingOrder &&
     status === "idle";
   const orderDisabled =
-    status === "pending" || (status === "idle" && !canSubmit);
+    status === "pending" ||
+    connectingWallet ||
+    (status === "idle" && !canSubmit);
 
   async function switchNetwork() {
     if (switching) return;
@@ -752,13 +875,72 @@ export function OrderScreen({
     }
   }
 
-  function submitOrder() {
-    if (!canSubmit) return;
+  // 未连接钱包 / 合约未部署时的 demo 模拟路径（演示用；成功态标 OFF-CHAIN DEMO）。
+  function runDemoSimulation() {
     setStatus("pending");
     window.setTimeout(
       () => setStatus(signatureMode === "reject" ? "error" : "success"),
       1200,
     );
+  }
+
+  async function submitOrder() {
+    if (!canSubmit) return;
+    if (!wallet) {
+      // 未连接钱包 → 触发连接；连接成功后本次不提交，确认金额再点一次走真实流程。
+      // 用户拒绝连接或未安装钱包时回落 demo 模拟（标 OFF-CHAIN DEMO）。
+      setConnectingWallet(true);
+      let accounts: Address[] = [];
+      try {
+        accounts = await requestAccounts();
+      } catch {
+        accounts = [];
+      } finally {
+        setConnectingWallet(false);
+      }
+      if (accounts.length === 0) runDemoSimulation();
+      return;
+    }
+    if (isDemoMode) {
+      // 合约地址为零地址（未部署）：不发真实交易，走 demo 模拟。
+      runDemoSimulation();
+      return;
+    }
+    setStatus("pending");
+    setOrderError(null);
+    try {
+      // 金额 wei（bigint），parseUnits 转换，禁止浮点（INV-09）。
+      const maxPriceWei = parseUnits(maxPrice, INJ_DECIMALS);
+      // 提交前用 getOrder 预检 DuplicateOrder（接口文档 2.1）；
+      // 预检读取失败不阻塞提交，合约仍会强制校验并按 revert 映射提示。
+      try {
+        const prior = await readOrder(
+          createInjPublicClient(),
+          view.address,
+          wallet.address,
+        );
+        if (prior) {
+          setDuplicateOrder(prior);
+          setStatus("idle");
+          return;
+        }
+      } catch {
+        // 预检 RPC 故障：继续提交，由合约 revert 兜底。
+      }
+      const { hash } = await placeOrder(
+        view.address,
+        wallet.address,
+        view.manifestHash,
+        maxPriceWei,
+      );
+      setOrderTxHash(hash);
+      setStatus("success");
+      // 触发 Campaign 数据刷新（订单数 / 需求曲线 / My Receipt）。
+      reload();
+    } catch (err) {
+      setOrderError(describePlaceOrderError(err));
+      setStatus("error");
+    }
   }
 
   return (
@@ -950,35 +1132,73 @@ export function OrderScreen({
             : status === "success"
               ? "订单已上链 · 查看交易"
               : status === "error"
-                ? "签名已取消 · 重新尝试"
-              : `签名并预锁 ${numericPrice.toFixed(3)} test INJ`}
+                ? orderError
+                  ? "下单失败 · 重新尝试"
+                  : "签名已取消 · 重新尝试"
+                : existingOrder
+                  ? "你已在当前 Campaign 下过单"
+                  : `签名并预锁 ${numericPrice.toFixed(3)} test INJ`}
         </button>
+
+        {existingOrder && status !== "success" ? (
+          <div className="tx-proof">
+            <div>
+              <SourceTag tone="onchain">Onchain</SourceTag>
+              <span>
+                你已在当前 Campaign 下过单，每个钱包限 1 单。预锁上限{" "}
+                {formatInj(existingOrder.maxPriceWei)} test INJ。
+              </span>
+            </div>
+            {existingOrderTxHash ? (
+              <ExplorerLink
+                hash={existingOrderTxHash}
+                display="Explorer"
+                label="订单交易"
+              />
+            ) : null}
+          </div>
+        ) : null}
 
         {status === "error" ? (
           <div className="tx-error" role="status">
             <AlertCircle size={16} aria-hidden="true" />
             <p>
-              你取消了钱包签名；没有创建订单，也没有资金进入合约。
+              {orderError ??
+                "你取消了钱包签名；没有创建订单，也没有资金进入合约。"}
             </p>
           </div>
         ) : null}
 
         {status === "success" ? (
-          <div className="tx-proof">
-            <div>
-              <SourceTag tone="onchain">Onchain</SourceTag>
-              <CopyValue
-                value={orderTx}
-                display="0xb7e4…9c21"
-                label="复制完整交易哈希"
+          <>
+            <div className="tx-proof">
+              <div>
+                {orderTxHash ? (
+                  <SourceTag tone="onchain">Onchain</SourceTag>
+                ) : (
+                  <SourceTag tone="offchain">Off-chain Demo</SourceTag>
+                )}
+                <CopyValue
+                  value={orderTxHash ?? orderTx}
+                  display={
+                    orderTxHash ? shortenAddress(orderTxHash) : "0xb7e4…9c21"
+                  }
+                  label="复制完整交易哈希"
+                />
+              </div>
+              <ExplorerLink
+                hash={orderTxHash ?? orderTx}
+                display="Explorer"
+                label="订单交易"
               />
             </div>
-            <ExplorerLink
-              hash={orderTx}
-              display="Explorer"
-              label="订单交易"
-            />
-          </div>
+            {orderTxHash ? null : (
+              <p className="honesty-note">
+                <AlertCircle size={14} aria-hidden="true" />
+                演示数据：以上为模拟交易哈希，未提交到 Injective 链上。
+              </p>
+            )}
+          </>
         ) : null}
       </section>
     </div>
