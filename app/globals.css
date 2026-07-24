@@ -24,6 +24,11 @@
   --radius-md: 8px;
   --radius-lg: 10px;
   --shadow-soft: 0 6px 20px rgba(27, 28, 26, 0.055);
+  --text-caption: 11px;
+  --text-label: 12px;
+  --text-body: 14px;
+  --text-body-lg: 15px;
+  --text-subtitle: 18px;
 }
 
 @theme inline {
@@ -190,6 +195,11 @@ textarea:focus-visible {
   content: "";
 }
 
+.network-name-long,
+.header-action-label {
+  display: none;
+}
+
 .wallet-pill {
   display: grid;
   min-width: 44px;
@@ -243,6 +253,11 @@ textarea:focus-visible {
 
 .story-step[data-done="true"] {
   color: var(--blue);
+}
+
+.story-step[data-locked="true"] {
+  cursor: not-allowed;
+  opacity: 0.38;
 }
 
 .story-number {
@@ -307,8 +322,33 @@ textarea:focus-visible {
   max-width: 38ch;
   margin: 12px 0 0;
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: var(--text-body);
   line-height: 1.62;
+}
+
+.screen-task {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  max-width: 42ch;
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+}
+
+.screen-task span {
+  color: var(--blue);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.screen-task strong {
+  font-size: 13px;
+  font-weight: 620;
+  line-height: 1.4;
 }
 
 .screen-stack {
@@ -333,7 +373,7 @@ textarea:focus-visible {
   margin-bottom: 14px;
   color: var(--ink-soft);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 10px;
+  font-size: var(--text-caption);
   font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -356,7 +396,7 @@ textarea:focus-visible {
 .mono-note {
   color: rgba(18, 19, 19, 0.55);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -371,7 +411,7 @@ textarea:focus-visible {
   color: var(--ink);
   background: var(--paper-deep);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -472,7 +512,7 @@ textarea:focus-visible {
 .studio-source-intro {
   max-width: 34ch;
   margin: 10px 0 16px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -494,7 +534,7 @@ textarea:focus-visible {
 .studio-output-head p {
   max-width: 48ch;
   margin: 0;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -525,7 +565,7 @@ textarea:focus-visible {
 .comment-row p {
   margin: 1px 0 0;
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -539,7 +579,7 @@ textarea:focus-visible {
   border: 0;
   color: rgba(18, 19, 19, 0.58);
   background: transparent;
-  font-size: 11px;
+  font-size: var(--text-label);
   cursor: pointer;
 }
 
@@ -555,7 +595,7 @@ textarea:focus-visible {
   border-radius: 5px;
   color: var(--ink);
   background: transparent;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 680;
   cursor: pointer;
 }
@@ -592,7 +632,7 @@ textarea:focus-visible {
   gap: 7px;
   margin: 11px 2px 0;
   color: rgba(18, 19, 19, 0.55);
-  font-size: 10px;
+  font-size: var(--text-caption);
   line-height: 1.5;
 }
 
@@ -723,7 +763,7 @@ textarea:focus-visible {
 .candidate-title-block > p {
   max-width: 38ch;
   margin: 10px 0 0;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -798,7 +838,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 7px;
   margin: 0 0 9px;
-  font-size: 10px;
+  font-size: var(--text-caption);
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -815,7 +855,7 @@ textarea:focus-visible {
 .unknown-block > p:last-child {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -861,7 +901,7 @@ textarea:focus-visible {
 
 .candidate-confirmation p {
   margin: 0;
-  font-size: 10px;
+  font-size: var(--text-label);
 }
 
 .candidate-confirmation .action-button {
@@ -879,7 +919,12 @@ textarea:focus-visible {
   border-top: 1px solid var(--line);
   color: rgba(18, 19, 19, 0.55);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 10px;
+}
+
+.number-flow {
+  font-variant-numeric: tabular-nums;
+  line-height: inherit;
 }
 
 .confirmation-proof[data-visible="true"] {
@@ -890,7 +935,7 @@ textarea:focus-visible {
 .product-hero {
   position: relative;
   overflow: hidden;
-  min-height: 480px;
+  min-height: 420px;
   border-radius: var(--radius-lg);
   background: var(--paper-deep);
   border: 1px solid var(--line);
@@ -1003,8 +1048,8 @@ textarea:focus-visible {
 .signal-card p {
   margin: 0;
   color: rgba(18, 19, 19, 0.55);
-  font-size: 9px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .metric {
@@ -1014,7 +1059,7 @@ textarea:focus-visible {
 
 .metric > span {
   color: rgba(18, 19, 19, 0.58);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .metric strong {
@@ -1028,11 +1073,30 @@ textarea:focus-visible {
   margin-left: 4px;
   color: var(--ink-soft);
   font-family: var(--font-geist-sans), sans-serif;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .demand-curve-card {
   overflow: hidden;
+}
+
+.chart-reading-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  margin: -2px 0 16px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.chart-reading-note span {
+  color: var(--blue);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .demand-chart {
@@ -1070,7 +1134,7 @@ textarea:focus-visible {
 .interest-band > div:first-child > span:last-child,
 .funded-chart-head > span {
   color: rgba(18, 19, 19, 0.56);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .interest-scale {
@@ -1173,6 +1237,10 @@ textarea:focus-visible {
   letter-spacing: 0.02em;
 }
 
+.chart-threshold-label-short {
+  display: none;
+}
+
 .factory-threshold-winner line,
 .factory-threshold-winner circle {
   stroke: var(--green);
@@ -1224,7 +1292,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 6px;
   color: var(--ink-soft);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .chart-legend span::before {
@@ -1286,7 +1354,7 @@ textarea:focus-visible {
 
 .factory-name strong {
   overflow: hidden;
-  font-size: 12px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1304,7 +1372,7 @@ textarea:focus-visible {
 .factory-price span,
 .factory-price small {
   color: rgba(18, 19, 19, 0.52);
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .factory-price strong {
@@ -1321,7 +1389,8 @@ textarea:focus-visible {
   padding-top: 10px;
   border-top: 1px solid var(--line);
   color: var(--ink-soft);
-  font-size: 9px;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .factory-tier[data-feasible="true"] .factory-state {
@@ -1371,8 +1440,26 @@ textarea:focus-visible {
 .feasibility-banner p {
   margin: 0;
   color: rgba(255, 255, 255, 0.48);
-  font-size: 9px;
-  line-height: 1.45;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@media (max-width: 767px) {
+  .chart-axis-labels text,
+  .chart-order-bars text,
+  .chart-y-title,
+  .chart-x-title {
+    font-size: 15px;
+  }
+
+  .chart-threshold-label-full {
+    display: none;
+  }
+
+  .chart-threshold-label-short {
+    display: block;
+    font-size: 16px;
+  }
 }
 
 .wallet-status-card,
@@ -1515,7 +1602,7 @@ textarea:focus-visible {
 .wallet-status-card p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .order-form {
@@ -1561,7 +1648,7 @@ textarea:focus-visible {
 .price-unit span,
 .field-help {
   color: rgba(18, 19, 19, 0.55);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .price-presets {
@@ -1610,7 +1697,7 @@ textarea:focus-visible {
 .refund-preview span,
 .receipt-lines span {
   color: rgba(18, 19, 19, 0.58);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .money-flow strong,
@@ -1654,7 +1741,7 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: 12px;
   color: var(--ink-soft);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.55;
   cursor: pointer;
 }
@@ -1793,7 +1880,7 @@ textarea:focus-visible {
   max-width: 42ch;
   margin: 0;
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -1855,7 +1942,7 @@ textarea:focus-visible {
 .explanation-card li p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -1936,7 +2023,7 @@ textarea:focus-visible {
 .production-demo p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -2389,6 +2476,25 @@ textarea:focus-visible {
     padding-inline: clamp(24px, 5vw, 64px);
   }
 
+  .network-name-short {
+    display: none;
+  }
+
+  .network-name-long,
+  .header-action-label {
+    display: inline;
+  }
+
+  .wallet-pill {
+    display: inline-flex;
+    width: auto;
+    gap: 7px;
+    padding-inline: 12px;
+    border-radius: 6px;
+    font-size: var(--text-label);
+    font-weight: 620;
+  }
+
   .app-main {
     padding: clamp(30px, 5vw, 56px) clamp(24px, 5vw, 64px)
       calc(118px + env(safe-area-inset-bottom));
@@ -2418,6 +2524,10 @@ textarea:focus-visible {
   }
 
   .screen-intro,
+  .screen-task strong,
+  .studio-source-intro,
+  .studio-output-head p,
+  .candidate-title-block > p,
   .comment-row p,
   .evidence-block li,
   .unknown-block > p:last-child,
@@ -2461,6 +2571,10 @@ textarea:focus-visible {
 
   .product-hero {
     min-height: 560px;
+  }
+
+  .app-frame[data-active-step="campaign"] .product-hero {
+    min-height: 420px;
   }
 
   .funded-chart {
@@ -2528,6 +2642,25 @@ textarea:focus-visible {
     min-height: 44px;
   }
 
+  .network-name-short {
+    display: none;
+  }
+
+  .network-name-long,
+  .header-action-label {
+    display: inline;
+  }
+
+  .wallet-pill {
+    display: inline-flex;
+    width: auto;
+    gap: 7px;
+    padding-inline: 13px;
+    border-radius: 6px;
+    font-size: var(--text-label);
+    font-weight: 620;
+  }
+
   .desktop-shell {
     display: grid;
     grid-template-columns: clamp(220px, 18vw, 288px) minmax(0, 1fr);
@@ -2574,7 +2707,7 @@ textarea:focus-visible {
   .desktop-nav-intro p {
     margin: 0;
     color: var(--ink-soft);
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.55;
   }
 
@@ -2596,6 +2729,11 @@ textarea:focus-visible {
   .desktop-step-nav button[data-active="true"] {
     border-color: var(--line);
     background: rgba(255, 255, 255, 0.66);
+  }
+
+  .desktop-step-nav button[data-locked="true"] {
+    cursor: not-allowed;
+    opacity: 0.34;
   }
 
   .desktop-step-nav button > div {
@@ -2829,6 +2967,19 @@ textarea:focus-visible {
     line-height: 1.65;
   }
 
+  .desktop-stage-head .desktop-stage-task {
+    display: block;
+    max-width: 26ch;
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    font-family: var(--font-geist-sans), sans-serif;
+    font-size: 13px;
+    font-weight: 620;
+    line-height: 1.45;
+  }
+
   .desktop-stage-content {
     min-width: 0;
   }
@@ -2904,53 +3055,58 @@ textarea:focus-visible {
     border-left: 1px solid var(--line);
   }
 
-  .desktop-stage-campaign .screen-stack > :nth-child(1) {
-    grid-column: 1 / 5;
-    grid-row: 1 / 4;
+  .desktop-stage-campaign .screen-stack > :nth-child(4) {
+    grid-column: 1 / 9;
+    grid-row: 1 / 5;
   }
 
+  .desktop-stage-campaign .screen-stack > :nth-child(1),
   .desktop-stage-campaign .screen-stack > :nth-child(2),
-  .desktop-stage-campaign .screen-stack > :nth-child(3),
-  .desktop-stage-campaign .screen-stack > :nth-child(6) {
-    grid-column: 5 / 13;
+  .desktop-stage-campaign .screen-stack > :nth-child(3) {
+    grid-column: 9 / 13;
   }
 
-  .desktop-stage-campaign .screen-stack > :nth-child(2) {
+  .desktop-stage-campaign .screen-stack > :nth-child(1) {
     grid-row: 1;
   }
 
-  .desktop-stage-campaign .screen-stack > :nth-child(3) {
+  .desktop-stage-campaign .screen-stack > :nth-child(2) {
     grid-row: 2;
   }
 
-  .desktop-stage-campaign .screen-stack > :nth-child(6) {
+  .desktop-stage-campaign .screen-stack > :nth-child(3) {
     grid-row: 3;
   }
 
-  .desktop-stage-campaign .screen-stack > :nth-child(4) {
+  .desktop-stage-campaign .screen-stack > :nth-child(5) {
     grid-column: 1 / 9;
-    grid-row: 4;
+    grid-row: 5;
   }
 
-  .desktop-stage-campaign .screen-stack > :nth-child(5) {
+  .desktop-stage-campaign .screen-stack > :nth-child(6) {
     grid-column: 9 / 13;
-    grid-row: 4;
+    grid-row: 4 / 6;
   }
 
   .desktop-stage-campaign .product-hero {
-    min-height: 560px;
+    min-height: 310px;
+  }
+
+  .desktop-stage-campaign .product-hero-copy h2 {
+    font-size: 28px;
   }
 
   .desktop-stage-campaign .signal-card {
-    min-height: 156px;
+    min-height: 146px;
   }
 
   .desktop-stage-campaign .funded-chart {
-    min-height: 350px;
+    min-height: 360px;
   }
 
   .desktop-stage-campaign .factory-list {
     height: calc(100% - 38px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .desktop-stage-campaign .factory-tier {
@@ -2958,8 +3114,8 @@ textarea:focus-visible {
   }
 
   .desktop-stage-campaign .contract-read-state {
-    grid-column: 5 / 13;
-    grid-row: 2 / 4;
+    grid-column: 1 / 13;
+    grid-row: 1 / 4;
   }
 
   .desktop-stage-order .screen-stack > :nth-child(1) {

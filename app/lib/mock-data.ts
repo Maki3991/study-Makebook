@@ -6,6 +6,7 @@ export type StoryStep = {
   title: string;
   kicker: string;
   intro: string;
+  task: string;
   nextLabel: string;
 };
 
@@ -17,24 +18,27 @@ export const storySteps: StoryStep[] = [
     kicker: "AI Demand Studio",
     intro:
       "从评论与访谈里提炼规格、证据和未知项。AI 只给建议，最终进入资金流程的版本必须由人确认。",
+    task: "选择方向并人工确认",
     nextLabel: "前往 FRAME-01 市场",
   },
   {
     id: "campaign",
     shortLabel: "市场",
-    title: "资金订单，画出需求曲线。",
+    title: "让资金画出需求曲线。",
     kicker: "Campaign Market",
     intro:
       "消费者提交最高愿付价，工厂提交 MOQ 阶梯。兴趣样本与链上订单分开显示，不把点赞假装成购买。",
+    task: "读懂中标档位，再决定下单",
     nextLabel: "提交条件订单",
   },
   {
     id: "order",
     shortLabel: "订单",
-    title: "承诺最高价，等待统一清算。",
+    title: "最高愿付价，统一清算。",
     kicker: "Conditional Order",
     intro:
       "预锁你的最高愿付价。统一清算价不高于它时成交并退回差额，否则可领取全额退款。",
+    task: "确认金额、公开性和不可撤销",
     nextLabel: "查看清算结果",
   },
   {
@@ -44,6 +48,7 @@ export const storySteps: StoryStep[] = [
     kicker: "Settlement & Receipt",
     intro:
       "Injective 合约比较资金订单与工厂 MOQ 报价，给出唯一档位、统一价格与可验证的个人凭证。",
+    task: "看清结果，再领取差额或退款",
     nextLabel: "演示完成",
   },
 ];

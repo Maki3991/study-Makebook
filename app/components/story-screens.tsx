@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { AnimatePresence, motion } from "motion/react";
 import {
   AlertCircle,
   ArrowUpRight,
@@ -16,7 +17,6 @@ import {
   ReceiptText,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
   WalletCards,
 } from "lucide-react";
 import { useState, type CSSProperties } from "react";
@@ -33,6 +33,7 @@ import type {
   DemoSignatureMode,
 } from "./demo-panel";
 import {
+  AnimatedAmount,
   CopyValue,
   ExplorerLink,
   Metric,
@@ -60,16 +61,21 @@ function decimalToWei(value: string) {
   ).toString();
 }
 
-export function StudioScreen() {
+export function StudioScreen({
+  confirmed,
+  onConfirmedChange,
+}: {
+  confirmed: boolean;
+  onConfirmedChange: (confirmed: boolean) => void;
+}) {
   const [selectedId, setSelectedId] = useState("FRAME-01");
   const [status, setStatus] = useState<"idle" | "compiling" | "ready">("ready");
-  const [confirmed, setConfirmed] = useState(false);
   const selected =
     candidates.find((candidate) => candidate.id === selectedId) ?? candidates[0];
 
   function compileDemand() {
     setStatus("compiling");
-    setConfirmed(false);
+    onConfirmedChange(false);
     window.setTimeout(() => setStatus("ready"), 850);
   }
 
@@ -106,10 +112,10 @@ export function StudioScreen() {
         >
           {status === "compiling" ? (
             <LoaderCircle className="spin" size={17} aria-hidden="true" />
-          ) : (
-            <Sparkles size={17} aria-hidden="true" />
-          )}
-          {status === "compiling" ? "正在编译需求…" : "重新生成候选 SKU"}
+          ) : null}
+          {status === "compiling"
+            ? "正在整理评论与访谈…"
+            : "重新整理评论与访谈"}
         </button>
         <p className="honesty-note">
           <AlertCircle size={14} aria-hidden="true" />
@@ -134,7 +140,7 @@ export function StudioScreen() {
               type="button"
               onClick={() => {
                 setSelectedId(candidate.id);
-                setConfirmed(false);
+                onConfirmedChange(false);
               }}
             >
               <span className="candidate-index">0{index + 1}</span>
@@ -150,7 +156,15 @@ export function StudioScreen() {
           ))}
         </div>
 
-        <section className="surface candidate-detail">
+        <AnimatePresence initial={false} mode="wait">
+        <motion.section
+          animate={{ opacity: 1, y: 0 }}
+          className="surface candidate-detail"
+          exit={{ opacity: 0, y: -8 }}
+          initial={{ opacity: 0, y: 10 }}
+          key={selected.id}
+          transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
+        >
           <div className="candidate-heading">
             <div className="candidate-title-block">
               <div className="candidate-title-meta">
@@ -215,7 +229,7 @@ export function StudioScreen() {
               className="action-button"
               data-confirmed={confirmed}
               type="button"
-              onClick={() => setConfirmed((value) => !value)}
+              onClick={() => onConfirmedChange(!confirmed)}
             >
               {confirmed ? (
                 <CheckCircle2 size={17} aria-hidden="true" />
@@ -238,7 +252,8 @@ export function StudioScreen() {
                 : "等待人工确认后生成 manifestHash"}
             </span>
           </div>
-        </section>
+        </motion.section>
+        </AnimatePresence>
       </section>
     </div>
   );
@@ -348,6 +363,11 @@ export function CampaignScreen({
         >
           资金需求曲线
         </SectionLabel>
+        <p className="chart-reading-note">
+          <span>怎么读</span>
+          从左向右价格升高，仍愿意出价的订单会减少。绿色档位达到 MOQ，
+          灰色档位未达到。
+        </p>
         <div
           className="demand-chart"
           role="img"
@@ -431,26 +451,74 @@ export function CampaignScreen({
               })}
             </g>
 
-            <path
+            <motion.path
+              initial={{ pathLength: 0, opacity: 0.35 }}
+              transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
+              viewport={{ once: true, amount: 0.35 }}
+              whileInView={{ pathLength: 1, opacity: 1 }}
               className="funded-step-line"
               d="M94 40 H206 V80 H318 V160 H430 V200 H542 V240"
             />
 
             <g className="factory-threshold factory-threshold-winner">
-              <line x1="166" x2="586" y1="80" y2="80" />
+              <motion.line
+                initial={{ pathLength: 0, opacity: 0 }}
+                transition={{ delay: 0.25, duration: 0.55 }}
+                viewport={{ once: true, amount: 0.35 }}
+                whileInView={{ pathLength: 1, opacity: 1 }}
+                x1="166"
+                x2="586"
+                y1="80"
+                y2="80"
+              />
               <circle cx="206" cy="80" r="7" />
               <rect x="356" y="50" width="220" height="23" rx="4" />
-              <text x="566" y="66" textAnchor="end">
+              <text
+                className="chart-threshold-label chart-threshold-label-full"
+                x="566"
+                y="66"
+                textAnchor="end"
+              >
                 WINNER · LOOM · MOQ 5 @ 0.019
+              </text>
+              <text
+                className="chart-threshold-label chart-threshold-label-short"
+                x="566"
+                y="66"
+                textAnchor="end"
+              >
+                LOOM · MOQ 5
               </text>
             </g>
 
             <g className="factory-threshold factory-threshold-missed">
-              <line x1="390" x2="586" y1="160" y2="160" />
+              <motion.line
+                initial={{ pathLength: 0, opacity: 0 }}
+                transition={{ delay: 0.42, duration: 0.45 }}
+                viewport={{ once: true, amount: 0.35 }}
+                whileInView={{ pathLength: 1, opacity: 1 }}
+                x1="390"
+                x2="586"
+                y1="160"
+                y2="160"
+              />
               <path d="M426 154 l12 12 M438 154 l-12 12" />
               <rect x="356" y="169" width="220" height="23" rx="4" />
-              <text x="566" y="185" textAnchor="end">
+              <text
+                className="chart-threshold-label chart-threshold-label-full"
+                x="566"
+                y="185"
+                textAnchor="end"
+              >
                 MISSED · NORTH · MOQ 3 @ 0.024
+              </text>
+              <text
+                className="chart-threshold-label chart-threshold-label-short"
+                x="566"
+                y="185"
+                textAnchor="end"
+              >
+                NORTH · MOQ 3
               </text>
             </g>
 
@@ -550,6 +618,8 @@ export function OrderScreen({
     numericPrice > 0 &&
     networkState === "correct" &&
     status === "idle";
+  const orderDisabled =
+    status === "pending" || (status === "idle" && !canSubmit);
 
   function submitOrder() {
     if (!canSubmit) return;
@@ -642,19 +712,25 @@ export function OrderScreen({
         <div className="money-flow">
           <div>
             <span>现在预锁</span>
-            <strong>{numericPrice.toFixed(3)} test INJ</strong>
+            <strong>
+              <AnimatedAmount value={numericPrice} /> test INJ
+            </strong>
           </div>
           <ArrowUpRight size={18} aria-hidden="true" />
           <div>
             <span>若按当前预览清算</span>
-            <strong>{clearingPrice.toFixed(3)} test INJ</strong>
+            <strong>
+              <AnimatedAmount value={clearingPrice} /> test INJ
+            </strong>
           </div>
         </div>
         <div className="refund-preview">
           <CircleDollarSign size={18} aria-hidden="true" />
           <div>
             <span>预计可领取差额</span>
-            <strong>{estimatedRefund.toFixed(3)} test INJ</strong>
+            <strong>
+              <AnimatedAmount value={estimatedRefund} /> test INJ
+            </strong>
           </div>
         </div>
         <WeiDebug
@@ -703,10 +779,7 @@ export function OrderScreen({
           data-status={status}
           type="button"
           aria-busy={status === "pending"}
-          disabled={
-            (!canSubmit && status !== "success" && status !== "error") ||
-            status === "pending"
-          }
+          disabled={orderDisabled}
           onClick={
             status === "success" || status === "error"
               ? () => setStatus("idle")

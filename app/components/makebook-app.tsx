@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Settings2, WalletCards } from "lucide-react";
+import { MotionConfig } from "motion/react";
 import Image from "next/image";
 import { useState } from "react";
 import { storySteps, type StoryStepId } from "../lib/mock-data";
@@ -21,6 +22,7 @@ import { SourceTag } from "./ui";
 
 export function MakebookApp() {
   const [activeStep, setActiveStep] = useState<StoryStepId>("studio");
+  const [studioConfirmed, setStudioConfirmed] = useState(true);
   const [demoOpen, setDemoOpen] = useState(false);
   const [readState, setReadState] = useState<ContractReadState>("ready");
   const [networkState, setNetworkState] =
@@ -34,6 +36,9 @@ export function MakebookApp() {
   const next = storySteps[activeIndex + 1];
 
   function goToStep(stepId: StoryStepId) {
+    const targetIndex = storySteps.findIndex((step) => step.id === stepId);
+    if (targetIndex > 0 && !studioConfirmed) return;
+
     setActiveStep(stepId);
 
     if (window.innerWidth >= 1280) {
@@ -51,7 +56,14 @@ export function MakebookApp() {
   }
 
   function renderScreen(stepId: StoryStepId) {
-    if (stepId === "studio") return <StudioScreen />;
+    if (stepId === "studio") {
+      return (
+        <StudioScreen
+          confirmed={studioConfirmed}
+          onConfirmedChange={setStudioConfirmed}
+        />
+      );
+    }
     if (stepId === "campaign") {
       return (
         <CampaignScreen
@@ -75,6 +87,10 @@ export function MakebookApp() {
   }
 
   return (
+    <MotionConfig
+      reducedMotion="user"
+      transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}
+    >
     <div className="app-frame" data-active-step={activeStep}>
       <header className="app-header">
         <div className="brand-lockup" aria-label="MAKEBOOK 造物簿">
@@ -85,7 +101,10 @@ export function MakebookApp() {
           </div>
         </div>
         <div className="header-actions">
-          <span className="network-pill">Testnet</span>
+          <span className="network-pill">
+            <span className="network-name-short">Testnet</span>
+            <span className="network-name-long">Injective Testnet</span>
+          </span>
           <button
             className="wallet-pill demo-panel-trigger"
             type="button"
@@ -93,9 +112,11 @@ export function MakebookApp() {
             onClick={() => setDemoOpen(true)}
           >
             <Settings2 size={15} strokeWidth={1.8} aria-hidden="true" />
+            <span className="header-action-label">演示设置</span>
           </button>
           <button className="wallet-pill" type="button" aria-label="连接钱包">
             <WalletCards size={15} strokeWidth={1.8} aria-hidden="true" />
+            <span className="header-action-label">连接钱包</span>
           </button>
         </div>
       </header>
@@ -108,6 +129,8 @@ export function MakebookApp() {
             type="button"
             data-active={step.id === activeStep}
             data-done={index < activeIndex}
+            data-locked={index > 0 && !studioConfirmed}
+            disabled={index > 0 && !studioConfirmed}
             aria-current={step.id === activeStep ? "step" : undefined}
             onClick={() => goToStep(step.id)}
           >
@@ -123,6 +146,10 @@ export function MakebookApp() {
             <p className="screen-kicker">{active.kicker}</p>
             <h1 className="screen-title">{active.title}</h1>
             <p className="screen-intro">{active.intro}</p>
+            <div className="screen-task">
+              <span>本步要做</span>
+              <strong>{active.task}</strong>
+            </div>
           </div>
 
           <div className="active-screen">{renderScreen(activeStep)}</div>
@@ -141,6 +168,8 @@ export function MakebookApp() {
               key={step.id}
               type="button"
               data-active={step.id === activeStep}
+              data-locked={index > 0 && !studioConfirmed}
+              disabled={index > 0 && !studioConfirmed}
               onClick={() => goToStep(step.id)}
             >
               <span>0{index + 1}</span>
@@ -221,6 +250,9 @@ export function MakebookApp() {
                   <p>{step.kicker}</p>
                   <h2 id={`stage-title-${step.id}`}>{step.title}</h2>
                   <span>{step.intro}</span>
+                  <small className="desktop-stage-task">
+                    本步完成条件 · {step.task}
+                  </small>
                 </div>
               </header>
               <div className="desktop-stage-content">
@@ -265,5 +297,6 @@ export function MakebookApp() {
         }}
       />
     </div>
+    </MotionConfig>
   );
 }

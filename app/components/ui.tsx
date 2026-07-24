@@ -1,5 +1,6 @@
 "use client";
 
+import NumberFlow from "@number-flow/react";
 import {
   BadgeCheck,
   Check,
@@ -74,14 +75,63 @@ export function Metric({
   value: string;
   suffix?: string;
 }) {
+  const numericValue = Number(value);
+  const decimals = value.includes(".") ? value.split(".")[1]?.length ?? 0 : 0;
+
   return (
     <div className="metric">
       <span>{label}</span>
       <strong>
-        {value}
+        {Number.isFinite(numericValue) ? (
+          <NumberFlow
+            className="number-flow"
+            value={numericValue}
+            format={{
+              minimumFractionDigits: decimals,
+              maximumFractionDigits: decimals,
+            }}
+            transformTiming={{
+              duration: 520,
+              easing: "cubic-bezier(.2,.8,.2,1)",
+            }}
+            spinTiming={{
+              duration: 520,
+              easing: "cubic-bezier(.2,.8,.2,1)",
+            }}
+          />
+        ) : (
+          value
+        )}
         {suffix ? <small>{suffix}</small> : null}
       </strong>
     </div>
+  );
+}
+
+export function AnimatedAmount({
+  value,
+  decimals = 3,
+}: {
+  value: number;
+  decimals?: number;
+}) {
+  return (
+    <NumberFlow
+      className="number-flow"
+      value={value}
+      format={{
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }}
+      transformTiming={{
+        duration: 520,
+        easing: "cubic-bezier(.2,.8,.2,1)",
+      }}
+      spinTiming={{
+        duration: 520,
+        easing: "cubic-bezier(.2,.8,.2,1)",
+      }}
+    />
   );
 }
 
