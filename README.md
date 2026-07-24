@@ -23,6 +23,29 @@ MAKEBOOK 是面向实体新品的预生产订单簿：AI 将评论与访谈整�
 - Operator / Factory 操作收在隐藏 Demo Panel，不进入评委主路径。
 - 这是测试网原型，不处理真实资产，也不保证真实生产、物流或质量履约。
 
+## 仓库结构（Monorepo）
+
+- `app/` — 前端四步叙事（AI Demand Studio → Campaign Market → Conditional Order → Settlement & Receipt）
+- `contracts/` — MakebookCampaign 清算合约（Foundry，51 个测试全绿；见 `contracts/README.md`）
+- `lib/schema/` — Market Manifest Zod schema + canonical JSON / manifestHash（前后端共用）
+- `lib/ai/` — AI 需求编译器：脱敏、OpenAI 兼容适配器、Zod 校验、fixture 降级
+- `fixtures/` — 成功/失败清算剧本与 20 条评论样本（Demo 模式数据源，数值与 PRD 附录 A 逐 wei 对齐）
+- `public/manifests/frame-01.json` — 人工确认版 manifest（canonical 格式）
+- `deployments/injective-testnet.json` — 预部署 Campaign 地址（占位，部署后回填）
+- `docs/FRONTEND_INTERFACE.md` — 前后端唯一对接入口（ABI / revert 文案 / 状态机 / 事件 / hash 算法）
+- `docs/DEMO_RUNBOOK.md` — 演示手册：预部署步骤、2 分钟流程、降级预案、评委问答
+- `specs/` — SDD 规格文档（见 `specs/README.md`）
+
+## 后端 / 合约
+
+```bash
+npm run test:lib        # lib/schema + lib/ai 测试（node --test，需 Node ≥ 22.18）
+cd contracts && forge install foundry-rs/forge-std OpenZeppelin/openzeppelin-contracts --no-git
+forge test -vv          # 合约 CT-01~CT-12 + 端到端
+```
+
+部署到 Injective EVM Testnet 的命令（必须带 `--legacy --gas-price 160000000 --gas-limit 2000000`）见 `contracts/README.md`。
+
 ## 响应式验收
 
 移动端和桌面端均为正式使用场景：

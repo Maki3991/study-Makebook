@@ -46,3 +46,9 @@ next-env.d.ts
 /.codex-live.*
 /.codex-start.*
 /.codex-run-dev.cmd
+
+# foundry (contracts/) — restore via `forge install --no-git` per contracts/README.md
+/contracts/lib/
+/contracts/out/
+/contracts/cache/
+/contracts/broadcast/

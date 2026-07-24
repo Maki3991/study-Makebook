@@ -1,0 +1,31 @@
+{
+  "scenario": "failure",
+  "label": "附录 A.2 失败 Campaign（Hackathon scaled test data）",
+  "campaignCode": "FRAME-01-FAIL",
+  "quotes": [
+    {
+      "quoteId": 0,
+      "factory": "Factory North",
+      "demoFactory": true,
+      "tiers": [{ "minQty": 3, "unitPrice": "0.024", "unit": "testINJ" }]
+    },
+    {
+      "quoteId": 1,
+      "factory": "Factory Loom",
+      "demoFactory": true,
+      "tiers": [{ "minQty": 3, "unitPrice": "0.019", "unit": "testINJ" }]
+    }
+  ],
+  "orders": [
+    { "buyer": "Buyer A", "maxPrice": "0.026", "unit": "testINJ", "expected": { "winner": false, "refund": "0.026" } },
+    { "buyer": "Buyer B", "maxPrice": "0.024", "unit": "testINJ", "expected": { "winner": false, "refund": "0.024" } }
+  ],
+  "settlement": {
+    "success": false,
+    "state": "Failed",
+    "winnerCount": 0,
+    "factoryReceivable": "0",
+    "unit": "testINJ",
+    "note": "最低 MOQ=3，仅 2 个有效订单；全员全额退款，无工厂应收"
+  }
+}

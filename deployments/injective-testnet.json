@@ -1,0 +1,20 @@
+{
+  "chainId": 1439,
+  "network": "injectiveEvmTestnet",
+  "rpc": "https://k8s.testnet.json-rpc.injective.network/",
+  "explorer": "https://testnet.blockscout.injective.network/",
+  "success": {
+    "address": "0x0000000000000000000000000000000000000000",
+    "manifestHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "manifestURI": "https://example.com/manifests/frame-01.json",
+    "deadline": 0,
+    "note": "占位：部署后由合约任务回填 address / manifestHash / deadline"
+  },
+  "failure": {
+    "address": "0x0000000000000000000000000000000000000000",
+    "manifestHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "manifestURI": "https://example.com/manifests/frame-01.json",
+    "deadline": 0,
+    "note": "占位：失败演示用 Campaign，MOQ=3 仅 2 单"
+  }
+}
