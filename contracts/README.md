@@ -32,7 +32,14 @@ foundry.toml                  含 injectiveEvm RPC endpoint
 
 ## 部署到 Injective EVM Testnet
 
-**必须带 `--legacy --gas-price 160000000 --gas-limit 2000000`**（Injective EVM 不支持 EIP-1559 类型交易）：
+**推荐：一键流水线** `script/demo-pipeline.sh`（anvil 排练 / testnet 正式，用法见脚本头注释与 `docs/DEMO_RUNBOOK.md` 第 2 节）：
+
+```bash
+contracts/script/demo-pipeline.sh anvil all      # 本地全链路排练（deploy→open→orders→settle→claims）
+contracts/script/demo-pipeline.sh testnet up     # testnet 部署两套 Campaign 并预下单
+```
+
+**必须带 `--legacy --gas-price 160000000 --gas-limit 2000000`**（Injective EVM 不支持 EIP-1559 类型交易）。手动单实例部署：
 
 ```bash
 export PRIVATE_KEY=0x...                  # 只存在本地环境，绝不写入仓库

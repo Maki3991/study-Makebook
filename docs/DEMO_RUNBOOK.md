@@ -24,12 +24,22 @@
 
 ## 2. 预部署两套 Campaign（演示前一天完成）
 
-按 `contracts/README.md` 的命令部署两个合约实例（都带 `--legacy --gas-price 160000000 --gas-limit 2000000`）：
+使用一键流水线 `contracts/script/demo-pipeline.sh`（已在 anvil 全流程排练通过）：
 
-- **Success Campaign**：deadline 设在演示时段附近。部署后依次：`registerFactory`（North、Loom）→ 两个 factory 钱包各自 `submitQuote`（North: min3@0.024；Loom: min3@0.019，可各加第二档）→ operator `openCampaign` → 5 个 buyer 钱包按 fixtures/success.json 下单（0.026 / 0.024 / 0.021 / 0.019 / 0.017）。**先不 settle**，留到现场触发；同时保留一份已 settle 的截图/tx 作为兜底。
-- **Failure Campaign**：同样流程，但只下 2 个订单（低于 MOQ 3），现场 settle → Failed → 演示全额退款。
+```bash
+cp .env.example .env   # 填入 8 个角色私钥 + 确认 MANIFEST_HASH / MANIFEST_URI / DEADLINE
+contracts/script/demo-pipeline.sh testnet up       # 部署×2 → 登记/报价/开盘 → 5+2 单 → 回填地址 → verify
+contracts/script/demo-pipeline.sh testnet status   # 只读核对 state / orders / previewSettlement
+# 现场（deadline 过后）：
+contracts/script/demo-pipeline.sh testnet settle   # 两套各自触发清算
+contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + Loom 领取应收
+```
 
-部署后把两个地址、manifestHash、deadline 写入 `deployments/injective-testnet.json`（替换占位零地址），前端从此文件读取。两个合约都做 Blockscout verify（命令见 contracts/README.md）。
+- **Success Campaign**：5 个 buyer 按 fixtures/success.json 下单（0.026 / 0.024 / 0.021 / 0.019 / 0.017），**先不 settle**，留到现场触发；保留 rehearsal 轮已 settle 的 tx 作为兜底。
+- **Failure Campaign**：只下 2 单（Buyer A/B，低于 MOQ 3），现场 settle → Failed → 全额退款。
+- `DEADLINE` 部署后不可改：设为演示日清晨、早于任何演示时段（.env.example 默认 2026-07-26 06:00 UTC+8 = 1785016800）。
+- 每次运行生成 `deployments/receipts/testnet-<时间戳>.jsonl` 证据文件（deploy/订单/settle/refund/payout 全部 tx hash），提交前随仓库公开。
+- 部署后流水线自动回填 `deployments/injective-testnet.json`（address / manifestHash / deadline），前端从此文件读取；两个合约自动做 Blockscout verify（失败可 `demo-pipeline.sh testnet verify` 重试）。
 
 ## 3. 现场 2 分钟流程（对应 PRD 18 章节）
 
