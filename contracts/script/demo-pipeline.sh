@@ -293,8 +293,8 @@ verify_contract() { # <addr>
 
 require_state() {
   [[ -f "$STATE_FILE" ]] || { echo "找不到 ${STATE_FILE}，先跑 up" >&2; exit 1; }
-  SUCCESS_ADDR="$("$JQ" -r '.success.address' "$STATE_FILE")"
-  FAILURE_ADDR="$("$JQ" -r '.failure.address' "$STATE_FILE")"
+  SUCCESS_ADDR="${SUCCESS_ADDR_OVERRIDE:-$("$JQ" -r '.success.address' "$STATE_FILE")}"
+  FAILURE_ADDR="${FAILURE_ADDR_OVERRIDE:-$("$JQ" -r '.failure.address' "$STATE_FILE")}"
 }
 
 settle_one() { # <label> <addr>
