@@ -10,9 +10,10 @@
 | 合约 MakebookCampaign.sol + 51 测试 | ✅ 完成 | 后端 |
 | AI 编译模块 lib/ai（fixture 降级） | ✅ 完成 | 后端 |
 | canonical JSON + manifestHash（lib/schema） | ✅ 完成，hash 锚点 `0x92e96e07…cc6ec` | 后端 |
-| fixtures 成功/失败剧本 + 20 条评论 | ✅ 完成 | 后端 |
+| fixtures 成功/失败剧本 + 20 条评论（英文，面向欧美用户） | ✅ 完成 | 后端 |
+| 部署流水线 demo-pipeline.sh | ✅ anvil 全链路排练通过（PaidOut + Failed 双路径） | 后端 |
 | 前端四步叙事 + Demo 模式 | 🔲 队友，按接口文档对接 | 前端 |
-| Testnet 预部署两套 Campaign | 🔲 见下方第 2 步 | 后端 |
+| Testnet 预部署两套 Campaign | 🔲 等 8 个角色私钥 + 领水完成 → `testnet up` | 后端 |
 | 证据页 / 视频 / README 素材 | 🔲 演示前一天完成 | Producer |
 
 ## 1. 赛前准备（T+0 必做）

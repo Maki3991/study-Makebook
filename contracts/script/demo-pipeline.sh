@@ -36,7 +36,7 @@ case "$NETWORK" in
     STATE_FILE="$ROOT/deployments/injective-testnet.json"
     NETWORK_LABEL="injectiveEvmTestnet"
     ;;
-  *) echo "未知网络: $NETWORK（应为 anvil 或 testnet）" >&2; exit 1 ;;
+  *) echo "未知网络: ${NETWORK}（应为 anvil 或 testnet）" >&2; exit 1 ;;
 esac
 
 # 加载 .env（若存在）
@@ -175,7 +175,7 @@ verify_contract() { # <addr>
 # ---------------------------------------------------------------- settle / claims / status
 
 require_state() {
-  [[ -f "$STATE_FILE" ]] || { echo "找不到 $STATE_FILE，先跑 up" >&2; exit 1; }
+  [[ -f "$STATE_FILE" ]] || { echo "找不到 ${STATE_FILE}，先跑 up" >&2; exit 1; }
   SUCCESS_ADDR="$("$JQ" -r '.success.address' "$STATE_FILE")"
   FAILURE_ADDR="$("$JQ" -r '.failure.address' "$STATE_FILE")"
 }
