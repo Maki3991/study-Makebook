@@ -1,146 +1,48 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { Globe } from "lucide-react";
-import { shortenAddress } from "@/app/lib/chain/wallet";
-import { useLang } from "@/app/lib/i18n";
-import { Button, CopyValue, SourceTag } from "./primitives";
-import { useSiteWallet } from "./wallet-provider";
+import { WalletButton } from "./wallet-button";
+import { copy } from "@/app/lib/copy";
 
-/**
- * Site top bar: brand lockup (monogram on small screens, wordmark from sm up)
- * + "FRAME-01 Campaign" label left; TESTNET pill + wallet control right.
- *
- * Both brand PNGs ship with generous padding, so each is rendered with
- * object-fit: cover inside an aspect-ratio box that matches the measured
- * content bounding box (monogram ≈ 2.609, wordmark ≈ 4.649).
- */
 export function TopBar() {
-  const {
-    address,
-    connected,
-    connecting,
-    connect,
-    switchNetwork,
-    isWrongNetwork,
-  } = useSiteWallet();
-  const { lang, setLang, t } = useLang();
-  const [switching, setSwitching] = useState(false);
-
-  const onConnect = async () => {
-    try {
-      await connect();
-    } catch {
-      // User rejected the auth prompt — stay in the idle state.
-    }
-  };
-
-  const onSwitchNetwork = async () => {
-    setSwitching(true);
-    try {
-      await switchNetwork();
-    } catch {
-      // User rejected the switch — the wrong-network state stays visible.
-    } finally {
-      setSwitching(false);
-    }
-  };
-
   return (
-    <header className="sticky top-0 z-40 border-b border-n-22 bg-n-00">
-      <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <div className="flex min-w-0 items-center gap-3">
-          <span
-            className="relative block h-7 shrink-0 sm:hidden"
-            style={{ aspectRatio: "2.609" }}
+    <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur-none">
+      <div className="page flex h-16 items-center justify-between gap-4">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-ink"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
           >
-            <Image
-              src="/makebook-monogram.png"
-              alt="MAKEBOOK"
-              fill
-              sizes="73px"
-              priority
-              // The vinext dev worker has no ASSETS binding, so the
-              // /_vinext/image optimizer 500s; serve the file directly.
-              unoptimized
-              style={{ objectFit: "cover", objectPosition: "50% 49.9%" }}
+            <path
+              d="M4 20V4h4l4 8 4-8h4v16h-3V8.5l-3.5 6.5h-3L7 8.5V20H4Z"
+              fill="currentColor"
             />
-          </span>
-          <span
-            className="relative hidden h-[18px] shrink-0 sm:block"
-            style={{ aspectRatio: "4.649" }}
-          >
-            <Image
-              src="/makebook-wordmark.png"
-              alt="MAKEBOOK"
-              fill
-              sizes="84px"
-              priority
-              // See monogram above: bypass the broken dev image optimizer.
-              unoptimized
-              style={{ objectFit: "cover", objectPosition: "50% 47.4%" }}
-            />
-          </span>
-          <span className="line-v hidden h-5 sm:block" aria-hidden="true" />
-          <span className="hidden truncate font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-64 sm:block">
-            {t("topbar.frameCampaign")}
-          </span>
-          <nav
-            aria-label="Site"
-            className="ml-2 flex items-center gap-1 font-mono text-11 font-medium uppercase tracking-[0.14em]"
-          >
-            <Link href="/" className="rounded-sm px-2 py-1.5 text-n-64 transition-colors hover:text-n-92">
-              {t("topbar.nav.campaign")}
-            </Link>
-            <Link href="/me" className="rounded-sm px-2 py-1.5 text-n-64 transition-colors hover:text-n-92">
-              {t("topbar.nav.myBatch")}
-            </Link>
-            <Link href="/evidence" className="rounded-sm px-2 py-1.5 text-n-64 transition-colors hover:text-n-92">
-              {t("topbar.nav.evidence")}
-            </Link>
-          </nav>
-        </div>
+          </svg>
+          {copy.global.nav.brand}
+        </Link>
 
-        <div className="flex shrink-0 items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setLang(lang === "en" ? "zh" : "en")}
-            aria-label={t("topbar.langToggleAria")}
-            className="flex min-h-0 items-center gap-1.5 rounded-sm border border-n-22 bg-n-00 px-2.5 py-1.5 font-mono text-11 font-medium uppercase tracking-[0.14em] text-n-64 transition-colors hover:text-n-92"
+        <nav className="flex items-center gap-1 sm:gap-3">
+          <Link
+            href="/orders"
+            className="hidden rounded-md px-3 py-2 text-sm font-medium text-ink-2 transition-colors hover:bg-surface hover:text-ink sm:inline-flex"
           >
-            <Globe size={13} aria-hidden="true" />
-            <span>{lang === "en" ? "中文" : "EN"}</span>
-          </button>
-          <span className="pill hidden sm:inline-flex">
-            <SourceTag tone="testnet">Testnet</SourceTag>
-          </span>
-          {!connected ? (
-            <Button
-              variant="primary"
-              state={connecting ? "loading" : "idle"}
-              onClick={onConnect}
-            >
-              {t("common.connectWallet")}
-            </Button>
-          ) : isWrongNetwork ? (
-            <Button
-              variant="primary"
-              className="btn-danger"
-              state={switching ? "loading" : "error"}
-              onClick={onSwitchNetwork}
-            >
-              {t("topbar.wrongNetwork")}
-            </Button>
-          ) : (
-            <CopyValue
-              value={address ?? ""}
-              display={address ? shortenAddress(address) : ""}
-              className="min-h-[36px] rounded-sm border border-n-22 bg-n-04 px-3"
-            />
-          )}
-        </div>
+            {copy.global.nav.orders}
+          </Link>
+          <Link
+            href="/console"
+            className="hidden rounded-md px-3 py-2 text-sm font-medium text-ink-2 transition-colors hover:bg-surface hover:text-ink sm:inline-flex"
+          >
+            {copy.global.nav.console}
+          </Link>
+          <WalletButton />
+        </nav>
       </div>
     </header>
   );

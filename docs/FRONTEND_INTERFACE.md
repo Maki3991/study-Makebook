@@ -268,7 +268,7 @@ Content-Type: application/json
 }
 ```
 
-当前为**占位**（零地址），部署后由合约任务回填。前端启动时校验 `address` 非零地址，否则进入 fixture/Demo 模式。
+已回填真实地址（2026-07-24 部署，两套 Campaign）。前端启动时校验 `address` 非零地址，地址为零时启动即报错（`app/lib/chain/deployments.ts` throw）；无用户可见 Demo 模式，fixtures 仅本地开发注入；线上读取持续失败时显示加载失败文案，不静默切假数据。
 
 ## 9. 六种状态标签语义（PRD 14.2）
 

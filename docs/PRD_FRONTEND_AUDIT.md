@@ -1,5 +1,7 @@
 # MAKEBOOK 前端 × PRD 自检
 
+> ⚠️ 【已归档 2026-07-25】本文档描述旧前端时代（四步叙事 + Demo Panel）的方案/交接，已被 specs/006-frontend-rebuild.md 与 specs/007-frontend-construction.md 取代。保留仅作历史参考，施工以 006/007 为准。
+
 更新时间：2026-07-24
 
 ## 已由前端实现并验证

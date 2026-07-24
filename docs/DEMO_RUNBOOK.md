@@ -1,7 +1,7 @@
 # MAKEBOOK 演示手册（Pitch Runbook）
 
 面向黑客松现场：如何把项目跑通并完成 2 分钟 pitch。配合 PRD 第 18 章使用。
-本仓库当前状态：合约与后端模块已完成并测试通过（forge 51/51、lib 9/9），前端由队友按 `docs/FRONTEND_INTERFACE.md` 开发。
+本仓库当前状态：合约与后端模块已完成并测试通过（forge 51/51、lib 9/9）；前端已按 specs/006/007 重建并接真链（T1–T6/T8 完成；/orders 与 /console 仍为占位桩，对应 spec 007 的 T7/T9）；Testnet 预部署两套 Campaign ✅ 已完成（2026-07-24，地址见 deployments/injective-testnet.json，链上实况见 specs/006 §0）。
 
 ## 当前进度与剩余工作
 
@@ -12,13 +12,13 @@
 | canonical JSON + manifestHash（lib/schema） | ✅ 完成，hash 锚点 `0x92e96e07…cc6ec` | 后端 |
 | fixtures 成功/失败剧本 + 20 条评论（英文，面向欧美用户） | ✅ 完成 | 后端 |
 | 部署流水线 demo-pipeline.sh | ✅ anvil 全链路排练通过（PaidOut + Failed 双路径） | 后端 |
-| 前端四步叙事 + Demo 模式 | 🔲 队友，按接口文档对接 | 前端 |
-| Testnet 预部署两套 Campaign | 🔲 等 8 个角色私钥 + 领水完成 → `testnet up` | 后端 |
+| 前端重建（specs/006/007：极简三页 + 真链全流程） | ✅ T1–T6/T8 完成；/orders 与 /console 仍为占位桩（T7/T9 待施工） | 前端 |
+| Testnet 预部署两套 Campaign | ✅ 完成（2026-07-24，地址见 deployments/injective-testnet.json，链上实况见 specs/006 §0） | 后端 |
 | 证据页 / 视频 / README 素材 | 🔲 演示前一天完成 | Producer |
 
 ## 1. 赛前准备（T+0 必做）
 
-1. 准备 7 个测试钱包：1 operator、2 factory（North/Loom）、≥4 buyer。只记录地址，私钥只在各自 MetaMask / 本地环境变量。
+1. 准备 8 个角色钱包：1 operator、2 factory（North/Loom）、5 buyer（与 .env.example 一致）。只记录地址，私钥只在各自 MetaMask / 本地环境变量。
 2. 每个钱包去 faucet 领 test INJ：<https://testnet.faucet.injective.network/>（buyer 至少 0.03，operator/factory 少量 gas 即可）。
 3. 只读验证网络：`cast chain-id --rpc-url https://k8s.testnet.json-rpc.injective.network/` 应返回 `1439`；Blockscout 能打开。
 4. 复核 manifestHash：`npm test` 中 lib/schema 单测会打印并断言 FRAME-01 的 hash，必须与部署参数一致。
@@ -47,7 +47,7 @@ contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + Loom 
 | 时间 | 动作 | 证据 |
 |---|---|---|
 | 0:00–0:15 | 讲问题：品牌靠点赞猜产量，工厂靠询价猜订单 | 口述 |
-| 0:15–0:35 | AI Studio 粘贴 fixtures/comments.json 的 20 条评论 → 生成 3 候选 → 展示证据/unknowns → 确认 FRAME-01，展示 manifestHash | AI GENERATED → HUMAN CONFIRMED 标签切换 |
+| 0:15–0:35 | AI Studio 粘贴 fixtures/comments.json 的 20 条评论 → 生成 3 候选 → 展示证据/unknowns → 确认 FRAME-01，展示 manifestHash（AI Studio 已砍，编译入口移至 /console，见 specs/006 §3.4） | AI GENERATED → HUMAN CONFIRMED 标签切换 |
 | 0:35–0:55 | Campaign 页展示两家 DEMO FACTORY 的冻结 MOQ 曲线 | 报价卡 + ONCHAIN 标签 |
 | 0:55–1:15 | 一个 buyer 钱包现场连接 MetaMask 下单（或展示已下单 tx） | 真实 testnet tx + Blockscout 深链 |
 | 1:15–1:35 | Success Campaign 现场 `settle`；结果页逐条解释 Loom min3@0.019 为何中标（North 只有 2 人 ≥0.024 不可行） | CampaignSettled 事件 |
@@ -59,7 +59,7 @@ contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + Loom 
 ## 4. 降级预案（按优先级）
 
 1. **RPC 抖动**：前端切备用 RPC 环境变量；已下单的 tx 链接不受影响。
-2. **现场网络完全挂掉**：切前端 Demo 模式（fixtures 驱动，全部视图可走通，数据标 OFF-CHAIN DEMO），同时展示预录的 testnet tx 证据页。**不得把预录状态说成现场交易。**
+2. **现场网络完全挂掉**：前端 live-first，无用户可见 Demo 开关（fixtures 仅本地开发注入）；断网降级 = 显示加载失败文案 + 展示预录的 testnet 证据页，不得静默切假数据（spec 006 §6）。**不得把预录状态说成现场交易。**
 3. **AI API 故障**：lib/ai 自动落 fixture（<2 秒），页面显示 Fixture 标签，不阻断流程。
 4. **钱包拒签/余额不足**：按 PRD 15 章文案提示，换备用 buyer 钱包重试。
 

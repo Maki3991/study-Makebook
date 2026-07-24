@@ -1,5 +1,7 @@
 # Spec 003 · 前端集成与数值对齐
 
+> ⚠️ 【已归档 2026-07-25】本文施工坐标（mock-data.ts、story-screens、Demo Panel）已全部删除，被 specs/006 取代。数值口径（0.019×4 / MOQ 3 / 应收 0.076）仍与 fixtures/success.json 一致，保留作历史参考。
+
 > 面向前端（Alan）。接口字段细节以 `docs/FRONTEND_INTERFACE.md` 为唯一入口；本 spec 管"mock 如何换成真数据"与"两边数值必须一致"。
 > 原则：界面结构与视觉系统不动；只替换数据源与修正数值。
 

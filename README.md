@@ -20,21 +20,21 @@ MAKEBOOK 是面向实体新品的预生产订单簿：AI 将评论与访谈整�
 - 前端交互与成功/失败演示状态可独立运行。
 - 仓库中的固定交易哈希和订单数据仅用于前端联调，不是最终链上证据。
 - 钱包、合约读取、真实交易与 AI API 由团队技术分支接入；接入后仍沿用当前状态与错误界面。
-- Operator / Factory 操作收在隐藏 Demo Panel，不进入评委主路径。
 - 这是测试网原型，不处理真实资产，也不保证真实生产、物流或质量履约。
 
 ## 仓库结构（Monorepo）
 
-- `app/` — 前端四步叙事（AI Demand Studio → Campaign Market → Conditional Order → Settlement & Receipt）
+- `app/` — 前端：首页 + /campaigns/[id] + /orders + /console + /api/compile（specs/006 信息架构）
 - `contracts/` — MakebookCampaign 清算合约（Foundry，51 个测试全绿；见 `contracts/README.md`）
 - `lib/schema/` — Market Manifest Zod schema + canonical JSON / manifestHash（前后端共用）
 - `lib/ai/` — AI 需求编译器：脱敏、OpenAI 兼容适配器、Zod 校验、fixture 降级
-- `fixtures/` — 成功/失败清算剧本与 20 条评论样本（Demo 模式数据源，数值与 PRD 附录 A 逐 wei 对齐）
-- `public/manifests/frame-01.json` — 人工确认版 manifest（canonical 格式）
-- `deployments/injective-testnet.json` — 预部署 Campaign 地址（占位，部署后回填）
+- `fixtures/` — 成功/失败清算剧本与评论样本（comments.json、bracelet-comments.json；Demo 模式数据源，数值与 PRD 附录 A 逐 wei 对齐）
+- `public/manifests/` — 人工确认版 manifest（canonical 格式）：frame-01.json、heritage-bracelet.json
+- `deployments/injective-testnet.json` — 预部署 Campaign 地址（已回填真实地址，两套 Campaign）
 - `docs/FRONTEND_INTERFACE.md` — 前后端唯一对接入口（ABI / revert 文案 / 状态机 / 事件 / hash 算法）
 - `docs/DEMO_RUNBOOK.md` — 演示手册：预部署步骤、2 分钟流程、降级预案、评委问答
 - `specs/` — SDD 规格文档（见 `specs/README.md`）
+- `worker/`、`db/`、`examples/d1/`、`build/sites-vite-plugin.ts` — vinext 模板残留，当前 dormant（db 未接线，D1 binding 为空）
 
 ## 后端 / 合约
 
@@ -58,7 +58,7 @@ forge test -vv          # 合约 CT-01~CT-12 + 端到端
 
 ## 本地运行
 
-需要 Node.js `>=22.13.0`。
+需要 Node.js `>=22.18.0`（实测 22.13–22.17 无法 flagless 跑 .ts 测试）。包管理器以 npm 为准：仓库根暂存 pnpm-lock.yaml 与 package-lock.json 双 lockfile，pnpm-lock.yaml 待清理。
 
 ```bash
 npm install

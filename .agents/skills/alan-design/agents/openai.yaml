@@ -1,0 +1,8 @@
+interface:
+  display_name: "Alan Design"
+  short_description: "Alan Yang's product and visual design direction system"
+  brand_color: "#111111"
+  default_prompt: "Use $alan-design to design, redesign, review, or polish this work according to Alan Yang's product and visual standards."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,5 +1,7 @@
 # MAKEBOOK 前端架构（MVP 产品化版）
 
+> ⚠️ 【已归档 2026-07-25】本文档描述旧前端时代（四步叙事 + Demo Panel）的方案/交接，已被 specs/006-frontend-rebuild.md 与 specs/007-frontend-construction.md 取代。保留仅作历史参考，施工以 006/007 为准。
+
 > 目的：把全部需求（PRD v1.0 + v2 草案 + spec 001–005）映射为一套**像真实众筹平台**的前端信息架构，供实现 agent 施工。
 > 核心转向：从"四步评审叙事"升级为"产品主页 + 角色控制台"。四步叙事压缩进产品页，评审路径不丢失。
 > 纪律：数据源优先级（合约 → fixtures 降级）与六种来源标签不变；P0 已实现 / V1 设计在 UI 上永不混称（OFF-CHAIN DEMO 标签）；金额全程 wei bigint。

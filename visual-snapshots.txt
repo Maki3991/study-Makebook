@@ -1,0 +1,444 @@
+MAKEBOOK visual snapshots — 2026-07-24T20:37:56.356Z
+Base URL: http://localhost:3000
+============================================================
+
+--- home desktop (http://localhost:3000/) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/home-desktop.png
+text:
+Name your max price. Factories produce to real demand.
+
+Your bid is held in full by the contract. If the batch clears, you pay one uniform price and the difference is refunded automatically. If it does not clear, everyone gets a full refund.
+
+Start demo
+Get started in 3 steps
+
+Step 1
+
+Connect wallet (auto-switches to Injective testnet)
+
+Step 2
+
+Claim free test INJ
+
+Step 3
+
+Place a bid on a batch
+
+Active batches
+FRAME-01 Camera Sling
+
+Batch A
+
+Accepting orders
+
+5/50 orders
+
+1d 1h 22m until deadline
+
+If it closed now: uniform price 0.019 test INJ, 4 orders clearing
+
+Start demo
+FRAME-01 Camera Sling
+
+Batch B(Below-MOQ example batch)
+
+Accepting orders
+
+2/50 orders
+
+1d 1h 22m until deadline
+
+Below MOQ — would not clear yet
+
+Start demo
+Demand being compiled
+
+These products are compiled by AI from the same set of user comments. They will open once demand is confirmed.
+
+Not yet open
+Black 10L Urban Short-trip Backpack
+
+From comments c10
+
+Not yet open
+Commuter Tote with Removable Insert
+
+From comments c13
+
+--- campaign-success desktop (http://localhost:3000/campaigns/success) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/campaign-success-desktop.png
+text:
+Accepting orders
+1d 1h 21m until deadline
+
+ORDERS
+
+5 / 50
+
+CURRENT PREVIEW
+
+If it closed now: uniform price 0.019 test INJ, 4 orders clearing
+
+FRAME-01 Camera Sling
+
+Batch A
+
+SPECS
+
+Capacity
+8L
+Color
+Black
+Insert
+Removable
+
+Specs compiled by AI from real user comments and confirmed on-chain
+
+Product manifest hash verified, matches on-chain ✓
+
+Factory terms (demo factories)
+FACTORY
+MOQ
+UNIT PRICE
+ELIGIBLE
+STATUS
+FACTORY A
+3
+0.024 test INJ
+2 orders
+1 orders short
+FACTORY B
+3
+0.019 test INJ
+4 orders
+can clear
+Demand curve: real orders at each price point
+5
+4
+3
+2
+1
+0.019
+0.017
+0.019
+0.021
+0.024
+0.026
+Price (test INJ)
+0
+1
+2
+3
+4
+5
+Orders
+Back this batch
+Your max price (test INJ)
+test INJ
+
+Reference price points
+
+0.019
+0.024
+0.026
+Back now
+
+Contract: 0x378bb7d08e92317ff8a5f7750bb7a91332bab03d
+
+--- campaign-failure desktop (http://localhost:3000/campaigns/failure) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/campaign-failure-desktop.png
+text:
+Accepting orders
+1d 1h 21m until deadline
+
+ORDERS
+
+2 / 50
+
+CURRENT PREVIEW
+
+Below MOQ — would not clear yet
+
+FRAME-01 Camera Sling
+
+Batch B
+
+SPECS
+
+Capacity
+8L
+Color
+Black
+Insert
+Removable
+
+Specs compiled by AI from real user comments and confirmed on-chain
+
+Product manifest hash verified, matches on-chain ✓
+
+Factory terms (demo factories)
+FACTORY
+MOQ
+UNIT PRICE
+ELIGIBLE
+STATUS
+FACTORY A
+3
+0.024 test INJ
+2 orders
+1 orders short
+FACTORY B
+3
+0.019 test INJ
+2 orders
+1 orders short
+Demand curve: real orders at each price point
+2
+2
+2
+2
+1
+0.017
+0.019
+0.021
+0.024
+0.026
+Price (test INJ)
+0
+1
+2
+3
+4
+5
+Orders
+Back this batch
+Your max price (test INJ)
+test INJ
+
+Reference price points
+
+0.019
+0.024
+0.026
+Back now
+
+Contract: 0x01c51b7c50dd0537933bf245b8a5ea6252735f51
+
+--- home mobile (http://localhost:3000/) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/home-mobile.png
+text:
+Name your max price. Factories produce to real demand.
+
+Your bid is held in full by the contract. If the batch clears, you pay one uniform price and the difference is refunded automatically. If it does not clear, everyone gets a full refund.
+
+Start demo
+Get started in 3 steps
+
+Step 1
+
+Connect wallet (auto-switches to Injective testnet)
+
+Step 2
+
+Claim free test INJ
+
+Step 3
+
+Place a bid on a batch
+
+Active batches
+FRAME-01 Camera Sling
+
+Batch A
+
+Accepting orders
+
+5/50 orders
+
+1d 1h 21m until deadline
+
+If it closed now: uniform price 0.019 test INJ, 4 orders clearing
+
+Start demo
+FRAME-01 Camera Sling
+
+Batch B(Below-MOQ example batch)
+
+Accepting orders
+
+2/50 orders
+
+1d 1h 21m until deadline
+
+Below MOQ — would not clear yet
+
+Start demo
+Demand being compiled
+
+These products are compiled by AI from the same set of user comments. They will open once demand is confirmed.
+
+Not yet open
+Black 10L Urban Short-trip Backpack
+
+From comments c10
+
+Not yet open
+Commuter Tote with Removable Insert
+
+From comments c13
+
+--- campaign-success mobile (http://localhost:3000/campaigns/success) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/campaign-success-mobile.png
+text:
+Accepting orders
+1d 1h 20m until deadline
+
+ORDERS
+
+5 / 50
+
+CURRENT PREVIEW
+
+If it closed now: uniform price 0.019 test INJ, 4 orders clearing
+
+FRAME-01 Camera Sling
+
+Batch A
+
+SPECS
+
+Capacity
+8L
+Color
+Black
+Insert
+Removable
+
+Specs compiled by AI from real user comments and confirmed on-chain
+
+Product manifest hash verified, matches on-chain ✓
+
+Factory terms (demo factories)
+Factory A
+MOQ 3
+Unit price 0.024 test INJ
+Eligible 2 orders
+1 orders short
+Factory B
+MOQ 3
+Unit price 0.019 test INJ
+Eligible 4 orders
+can clear
+Demand curve: real orders at each price point
+5
+4
+3
+2
+1
+0.019
+0.017
+0.019
+0.021
+0.024
+0.026
+Price (test INJ)
+0
+1
+2
+3
+4
+5
+Orders
+Back this batch
+Your max price (test INJ)
+test INJ
+
+Reference price points
+
+0.019
+0.024
+0.026
+Back now
+
+Contract: 0x378bb7d08e92317ff8a5f7750bb7a91332bab03d
+
+--- campaign-failure mobile (http://localhost:3000/campaigns/failure) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/campaign-failure-mobile.png
+text:
+Accepting orders
+1d 1h 20m until deadline
+
+ORDERS
+
+2 / 50
+
+CURRENT PREVIEW
+
+Below MOQ — would not clear yet
+
+FRAME-01 Camera Sling
+
+Batch B
+
+SPECS
+
+Capacity
+8L
+Color
+Black
+Insert
+Removable
+
+Specs compiled by AI from real user comments and confirmed on-chain
+
+Product manifest hash verified, matches on-chain ✓
+
+Factory terms (demo factories)
+Factory A
+MOQ 3
+Unit price 0.024 test INJ
+Eligible 2 orders
+1 orders short
+Factory B
+MOQ 3
+Unit price 0.019 test INJ
+Eligible 2 orders
+1 orders short
+Demand curve: real orders at each price point
+2
+2
+2
+2
+1
+0.017
+0.019
+0.021
+0.024
+0.026
+Price (test INJ)
+0
+1
+2
+3
+4
+5
+Orders
+Back this batch
+Your max price (test INJ)
+test INJ
+
+Reference price points
+
+0.019
+0.024
+0.026
+Back now
+
+Contract: 0x01c51b7c50dd0537933bf245b8a5ea6252735f51
+

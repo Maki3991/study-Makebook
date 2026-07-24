@@ -138,7 +138,7 @@
 
 ### 3.5 演示与评审需求（团队自身）
 
-- **P0 机制** `[机制]`：成功/失败双 Campaign 预部署、fixture 降级（AI/网络/钱包故障不阻断演示）、Demo Panel 四种异常状态切换、证据页（tx 深链 + Blockscout）、120 秒主路径。
+- **P0 机制** `[机制]`：成功/失败双 Campaign 预部署、fixture 降级（AI/网络/钱包故障不阻断演示）、Demo Panel 四种异常状态切换（Demo Panel 已随 006 取消，此条为历史口径）、证据页（tx 深链 + Blockscout）、120 秒主路径。
 - **验证**：DEMO-01/02；`docs/DEMO_RUNBOOK.md`。
 
 ---
