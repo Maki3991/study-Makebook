@@ -30,6 +30,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -52,3 +53,8 @@ next-env.d.ts
 /contracts/out/
 /contracts/cache/
 /contracts/broadcast/
+
+# secrets & local deployment state — 私钥永不进仓库
+.env
+deployments/state.anvil.json
+deployments/receipts/anvil-*
