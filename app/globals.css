@@ -1,47 +1,494 @@
 @import "tailwindcss";
 
-:root {
-  color-scheme: light;
+/*
+ * MAKEBOOK site design system — manufacturing spec-sheet aesthetic.
+ * Cold neutrals, 1px hairlines, 0/2px radii only, tabular numerals.
+ * No gradients, no glassmorphism, no glow, no shadow stacking.
+ */
+
+@theme {
+  /* neutrals */
+  --color-n-00: #ffffff;
+  --color-n-04: #eff1f3;
+  --color-n-08: #e7eaed;
+  --color-n-12: #dfe3e6; /* page background */
+  --color-n-16: #d6dbdf;
+  --color-n-22: #c9cfd5; /* hairline */
+  --color-n-30: #b6bec6; /* strong hairline */
+  --color-n-40: #99a2ac; /* tertiary text */
+  --color-n-52: #7a838e;
+  --color-n-64: #5a636e; /* secondary text */
+  --color-n-76: #3e4650;
+  --color-n-86: #293038;
+  --color-n-92: #1b2229; /* primary text */
+  --color-n-96: #131920;
+
+  /* accents */
+  --color-azure: #1b4f6b; /* primary CTA */
+  --color-azure-deep: #153f58;
+  --color-celadon: #9cc3c9; /* accent on dark surfaces */
+  --color-celadon-dim: #4a7f88;
+  --color-violet: #4e4570; /* AI-inferred marks only */
+
+  /* dark settlement zone */
+  --color-ink: #14262c;
+  --color-ink-1: #1a2f36;
+  --color-ink-2: #21393f;
+  --color-ink-line: rgb(156 195 201 / 0.14);
+  --color-ink-line-strong: rgb(156 195 201 / 0.26);
+  --color-ink-text-1: #e2ecec;
+  --color-ink-text-2: #93a8ab;
+  --color-ink-text-3: #66787c;
+
+  /* source-tag signal tones (dot color; the label text is always rendered,
+     so color is never the only signal) */
+  --color-signal-onchain: #2e7d54;
+  --color-signal-human: #1b4f6b;
+  --color-signal-ai: #4e4570;
+  --color-signal-factory: #b45f16;
+  --color-signal-offchain: #7a838e;
+  --color-signal-testnet: #3f4e78;
+
+  /* destructive / wrong-network */
+  --color-danger: #b03a30;
+  --color-danger-deep: #8f2d25;
+
+  /* type */
+  --font-display: "Noto Sans SC Variable", "Noto Sans SC",
+    "Source Han Sans SC", system-ui, sans-serif;
+  --font-sans: "MiSans", "Noto Sans SC Variable", "Noto Sans SC", system-ui,
+    sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular,
+    monospace;
+
+  /* type scale */
+  --text-11: 11px;
+  --text-13: 13px;
+  --text-15: 15px;
+  --text-17: 17px;
+  --text-21: 21px;
+  --text-28: 28px;
+  --text-40: 40px;
+  --text-64: 64px;
+
+  /* motion */
+  --ease-site: cubic-bezier(0.2, 0, 0, 1);
 }
 
-html,
-body {
-  min-height: 100%;
-  margin: 0;
+/* ----------------------------------------------------------------------- */
+/* base reset                                                               */
+/* ----------------------------------------------------------------------- */
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --topbar-h: 64px;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+    margin: 0;
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--topbar-h) + 16px);
+  }
+
+  body {
+    min-height: 100dvh;
+    margin: 0;
+    background: var(--color-n-12);
+    color: var(--color-n-92);
+    font-family: var(--font-sans);
+    font-size: var(--text-15);
+    font-weight: 400;
+    line-height: 1.7;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "halt" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  figure,
+  blockquote,
+  dl,
+  dd {
+    margin: 0;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button,
+  [role="button"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  img,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-azure);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-celadon);
+    color: var(--color-n-96);
+  }
 }
 
-body {
-  min-height: 100dvh;
+/* ----------------------------------------------------------------------- */
+/* components: surfaces, hairlines, tags, buttons, skeleton, reveal         */
+/* ----------------------------------------------------------------------- */
+
+@layer components {
+  /* surfaces */
+  .surface {
+    background: var(--color-n-08);
+    border: 1px solid var(--color-n-22);
+    border-radius: 2px;
+  }
+
+  .surface-flat {
+    background: var(--color-n-04);
+    border: 1px solid var(--color-n-22);
+    border-radius: 2px;
+  }
+
+  /* dark settlement zone */
+  .surface-ink {
+    background: var(--color-ink);
+    border: 1px solid var(--color-ink-line);
+    border-radius: 2px;
+    color: var(--color-ink-text-1);
+  }
+
+  /* 1px hairline dividers */
+  .line {
+    height: 1px;
+    border: 0;
+    background: var(--color-n-22);
+  }
+
+  .line-v {
+    width: 1px;
+    align-self: stretch;
+    background: var(--color-n-22);
+  }
+
+  .surface-ink .line,
+  .line-on-ink {
+    background: var(--color-ink-line);
+  }
+
+  /* vertical section rhythm */
+  .section {
+    padding-block: 64px;
+  }
+
+  @media (min-width: 1024px) {
+    .section {
+      padding-block: 96px;
+    }
+  }
+
+  /* mono tabular numerals */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* source tags — 6px square dot + uppercase mono label */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: var(--text-11);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--color-n-52);
+  }
+
+  .tag-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
+    background: currentcolor;
+  }
+
+  .tag[data-tone="onchain"] {
+    color: var(--color-signal-onchain);
+  }
+
+  .tag[data-tone="human"] {
+    color: var(--color-signal-human);
+  }
+
+  /* AI-inferred marks use a hollow dot, so shape also carries the meaning */
+  .tag[data-tone="ai"] {
+    color: var(--color-signal-ai);
+  }
+
+  .tag[data-tone="ai"] .tag-dot {
+    background: transparent;
+    border: 1px solid currentcolor;
+  }
+
+  .tag[data-tone="factory"] {
+    color: var(--color-signal-factory);
+  }
+
+  .tag[data-tone="offchain"] {
+    color: var(--color-signal-offchain);
+  }
+
+  .tag[data-tone="testnet"] {
+    color: var(--color-signal-testnet);
+  }
+
+  /* on dark surfaces, dim tones lift to celadon for legibility */
+  .surface-ink .tag[data-tone="onchain"],
+  .surface-ink .tag[data-tone="human"] {
+    color: var(--color-celadon);
+  }
+
+  /* small bordered pill wrapper (e.g. top-bar TESTNET) */
+  .pill {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    border: 1px solid var(--color-n-22);
+    border-radius: 2px;
+    background: var(--color-n-04);
+  }
+
+  /* buttons — idle / hover / focus / active / disabled (+ loading) */
+  .btn {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    font-size: var(--text-13);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    user-select: none;
+    transition:
+      background-color 120ms var(--ease-site),
+      border-color 120ms var(--ease-site),
+      color 120ms var(--ease-site);
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--color-azure);
+    color: var(--color-n-00);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-azure-deep);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    background: var(--color-azure-deep);
+  }
+
+  .btn-primary:disabled {
+    background: var(--color-n-22);
+    color: var(--color-n-52);
+  }
+
+  .btn-dark {
+    background: var(--color-n-92);
+    color: var(--color-n-00);
+  }
+
+  .btn-dark:hover:not(:disabled) {
+    background: var(--color-n-76);
+  }
+
+  .btn-dark:active:not(:disabled) {
+    background: var(--color-n-86);
+  }
+
+  .btn-dark:disabled {
+    background: var(--color-n-22);
+    color: var(--color-n-52);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--color-n-30);
+    color: var(--color-n-92);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--color-n-08);
+    border-color: var(--color-n-40);
+  }
+
+  .btn-ghost:active:not(:disabled) {
+    background: var(--color-n-16);
+  }
+
+  .btn-ghost:disabled {
+    border-color: var(--color-n-22);
+    color: var(--color-n-40);
+  }
+
+  /* wrong-network / destructive */
+  .btn-danger {
+    background: var(--color-danger);
+    color: var(--color-n-00);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: var(--color-danger-deep);
+  }
+
+  .btn-danger:active:not(:disabled) {
+    background: var(--color-danger-deep);
+  }
+
+  /* transient error feedback on any variant */
+  .btn[data-state="error"] {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+  }
+
+  .btn[data-state="error"].btn-primary,
+  .btn[data-state="error"].btn-dark,
+  .btn[data-state="error"].btn-danger {
+    color: var(--color-n-00);
+  }
+
+  /* skeleton shimmer (sliding translucent bar, no gradient) */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--color-n-16);
+  }
+
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: rgb(255 255 255 / 0.5);
+    animation: skeleton-slide 1.6s var(--ease-site) infinite;
+  }
+
+  @keyframes skeleton-slide {
+    from {
+      transform: translateX(-100%);
+    }
+
+    to {
+      transform: translateX(250%);
+    }
+  }
+
+  /* reveal animation — opacity/transform only */
+  @keyframes reveal-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .reveal {
+    animation: reveal-rise 320ms var(--ease-site) both;
+  }
+
+  .reveal-delay-1 {
+    animation-delay: 60ms;
+  }
+
+  .reveal-delay-2 {
+    animation-delay: 120ms;
+  }
+
+  .reveal-delay-3 {
+    animation-delay: 180ms;
+  }
 }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
+/* ----------------------------------------------------------------------- */
+/* reduced motion                                                           */
+/* ----------------------------------------------------------------------- */
 
-button {
-  cursor: pointer;
-}
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
 
-button,
-[role="button"] {
-  min-width: 44px;
-  min-height: 44px;
-}
+    .reveal {
+      animation: none;
+    }
 
-img,
-svg {
-  display: block;
-  max-width: 100%;
-}
+    .skeleton::after {
+      animation: none;
+      width: 100%;
+      background: none;
+    }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-[hidden] {
-  display: none !important;
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
 }

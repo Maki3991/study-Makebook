@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { formatUnits, parseUnits, type Address, type Hex } from "viem";
 import failureFixture from "../../../fixtures/failure.json";
 import successFixture from "../../../fixtures/success.json";
@@ -9,6 +9,7 @@ import {
   ZERO_ADDRESS,
   failureDeployment,
   isDemoMode,
+  playgroundDeployment,
   successDeployment,
   type CampaignDeployment,
 } from "./deployments";
@@ -33,11 +34,11 @@ import { shortenAddress } from "./wallet";
  * Campaign 数据 hook：链上实时读取 + fixtures 降级（spec 003 第 1/3 节）。
  * - 数据源优先级：合约（ONCHAIN）→ fixtures/*.json（OFF-CHAIN DEMO）
  * - deployments 零地址（isDemoMode）或任何 RPC/读取失败 → fixtures 兜底
- * - success/failure 两套合约地址由 demo-panel 的清算场景开关选择
+ * - 场景（success/failure/playground）由 site/demo-panel 的全局模式覆盖统一切换
  * - 金额全程 wei bigint，显示层才 formatUnits（INV-09，无浮点）
  */
 
-export type CampaignScenario = "success" | "failure";
+export type CampaignScenario = "success" | "failure" | "playground";
 
 const ZERO_HASH: Hex =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -82,12 +83,16 @@ export interface CampaignView {
   settledTxHash: Hex | null;
 }
 
-function deploymentFor(scenario: CampaignScenario): CampaignDeployment {
-  return scenario === "success" ? successDeployment : failureDeployment;
+/** playground 未部署（缺失/零地址）时为 null，调用方据此回落 fixtures。 */
+function deploymentFor(scenario: CampaignScenario): CampaignDeployment | null {
+  if (scenario === "success") return successDeployment;
+  if (scenario === "failure") return failureDeployment;
+  return playgroundDeployment;
 }
 
+/** playground 没有专属 fixture，降级时复用 success 剧本（标 OFF-CHAIN DEMO）。 */
 function fixtureFor(scenario: CampaignScenario) {
-  return scenario === "success" ? successFixture : failureFixture;
+  return scenario === "failure" ? failureFixture : successFixture;
 }
 
 // ---------------------------------------------------------------------------
@@ -165,7 +170,13 @@ function buildView(args: {
 /** fixtures/*.json → CampaignView（spec 003 附录 A 场景，OFF-CHAIN DEMO 兜底）。 */
 export function buildFixtureView(scenario: CampaignScenario): CampaignView {
   const fixture = fixtureFor(scenario);
-  const deployment = deploymentFor(scenario);
+  // playground 未部署时退化为零地址视图，元数据借用 success 部署（纯展示兜底）。
+  const deployment = deploymentFor(scenario) ?? {
+    address: ZERO_ADDRESS,
+    manifestHash: successDeployment.manifestHash,
+    manifestURI: successDeployment.manifestURI,
+    deadline: successDeployment.deadline,
+  };
   const quotes: Quote[] = fixture.quotes.map((quote) => ({
     factory: ZERO_ADDRESS,
     quoteHash: ZERO_HASH,
@@ -181,7 +192,7 @@ export function buildFixtureView(scenario: CampaignScenario): CampaignView {
     refundClaimed: false,
     txHash: null,
   }));
-  const success = scenario === "success";
+  const success = scenario !== "failure";
   const preview: SettlementPreview = success
     ? {
         feasible: true,
@@ -240,6 +251,7 @@ export function buildFixtureView(scenario: CampaignScenario): CampaignView {
 
 async function fetchOnchainView(scenario: CampaignScenario): Promise<CampaignView> {
   const deployment = deploymentFor(scenario);
+  if (!deployment) return buildFixtureView(scenario);
   const client = createInjPublicClient();
   const summary = await readCampaignSummary(client, deployment.address);
   const latest = await client.getBlockNumber();
@@ -285,6 +297,54 @@ const CACHE_TTL_MS = 15_000;
 const cache = new Map<CampaignScenario, { at: number; view: CampaignView }>();
 const inflight = new Map<CampaignScenario, Promise<CampaignView>>();
 
+// ---------------------------------------------------------------------------
+// 全局演示模式（site/demo-panel）：场景覆盖 + RPC 故障模拟
+// ---------------------------------------------------------------------------
+
+export interface CampaignModeState {
+  /** null = 尊重各调用点请求的 scenario（默认行为，页面主场景即 "success"）。 */
+  scenarioOverride: CampaignScenario | null;
+  /** true = 跳过全部 RPC 读取直接回落 fixtures（演示"RPC 故障"降级链路）。 */
+  forceFixture: boolean;
+}
+
+const DEFAULT_MODE_STATE: CampaignModeState = {
+  scenarioOverride: null,
+  forceFixture: false,
+};
+
+let modeState: CampaignModeState = DEFAULT_MODE_STATE;
+const modeListeners = new Set<() => void>();
+
+/** 更新全局演示模式（Demo Panel 调用）；所有 useCampaignData 订阅方随之重取。 */
+export function setCampaignMode(next: Partial<CampaignModeState>): void {
+  const merged = { ...modeState, ...next };
+  if (
+    merged.scenarioOverride === modeState.scenarioOverride &&
+    merged.forceFixture === modeState.forceFixture
+  ) {
+    return;
+  }
+  modeState = merged;
+  for (const listener of modeListeners) listener();
+}
+
+function subscribeMode(listener: () => void): () => void {
+  modeListeners.add(listener);
+  return () => {
+    modeListeners.delete(listener);
+  };
+}
+
+/** 订阅全局演示模式（SSR 快照恒为默认值）。 */
+export function useCampaignModeState(): CampaignModeState {
+  return useSyncExternalStore(
+    subscribeMode,
+    () => modeState,
+    () => DEFAULT_MODE_STATE,
+  );
+}
+
 /**
  * 拉取 Campaign 视图。任何 RPC/读取失败静默回落 fixtures（标 OFF-CHAIN DEMO），
  * 不向组件抛错——错误三态演示由 demo-panel 的 readState 开关负责。
@@ -325,12 +385,17 @@ export interface CampaignDataResult {
  * Campaign 数据 hook。
  * status 由"已取数是否与当前 scenario 匹配"派生，effect 内不做同步 setState；
  * 首屏及 scenario 切换期间为 loading（界面走 skeleton），就绪后 view 恒有值。
- * @param enabled demo-panel readState ≠ ready 时置 false，暂停读取（演示三态用）。
+ * Demo Panel 的全局模式（scenarioOverride / forceFixture）在此统一生效：
+ * 各 section 仍以 "success" 请求，覆盖激活时实际读取被切到目标场景。
+ * @param enabled 置 false 时暂停读取（演示三态用）。
  */
 export function useCampaignData(
   scenario: CampaignScenario,
   enabled = true,
 ): CampaignDataResult {
+  const mode = useCampaignModeState();
+  const activeScenario = mode.scenarioOverride ?? scenario;
+  const forceFixture = mode.forceFixture;
   const [fetched, setFetched] = useState<{
     scenario: CampaignScenario;
     view: CampaignView;
@@ -340,19 +405,22 @@ export function useCampaignData(
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    void fetchCampaignView(scenario, nonce > 0).then((view) => {
-      if (!cancelled) setFetched({ scenario, view });
+    const promise = forceFixture
+      ? Promise.resolve(buildFixtureView(activeScenario))
+      : fetchCampaignView(activeScenario, nonce > 0);
+    void promise.then((view) => {
+      if (!cancelled) setFetched({ scenario: activeScenario, view });
     });
     return () => {
       cancelled = true;
     };
-  }, [scenario, enabled, nonce]);
+  }, [activeScenario, enabled, nonce, forceFixture]);
 
   const reload = useCallback(() => setNonce((n) => n + 1), []);
-  const ready = fetched !== null && fetched.scenario === scenario;
+  const ready = fetched !== null && fetched.scenario === activeScenario;
   return {
     status: ready ? "ready" : "loading",
-    view: ready ? fetched.view : buildFixtureView(scenario),
+    view: ready ? fetched.view : buildFixtureView(activeScenario),
     reload,
   };
 }

@@ -14,6 +14,11 @@ export interface CampaignDeployment {
   manifestURI: string;
   /** 秒级 Unix 时间，对应合约 uint64 deadline；链上读取返回 bigint，此处为部署元数据 number。 */
   deadline: number;
+  /**
+   * 主理人地址（可选）：deployments.json 可能未回填；缺省时前端在 onchain
+   * 路径下从合约 operator() 实读，fixture 降级时不编造、显示不可用占位。
+   */
+  operator?: Address;
 }
 
 export interface Deployments {
@@ -23,6 +28,8 @@ export interface Deployments {
   explorer: string;
   success: CampaignDeployment;
   failure: CampaignDeployment;
+  /** 可选：真实体验场实例，部署完成后由合约任务回填；缺失或零地址时前端隐藏该入口。 */
+  playground?: CampaignDeployment;
 }
 
 export const ZERO_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
@@ -37,6 +44,15 @@ export const deployments = raw as Deployments;
 export const successDeployment: CampaignDeployment = deployments.success;
 /** 失败场景 Campaign（fixtures/failure.json 对应的链上实例）。 */
 export const failureDeployment: CampaignDeployment = deployments.failure;
+
+/**
+ * Playground 体验场 Campaign：仅当 deployments.json 回填且地址非零时可用，
+ * 否则为 null（UI 不展示 playground 入口，请求该场景时回落 fixtures）。
+ */
+export const playgroundDeployment: CampaignDeployment | null =
+  deployments.playground && !isZeroAddress(deployments.playground.address)
+    ? deployments.playground
+    : null;
 
 /**
  * Demo/fixture 降级开关：success/failure 任一为零地址即视为未部署完成，

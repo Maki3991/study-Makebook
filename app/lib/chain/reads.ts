@@ -84,6 +84,21 @@ export interface Order {
 // ---------------------------------------------------------------------------
 
 /**
+ * 读取构造时写入的 immutable operator 地址（主理人卡展示用）。
+ * 读取失败照常抛出，由调用方决定降级展示（fixture 场景无链上可读）。
+ */
+export async function readOperator(
+  client: PublicClient,
+  address: Address,
+): Promise<Address> {
+  return client.readContract({
+    address,
+    abi: makebookAbi,
+    functionName: "operator",
+  });
+}
+
+/**
  * 一次拉取 Campaign 概览：基础字段 + 全部 quote + 实时清算预览。
  * previewSettlement 在 Open 期间是实时预览，settle 后是已写入的唯一结果。
  */
