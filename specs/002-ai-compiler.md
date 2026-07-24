@@ -36,7 +36,7 @@ AI 只做"文本 → 受约束 JSON"：候选 SKU、证据、未知项、价格�
 
 ```
 public/manifests/frame-01.json
-manifestHash = 0x7952a786db50f4ee3d6f1170a2f2c5d4fa1df5d90fe1ff06a5327e8c52b876b0
+manifestHash = 0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec
 ```
 
 前端算出的 hash、部署参数、链上 `manifestHash()` 三者必须一致；`npm run test:lib` 含稳定性断言。

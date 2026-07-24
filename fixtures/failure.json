@@ -1,6 +1,6 @@
 {
   "scenario": "failure",
-  "label": "附录 A.2 失败 Campaign（Hackathon scaled test data）",
+  "label": "Appendix A.2 failure campaign (Hackathon scaled test data)",
   "campaignCode": "FRAME-01-FAIL",
   "quotes": [
     {
@@ -26,6 +26,6 @@
     "winnerCount": 0,
     "factoryReceivable": "0",
     "unit": "testINJ",
-    "note": "最低 MOQ=3，仅 2 个有效订单；全员全额退款，无工厂应收"
+    "note": "min MOQ=3 with only 2 valid orders; everyone refunded in full, no factory receivable"
   }
 }

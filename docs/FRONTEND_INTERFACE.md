@@ -195,7 +195,7 @@ const hash = canonicalHash(manifest); // 交给 operator 部署用
 **已确认 fixture（FRAME-01）**：`public/manifests/frame-01.json`（文件本身即 canonical 形式），其
 
 ```
-manifestHash = 0x7952a786db50f4ee3d6f1170a2f2c5d4fa1df5d90fe1ff06a5327e8c52b876b0
+manifestHash = 0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec
 ```
 
 前端、Node 脚本与链上 `manifestHash()` 三方必须一致（`npm test` 中有稳定性锚点测试）。

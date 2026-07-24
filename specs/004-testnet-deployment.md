@@ -34,7 +34,7 @@
 
 - [ ] Chain ID 1439 复核截图；RPC/Explorer 现场可达
 - [ ] 两个合约地址 + 部署 tx + verify 链接
-- [ ] manifest JSON 与链上 `manifestHash()` 一致（= `0x7952a786…876b0`）
+- [ ] manifest JSON 与链上 `manifestHash()` 一致（= `0x92e96e07…cc6ec`）
 - [ ] 3+ 笔 OrderPlaced tx；settle / 差额 refund / 全额 refund / payout 各 ≥1 笔
 - [ ] 重复 claim、重复 settle 被拒的证据（截图或录屏）
 - [ ] 2 分钟视频（字幕、tx 可见）+ 关键截图离线备份

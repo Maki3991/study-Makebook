@@ -9,7 +9,7 @@
 |---|---|---|
 | 合约 MakebookCampaign.sol + 51 测试 | ✅ 完成 | 后端 |
 | AI 编译模块 lib/ai（fixture 降级） | ✅ 完成 | 后端 |
-| canonical JSON + manifestHash（lib/schema） | ✅ 完成，hash 锚点 `0x7952a786…876b0` | 后端 |
+| canonical JSON + manifestHash（lib/schema） | ✅ 完成，hash 锚点 `0x92e96e07…cc6ec` | 后端 |
 | fixtures 成功/失败剧本 + 20 条评论 | ✅ 完成 | 后端 |
 | 前端四步叙事 + Demo 模式 | 🔲 队友，按接口文档对接 | 前端 |
 | Testnet 预部署两套 Campaign | 🔲 见下方第 2 步 | 后端 |
@@ -56,7 +56,7 @@
 
 - [ ] Chain ID 1439，RPC/Explorer 现场可达
 - [ ] 两个合约地址已 verify，源码公开
-- [ ] manifest JSON 与链上 hash 一致（`0x7952a786…876b0`）
+- [ ] manifest JSON 与链上 hash 一致（`0x92e96e07…cc6ec`）
 - [ ] 3+ buyer 订单 tx 可在 Blockscout 查看
 - [ ] settle / 差额 refund / 全额 refund / factory payout 各至少一条 tx
 - [ ] 重复 claim、重复 settle 被拒的截图或录屏

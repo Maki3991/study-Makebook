@@ -62,5 +62,5 @@
 - [ ] 上表所有数值与 `fixtures/success.json` / `failure.json` 逐项一致
 - [ ] 评委手算路径成立：0.019 价格点 4 笔 ≥ MOQ 3 → Loom 中标、统一价 0.019、应收 0.076
 - [ ] 零地址 deployments 时全站 fixture 可跑通并标 OFF-CHAIN DEMO
-- [ ] manifestHash 显示值 = `0x7952a786…876b0`（lib/schema 计算，非硬编码）
+- [ ] manifestHash 显示值 = `0x92e96e07…cc6ec`（lib/schema 计算，非硬编码）
 - [ ] 金额显示 ≤4 位有效小数，地址截断可复制，tx 带 Blockscout 深链
