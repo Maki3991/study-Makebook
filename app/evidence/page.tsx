@@ -6,7 +6,6 @@ import {
   ExplorerLink,
   SourceTag,
 } from "@/app/components/site/primitives";
-import { TopBar } from "@/app/components/site/top-bar";
 import {
   deployments,
   isZeroAddress,
@@ -105,7 +104,6 @@ function formatReceiptTime(ts: string): string {
 export default function EvidencePage() {
   return (
     <div className="flex min-h-dvh flex-col">
-      <TopBar />
       <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-14 py-10 lg:py-16">
           <header className="flex flex-col gap-3">

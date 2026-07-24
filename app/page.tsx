@@ -1,6 +1,5 @@
 import { DemoPanel } from "@/app/components/site/demo-panel";
 import { Tabs, type TabItem } from "@/app/components/site/tabs";
-import { TopBar } from "@/app/components/site/top-bar";
 import { AiStory } from "@/app/components/sections/ai-story";
 import { CampaignHero } from "@/app/components/sections/campaign-hero";
 import { DemandCurve } from "@/app/components/sections/demand-curve";
@@ -55,7 +54,6 @@ export default function Home() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <TopBar />
       <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 py-10 lg:grid-cols-[1fr_380px] lg:gap-16 lg:py-16">
           <div className="flex min-w-0 flex-col gap-12 lg:gap-16">

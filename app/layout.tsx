@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/noto-sans-sc/wght.css";
 import "./globals.css";
 import { WalletProvider } from "@/app/components/site/wallet-provider";
+import { TopBar } from "@/app/components/site/top-bar";
 
 // NOTE: the legacy art-direction.css was removed together with the old
 // story-flow site; globals.css is the single design system now.
@@ -30,7 +31,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <WalletProvider>{children}</WalletProvider>
+        <WalletProvider>
+          <TopBar />
+          {children}
+        </WalletProvider>
       </body>
     </html>
   );
