@@ -2,15 +2,9 @@
 
 import NumberFlow from "@number-flow/react";
 import {
-  BadgeCheck,
   Check,
-  CircleDashed,
   Copy,
   ExternalLink,
-  Factory,
-  FlaskConical,
-  Sparkles,
-  UserCheck,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -30,18 +24,14 @@ export function SourceTag({
   tone: SourceTagTone;
   children: ReactNode;
 }) {
-  const Icon = {
-    onchain: BadgeCheck,
-    ai: Sparkles,
-    human: UserCheck,
-    factory: Factory,
-    offchain: CircleDashed,
-    testnet: FlaskConical,
-  }[tone];
-
   return (
-    <span className="source-tag" data-tone={tone}>
-      <Icon className="source-tag-icon" size={11} strokeWidth={2.2} aria-hidden="true" />
+    <span
+      className="source-tag meta"
+      data-active={tone === "onchain" || tone === "human" ? "" : undefined}
+      data-kind={tone === "ai" ? "inferred" : undefined}
+      data-tone={tone}
+    >
+      <i className="dot" aria-hidden="true" />
       {children}
     </span>
   );
@@ -91,12 +81,12 @@ export function Metric({
               maximumFractionDigits: decimals,
             }}
             transformTiming={{
-              duration: 520,
-              easing: "cubic-bezier(.2,.8,.2,1)",
+              duration: 320,
+              easing: "cubic-bezier(.2,0,0,1)",
             }}
             spinTiming={{
-              duration: 520,
-              easing: "cubic-bezier(.2,.8,.2,1)",
+              duration: 320,
+              easing: "cubic-bezier(.2,0,0,1)",
             }}
           />
         ) : (
@@ -124,12 +114,12 @@ export function AnimatedAmount({
         maximumFractionDigits: decimals,
       }}
       transformTiming={{
-        duration: 520,
-        easing: "cubic-bezier(.2,.8,.2,1)",
+        duration: 320,
+        easing: "cubic-bezier(.2,0,0,1)",
       }}
       spinTiming={{
-        duration: 520,
-        easing: "cubic-bezier(.2,.8,.2,1)",
+        duration: 320,
+        easing: "cubic-bezier(.2,0,0,1)",
       }}
     />
   );

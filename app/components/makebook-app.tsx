@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowRight, Settings2, WalletCards } from "lucide-react";
-import { MotionConfig } from "motion/react";
 import Image from "next/image";
 import { useState } from "react";
 import { storySteps, type StoryStepId } from "../lib/mock-data";
@@ -87,18 +86,11 @@ export function MakebookApp() {
   }
 
   return (
-    <MotionConfig
-      reducedMotion="user"
-      transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}
-    >
     <div className="app-frame" data-active-step={activeStep}>
       <header className="app-header">
         <div className="brand-lockup" aria-label="MAKEBOOK 造物簿">
-          <span className="brand-mark">MB</span>
-          <div>
-            <p className="brand-name">MAKEBOOK</p>
-            <p className="brand-cn">造物簿</p>
-          </div>
+          <span className="brand-logo-image" aria-hidden="true" />
+          <p className="brand-cn">造物簿 / MANUFACTURING CLEARING LEDGER</p>
         </div>
         <div className="header-actions">
           <span className="network-pill">
@@ -185,12 +177,33 @@ export function MakebookApp() {
         <main className="desktop-dashboard">
           <header className="dashboard-hero">
             <div className="dashboard-hero-copy">
+              <div className="dashboard-hero-meta">
+                <span>ACL / ADVENTUREX 2026</span>
+                <span>LIVE PROTOTYPE · 01</span>
+              </div>
               <p className="screen-kicker">FRAME-01 / PRODUCTION DEMAND RECORD</p>
-              <h1>先看见真实需求，再决定生产。</h1>
+              <h1>
+                <span>先看见真实需求，</span>
+                <span>再决定生产</span>
+              </h1>
               <p>
                 MAKEBOOK 把评论编译成可制造规格，再用测试网资金订单与工厂
                 MOQ 报价形成公开清算。这里制造的是一个真实的包，不是代币行情。
               </p>
+              <div className="dashboard-proof" aria-label="当前需求证据摘要">
+                <div>
+                  <strong>20</strong>
+                  <span>真实评论输入</span>
+                </div>
+                <div>
+                  <strong>06</strong>
+                  <span>测试网资金订单</span>
+                </div>
+                <div>
+                  <strong>01</strong>
+                  <span>当前可行档位</span>
+                </div>
+              </div>
               <div className="dashboard-flow" aria-label="产品四步流程">
                 <span>Comments</span>
                 <span>Manifest</span>
@@ -200,6 +213,7 @@ export function MakebookApp() {
             </div>
 
             <figure className="dashboard-product">
+              <span className="dashboard-product-index">OBJECT / 01</span>
               <div className="dashboard-product-image">
                 <Image
                   src="/frame-01-hero.webp"
@@ -213,6 +227,12 @@ export function MakebookApp() {
                   <SourceTag tone="human">Human Confirmed</SourceTag>
                   <SourceTag tone="testnet">Testnet</SourceTag>
                 </div>
+              </div>
+              <div className="dashboard-product-axis" aria-hidden="true">
+                <span>COMMENT</span>
+                <span>CAPITAL</span>
+                <span>FACTORY</span>
+                <span>RECEIPT</span>
               </div>
               <figcaption>
                 <div>
@@ -267,7 +287,7 @@ export function MakebookApp() {
         <button
           className="bottom-primary"
           type="button"
-          disabled={!next}
+          disabled={!next || (activeStep === "studio" && !studioConfirmed)}
           onClick={goToNext}
         >
           <span className="bottom-primary-copy">
@@ -297,6 +317,5 @@ export function MakebookApp() {
         }}
       />
     </div>
-    </MotionConfig>
   );
 }

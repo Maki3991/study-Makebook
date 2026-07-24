@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion } from "motion/react";
 import {
   AlertCircle,
   ArrowUpRight,
@@ -156,15 +155,7 @@ export function StudioScreen({
           ))}
         </div>
 
-        <AnimatePresence initial={false} mode="wait">
-        <motion.section
-          animate={{ opacity: 1, y: 0 }}
-          className="surface candidate-detail"
-          exit={{ opacity: 0, y: -8 }}
-          initial={{ opacity: 0, y: 10 }}
-          key={selected.id}
-          transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
-        >
+        <section className="surface candidate-detail" key={selected.id}>
           <div className="candidate-heading">
             <div className="candidate-title-block">
               <div className="candidate-title-meta">
@@ -223,20 +214,35 @@ export function StudioScreen({
           <div className="candidate-confirmation">
             <div>
               <span>HUMAN REVIEW</span>
-              <p>确认后才生成可进入资金流程的 manifest。</p>
+              <p>
+                {selected.id === "FRAME-01"
+                  ? "确认后才生成可进入资金流程的 manifest。"
+                  : "当前资金演示只为 FRAME-01 准备；返回已确认方向后继续。"}
+              </p>
             </div>
             <button
               className="action-button"
               data-confirmed={confirmed}
               type="button"
-              onClick={() => onConfirmedChange(!confirmed)}
+              onClick={() => {
+                if (selected.id !== "FRAME-01") {
+                  setSelectedId("FRAME-01");
+                  onConfirmedChange(true);
+                  return;
+                }
+                onConfirmedChange(!confirmed);
+              }}
             >
               {confirmed ? (
                 <CheckCircle2 size={17} aria-hidden="true" />
               ) : (
                 <PencilLine size={17} aria-hidden="true" />
               )}
-              {confirmed ? "已确认，可进入 Campaign" : "编辑并确认方向"}
+              {confirmed
+                ? "已确认，可进入 Campaign"
+                : selected.id === "FRAME-01"
+                  ? "编辑并确认方向"
+                  : "返回 FRAME-01 进入资金流程"}
             </button>
           </div>
 
@@ -252,8 +258,7 @@ export function StudioScreen({
                 : "等待人工确认后生成 manifestHash"}
             </span>
           </div>
-        </motion.section>
-        </AnimatePresence>
+        </section>
       </section>
     </div>
   );
@@ -431,13 +436,12 @@ export function CampaignScreen({
               {demandPoints.map((point, index) => {
                 const height = point.orders * 40;
                 return (
-                  <g key={point.price}>
+                  <g data-winner={point.price === "0.019"} key={point.price}>
                     <rect
                       x={67 + index * 112}
                       y={280 - height}
                       width="54"
                       height={height}
-                      rx="7"
                     />
                     <text
                       x={94 + index * 112}
@@ -451,28 +455,26 @@ export function CampaignScreen({
               })}
             </g>
 
-            <motion.path
-              initial={{ pathLength: 0, opacity: 0.35 }}
-              transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
-              viewport={{ once: true, amount: 0.35 }}
-              whileInView={{ pathLength: 1, opacity: 1 }}
+            <path
               className="funded-step-line"
               d="M94 40 H206 V80 H318 V160 H430 V200 H542 V240"
             />
 
             <g className="factory-threshold factory-threshold-winner">
-              <motion.line
-                initial={{ pathLength: 0, opacity: 0 }}
-                transition={{ delay: 0.25, duration: 0.55 }}
-                viewport={{ once: true, amount: 0.35 }}
-                whileInView={{ pathLength: 1, opacity: 1 }}
+              <line
+                className="clearing-line-svg"
                 x1="166"
                 x2="586"
                 y1="80"
                 y2="80"
               />
-              <circle cx="206" cy="80" r="7" />
-              <rect x="356" y="50" width="220" height="23" rx="4" />
+              <rect
+                className="threshold-point"
+                x="202"
+                y="76"
+                width="8"
+                height="8"
+              />
               <text
                 className="chart-threshold-label chart-threshold-label-full"
                 x="566"
@@ -492,18 +494,13 @@ export function CampaignScreen({
             </g>
 
             <g className="factory-threshold factory-threshold-missed">
-              <motion.line
-                initial={{ pathLength: 0, opacity: 0 }}
-                transition={{ delay: 0.42, duration: 0.45 }}
-                viewport={{ once: true, amount: 0.35 }}
-                whileInView={{ pathLength: 1, opacity: 1 }}
+              <line
                 x1="390"
                 x2="586"
                 y1="160"
                 y2="160"
               />
               <path d="M426 154 l12 12 M438 154 l-12 12" />
-              <rect x="356" y="169" width="220" height="23" rx="4" />
               <text
                 className="chart-threshold-label chart-threshold-label-full"
                 x="566"
@@ -707,7 +704,7 @@ export function OrderScreen({
         </p>
       </section>
 
-      <section className="surface">
+      <section className="surface order-summary">
         <SectionLabel index="02">资金如何变化</SectionLabel>
         <div className="money-flow">
           <div>
@@ -853,7 +850,7 @@ export function SettlementScreen({
   }
 
   return (
-    <div className="screen-stack">
+    <div className="screen-stack settlement-ledger" data-surface="ink">
       <section className="settlement-hero" data-success={success}>
         <div className="settlement-icon">
           {success ? (
@@ -867,7 +864,7 @@ export function SettlementScreen({
           {success ? "SETTLED / SUCCESS" : "SETTLED / FAILED"}
         </span>
         <h2>
-          {success ? "生产批次成立。" : "清算未达到生产门槛。"}
+          {success ? "生产批次成立" : "清算未达到生产门槛"}
         </h2>
         <p>
           {success
