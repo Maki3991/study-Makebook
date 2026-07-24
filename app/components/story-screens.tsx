@@ -905,7 +905,7 @@ export function OrderScreen({
             <Check size={13} />
           </span>
           <span>
-            你将预锁 0.024 test INJ。若统一价不高于它，你会获得 1 件
+            你将预锁 {maxPrice} test INJ。若统一价不高于它，你会获得 1 件
             FRAME-01，并可领取差额；否则可领取全额。提交后不可撤销。
           </span>
         </label>
