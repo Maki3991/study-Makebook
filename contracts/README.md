@@ -78,3 +78,10 @@ Explorer 深链：`https://testnet.blockscout.injective.network/address/<addr>` 
 ## 安全边界（PRD 13A）
 
 无 proxy / delegatecall / selfdestruct / ownerWithdraw；ReentrancyGuard + pull payment；settle 只计算不转账；operator 无任何资金权限（INV-06）。
+
+## Slither 静态分析（2026-07-24，slither 0.11.5）
+
+`slither src/MakebookCampaign.sol --filter-paths "lib/"`：5 条结果，全部 informational/low，无中高严重度。
+
+- `block.timestamp` 比较（placeOrder/settle 的 deadline 判断）：矿工可操纵窗口约秒级，对跨小时的 Campaign 截止无实际影响——接受。
+- `claimRefund`/`claimPayout` 的 low-level `.call{value:}`：有意选择的 pull-payment 模式，先置 claimed 再转账 + nonReentrant（INV-02/07），CT-10 已覆盖恶意接收者——接受。
