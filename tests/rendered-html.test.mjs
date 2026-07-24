@@ -40,7 +40,7 @@ test("server-renders the complete MAKEBOOK narrative", async () => {
 });
 
 test("keeps the responsive and transaction requirements in source", async () => {
-  const [appSource, screenSource, styles, layout, packageJson] =
+  const [appSource, screenSource, baseStyles, artStyles, layout, packageJson] =
     await Promise.all([
       readFile(
         new URL("../app/components/makebook-app.tsx", import.meta.url),
@@ -51,13 +51,15 @@ test("keeps the responsive and transaction requirements in source", async () => 
         "utf8",
       ),
       readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+      readFile(new URL("../app/art-direction.css", import.meta.url), "utf8"),
       readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
       readFile(new URL("../package.json", import.meta.url), "utf8"),
     ]);
+  const styles = `${baseStyles}\n${artStyles}`;
 
   assert.match(packageJson, /"name": "makebook-frontend"/);
   assert.match(packageJson, /"@number-flow\/react"/);
-  assert.match(packageJson, /"motion"/);
+  assert.doesNotMatch(packageJson, /"motion"/);
   assert.match(layout, /title: "MAKEBOOK · 造物簿"/);
   assert.match(appSource, /studioConfirmed/);
   assert.match(appSource, /index > 0 && !studioConfirmed/);
@@ -82,9 +84,16 @@ test("keeps the responsive and transaction requirements in source", async () => 
   assert.match(screenSource, /Off-chain Demo/);
   assert.match(screenSource, /Onchain/);
   assert.match(screenSource, /Testnet/);
-  assert.match(styles, /@media \(max-width: 767px\)/);
-  assert.match(styles, /@media \(min-width: 768px\) and \(max-width: 1279px\)/);
+  assert.match(styles, /@media \(min-width: 768px\)/);
+  assert.match(styles, /@media \(min-width: 1024px\)/);
   assert.match(styles, /@media \(min-width: 1280px\)/);
-  assert.match(styles, /\.wallet-pill\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(styles, /\.network-pill,[\s\S]*?\.wallet-pill\s*\{[^}]*min-height:\s*48px/s);
   assert.match(styles, /\.order-submit[\s\S]*position:\s*fixed/);
+  assert.match(styles, /--n-12:\s*#dfe3e6/);
+  assert.match(styles, /--c-azure:\s*#1b4f6b/);
+  assert.match(styles, /\.settlement-ledger[\s\S]*background:\s*var\(--bg\)/);
+  assert.doesNotMatch(
+    styles,
+    /(?:linear|radial|conic|repeating-linear)-gradient|backdrop-filter|box-shadow|text-shadow/,
+  );
 });
