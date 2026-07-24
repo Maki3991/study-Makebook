@@ -20,6 +20,7 @@
 | [002](002-ai-compiler.md) | AI 需求编译器：I/O 契约、脱敏、fixture 降级 | 已实现（9/9 测试） |
 | [003](003-frontend-integration.md) | 前端集成：mock → 链上替换规则与数值对齐清单 | 待队友执行 |
 | [004](004-testnet-deployment.md) | Testnet 预部署与演示证据 | 待执行（需钱包/faucet） |
+| [005](005-stakeholder-requirements.md) | 三方真实需求矩阵：P0 机制 / 有意推迟 / 永不承诺 | 已评审 |
 
 ## 变更记录
 
