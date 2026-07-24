@@ -40,21 +40,48 @@ test("server-renders the complete MAKEBOOK narrative", async () => {
 });
 
 test("keeps the responsive and transaction requirements in source", async () => {
-  const [screenSource, styles, layout, packageJson] = await Promise.all([
-    readFile(
-      new URL("../app/components/story-screens.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-  ]);
+  const [appSource, screenSource, styles, layout, packageJson] =
+    await Promise.all([
+      readFile(
+        new URL("../app/components/makebook-app.tsx", import.meta.url),
+        "utf8",
+      ),
+      readFile(
+        new URL("../app/components/story-screens.tsx", import.meta.url),
+        "utf8",
+      ),
+      readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+      readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../package.json", import.meta.url), "utf8"),
+    ]);
 
   assert.match(packageJson, /"name": "makebook-frontend"/);
+  assert.match(packageJson, /"@number-flow\/react"/);
+  assert.match(packageJson, /"motion"/);
   assert.match(layout, /title: "MAKEBOOK · 造物簿"/);
+  assert.match(appSource, /studioConfirmed/);
+  assert.match(appSource, /index > 0 && !studioConfirmed/);
   assert.match(screenSource, /inputMode="decimal"/);
   assert.match(screenSource, /正在等待 Injective 确认。请不要重复点击。/);
   assert.match(screenSource, /你的钱包地址、最高愿付价和交易会公开出现/);
+  assert.match(
+    screenSource,
+    /你将预锁 0\.024 test INJ[\s\S]*提交后不可撤销。/,
+  );
+  assert.match(
+    screenSource,
+    /生产批次成立：Factory Loom 的 5 件档位可行，统一价为 0\.019 test INJ。/,
+  );
+  assert.match(
+    screenSource,
+    /以下生产进度为链下演示状态，不代表合约验证了真实制造或物流。/,
+  );
+  assert.match(screenSource, /AI Generated/);
+  assert.match(screenSource, /Human Confirmed/);
+  assert.match(screenSource, /Demo Factory/);
+  assert.match(screenSource, /Off-chain Demo/);
+  assert.match(screenSource, /Onchain/);
+  assert.match(screenSource, /Testnet/);
   assert.match(styles, /@media \(max-width: 767px\)/);
   assert.match(styles, /@media \(min-width: 768px\) and \(max-width: 1279px\)/);
   assert.match(styles, /@media \(min-width: 1280px\)/);
