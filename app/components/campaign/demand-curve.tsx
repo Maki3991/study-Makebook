@@ -1,41 +1,72 @@
 "use client";
 
-import { useCampaign, useOrders } from "@/app/lib/chain/hooks";
+import { useEffect, useState } from "react";
+import { useCampaign, useOrders, eligibleCount } from "@/app/lib/chain/hooks";
 import { CampaignId } from "@/app/lib/types";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj } from "@/app/lib/chain/format";
 
-const PRICE_TICKS = [0.017, 0.019, 0.021, 0.024, 0.026];
-
 export function DemandCurve({ id }: { id: CampaignId }) {
+  const copy = useCopy();
   const campaign = useCampaign(id);
   const orders = useOrders(id);
 
   const orderList = orders.data ?? [];
 
-  // Count orders with maxPrice >= each fixed tick.
-  const points = PRICE_TICKS.map((price) => ({
+  const preview = campaign.preview;
+  const feasible = preview?.[0];
+  const clearingPrice = preview?.[3];
+  const previewWinnerCount = preview?.[4];
+  const clearingPriceNum = clearingPrice
+    ? Number(formatInj(clearingPrice))
+    : undefined;
+  const winningQuoteId = campaign.winningQuoteId;
+  const winningTierIndex = campaign.winningTierIndex;
+
+  const quotes = campaign.quotes ?? [];
+
+  // P1 (spec 008): eligibility is priced at retail = factory tier price ×
+  // (10000 + marginBps) / 10000 (floor), wei-exact with the contract. Falls
+  // back to factory pricing on P0 batches where marginBps is not readable.
+  const marginBps = campaign.marginBps;
+  const retailPriceWei = (unitPriceWei: bigint): bigint =>
+    marginBps === undefined
+      ? unitPriceWei
+      : (unitPriceWei * (10000n + BigInt(marginBps))) / 10000n;
+
+  // X-axis ticks derive from real data: order maxPrices ∪ retail tier prices
+  // ∪ clearing price (when feasible), deduped and sorted. The domain then
+  // always covers the clearing line and the factory tier annotations.
+  const tickSet = new Set<number>();
+  for (const o of orderList) {
+    tickSet.add(Number(formatInj(o.maxPriceWei)));
+  }
+  for (const quote of quotes) {
+    for (const tier of quote.tiers) {
+      tickSet.add(Number(formatInj(retailPriceWei(tier.unitPriceWei))));
+    }
+  }
+  if (feasible && clearingPriceNum !== undefined) {
+    tickSet.add(clearingPriceNum);
+  }
+  const priceTicks = Array.from(tickSet).sort((a, b) => a - b);
+
+  // Count orders with maxPrice >= each tick.
+  const points = priceTicks.map((price) => ({
     price,
     count: orderList.filter(
       (o) => Number(formatInj(o.maxPriceWei)) >= price,
     ).length,
   }));
 
-  const preview = campaign.preview;
-  const feasible = preview?.[0];
-  const clearingPrice = preview?.[3];
-  const clearingPriceNum = clearingPrice
-    ? Number(formatInj(clearingPrice))
-    : undefined;
-
   const maxCount = Math.max(1, ...points.map((p) => p.count), 5);
-  const maxPrice = Math.max(...PRICE_TICKS);
-  const minPrice = Math.min(...PRICE_TICKS);
+  const maxPrice = priceTicks.length > 0 ? priceTicks[priceTicks.length - 1] : 1;
+  const minPrice = priceTicks.length > 0 ? priceTicks[0] : 0;
   const priceRange = maxPrice - minPrice || 1;
 
-  const width = 420;
-  const height = 240;
-  const padding = { top: 20, right: 20, bottom: 44, left: 40 };
+  const width = 520;
+  const height = 280;
+  const padding = { top: 28, right: 16, bottom: 56, left: 56 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
@@ -58,16 +89,91 @@ export function DemandCurve({ id }: { id: CampaignId }) {
     }
   });
 
+  // Factory tier lines: horizontal at the eligible order count, priced at the
+  // retail tier price (P1) so the annotation matches buyer-side eligibility.
+  const tierLines = quotes.flatMap((quote) =>
+    quote.tiers.map((tier, tierIdx) => {
+      const retailWei = retailPriceWei(tier.unitPriceWei);
+      const eligible = eligibleCount(orderList, retailWei);
+      const isFeasible = eligible >= tier.minQty;
+      const isWinner =
+        winningQuoteId !== undefined &&
+        winningTierIndex !== undefined &&
+        BigInt(quote.quoteId) === winningQuoteId &&
+        BigInt(tierIdx) === winningTierIndex;
+      return {
+        quoteId: quote.quoteId,
+        tierIdx,
+        unitPriceWei: retailWei,
+        unitPrice: Number(formatInj(retailWei)),
+        minQty: tier.minQty,
+        eligible,
+        isFeasible,
+        isWinner,
+        label: quote.quoteId === 0 ? "Factory A" : "Factory B",
+      };
+    }),
+  );
+
+  // Hover tooltip + data-change feedback (spec 008 §6 Owner-B #2). The only
+  // motion allowed here: points that appear after the first render fade in
+  // over 200ms (opacity). No entrance animation for the initial dataset.
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [enteredPrices, setEnteredPrices] = useState<Set<number>>(
+    () => new Set(points.map((p) => p.price)),
+  );
+  useEffect(() => {
+    const unseen = points
+      .map((p) => p.price)
+      .filter((price) => !enteredPrices.has(price));
+    if (unseen.length === 0) return;
+    const id = requestAnimationFrame(() => {
+      setEnteredPrices((prev) => {
+        const next = new Set(prev);
+        for (const price of unseen) next.add(price);
+        return next;
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [points, enteredPrices]);
+
+  // Tooltip content derives from the same preview/orders data as the chart.
+  // A point clears when the batch is feasible and its price reaches the
+  // preview clearing price (same rule as the pledge panel's wouldClear).
+  const hovered = hoveredIndex !== null ? (points[hoveredIndex] ?? null) : null;
+  const hoveredX = hovered ? xForPrice(hovered.price) : 0;
+  const hoveredY = hovered ? yForCount(hovered.count) : 0;
+  let tooltipStatus: { text: string; className: string } | null = null;
+  if (hovered && feasible !== undefined) {
+    if (!feasible || clearingPriceNum === undefined) {
+      tooltipStatus = {
+        text: copy.curve.tooltip.infeasible,
+        className: "text-warn",
+      };
+    } else if (hovered.price >= clearingPriceNum) {
+      tooltipStatus = {
+        text: copy.curve.tooltip.clears,
+        className: "text-success",
+      };
+    } else {
+      tooltipStatus = {
+        text: copy.curve.tooltip.below,
+        className: "text-warn",
+      };
+    }
+  }
+
   return (
     <section className="section">
       <h2 className="text-base font-semibold text-ink">{copy.curve.title}</h2>
 
       <div className="mt-4 overflow-x-auto">
+        <div className="relative max-w-[600px]">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full max-w-[520px]"
+          className="w-full max-w-[600px]"
           role="img"
-          aria-label="Demand curve"
+          aria-label={copy.curve.title}
         >
           {/* Grid lines for counts */}
           {Array.from({ length: maxCount + 1 }).map((_, i) => {
@@ -83,6 +189,48 @@ export function DemandCurve({ id }: { id: CampaignId }) {
                 strokeWidth={1}
                 strokeDasharray="2 3"
               />
+            );
+          })}
+
+          {/* Factory tier horizontal lines at the eligible order count */}
+          {tierLines.map((tier) => {
+            const y = yForCount(tier.eligible);
+            return (
+              <g key={`tier-${tier.quoteId}-${tier.tierIdx}`}>
+                <line
+                  x1={padding.left}
+                  y1={y}
+                  x2={width - padding.right}
+                  y2={y}
+                  stroke={
+                    tier.isWinner
+                      ? "var(--color-success)"
+                      : tier.isFeasible
+                        ? "var(--color-success)"
+                        : "var(--color-ink-3)"
+                  }
+                  strokeWidth={tier.isWinner ? 3 : 1.5}
+                  strokeDasharray={tier.isFeasible ? "none" : "4 4"}
+                  opacity={tier.isWinner ? 1 : 0.7}
+                />
+                <text
+                  x={width - padding.right - 4}
+                  y={y + 12}
+                  textAnchor="end"
+                  className="num"
+                  fontSize={10}
+                  fill={
+                    tier.isWinner
+                      ? "var(--color-success)"
+                      : tier.isFeasible
+                        ? "var(--color-success)"
+                        : "var(--color-ink-3)"
+                  }
+                  fontWeight={tier.isWinner ? 600 : 400}
+                >
+                  {tier.label} {tier.unitPrice}
+                </text>
+              </g>
             );
           })}
 
@@ -114,12 +262,23 @@ export function DemandCurve({ id }: { id: CampaignId }) {
             />
           )}
 
-          {/* Data points */}
+          {/* Data points and labels */}
           {points.map((point, i) => {
             const x = xForPrice(point.price);
             const y = yForCount(point.count);
+            // Label above the point; nudge rightward for the first point so it
+            // does not overlap the Y-axis title.
+            const labelX = i === 0 ? x + 14 : x;
+            const anchor = i === 0 ? "start" : "middle";
+            const labelY = y - 10;
             return (
-              <g key={i}>
+              <g
+                key={point.price}
+                style={{
+                  opacity: enteredPrices.has(point.price) ? 1 : 0,
+                  transition: "opacity 200ms ease-out",
+                }}
+              >
                 <circle
                   cx={x}
                   cy={y}
@@ -129,9 +288,9 @@ export function DemandCurve({ id }: { id: CampaignId }) {
                   strokeWidth={2}
                 />
                 <text
-                  x={x}
-                  y={y - 10}
-                  textAnchor="middle"
+                  x={labelX}
+                  y={labelY}
+                  textAnchor={anchor}
                   className="num"
                   fontSize={11}
                   fill="var(--color-ink)"
@@ -139,6 +298,16 @@ export function DemandCurve({ id }: { id: CampaignId }) {
                 >
                   {point.count}
                 </text>
+                {/* Invisible hit area driving the HTML tooltip below */}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={14}
+                  fill="var(--color-canvas)"
+                  fillOpacity={0}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                />
               </g>
             );
           })}
@@ -156,20 +325,31 @@ export function DemandCurve({ id }: { id: CampaignId }) {
                 strokeDasharray="4 4"
               />
               <text
-                x={xForPrice(clearingPriceNum) + 4}
-                y={padding.top + 12}
+                x={
+                  xForPrice(clearingPriceNum) > width - padding.right - 190
+                    ? xForPrice(clearingPriceNum) - 6
+                    : xForPrice(clearingPriceNum) + 6
+                }
+                y={padding.top + 10}
+                textAnchor={
+                  xForPrice(clearingPriceNum) > width - padding.right - 190
+                    ? "end"
+                    : "start"
+                }
                 className="num"
                 fontSize={10}
                 fill="var(--color-success)"
-                fontWeight={500}
+                fontWeight={600}
               >
-                {clearingPriceNum}
+                {copy.curve.clearingLabel
+                  .replace("{price}", String(clearingPriceNum))
+                  .replace("{count}", previewWinnerCount?.toString() ?? "—")}
               </text>
             </g>
           ) : null}
 
           {/* X-axis labels */}
-          {PRICE_TICKS.map((price) => (
+          {priceTicks.map((price) => (
             <text
               key={price}
               x={xForPrice(price)}
@@ -186,20 +366,20 @@ export function DemandCurve({ id }: { id: CampaignId }) {
           {/* X-axis title */}
           <text
             x={width - padding.right}
-            y={height - 8}
+            y={height - 12}
             textAnchor="end"
-            fontSize={10}
+            fontSize={11}
             fill="var(--color-ink-3)"
           >
-            Price (test INJ)
+            {copy.curve.xAxis}
           </text>
 
           {/* Y-axis labels */}
           {Array.from({ length: maxCount + 1 }).map((_, i) => (
             <text
               key={`ylabel-${i}`}
-              x={padding.left - 8}
-              y={yForCount(i) + 3}
+              x={padding.left - 10}
+              y={yForCount(i) + 4}
               textAnchor="end"
               className="num"
               fontSize={11}
@@ -211,15 +391,64 @@ export function DemandCurve({ id }: { id: CampaignId }) {
 
           {/* Y-axis title */}
           <text
-            x={10}
-            y={padding.top}
-            textAnchor="start"
-            fontSize={10}
+            x={padding.left}
+            y={padding.top - 8}
+            textAnchor="middle"
+            fontSize={11}
             fill="var(--color-ink-3)"
           >
-            Orders
+            {copy.curve.yAxis}
           </text>
         </svg>
+
+        {/* Hover tooltip: HTML overlay positioned over the SVG point. Stays
+            inside the chart box (clamped translate, flips below near the top)
+            so the scrollable wrapper never gains scrollbars. */}
+        {hovered ? (
+          <div
+            className="surface pointer-events-none absolute px-3 py-2"
+            style={{
+              left: `${(hoveredX / width) * 100}%`,
+              top: `${(hoveredY / height) * 100}%`,
+              transform: `translate(${
+                hoveredX < 100 ? "-15%" : hoveredX > width - 100 ? "-85%" : "-50%"
+              }, ${hoveredY > 84 ? "calc(-100% - 10px)" : "10px"})`,
+            }}
+          >
+            <p className="num text-xs font-medium text-ink">
+              {copy.curve.tooltip.price.replace("{price}", String(hovered.price))}
+            </p>
+            <p className="num mt-0.5 text-xs text-ink-2">
+              {copy.curve.tooltip.orders.replace("{count}", String(hovered.count))}
+            </p>
+            {tooltipStatus ? (
+              <p className={`mt-0.5 text-xs ${tooltipStatus.className}`}>
+                {tooltipStatus.text}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-0.5 w-4 bg-accent" />
+          <span>{copy.curve.legendDemand}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-0 w-4 border-t-2 border-dashed border-success" />
+          <span>{copy.curve.legendClearing}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-0 w-4 border-t border-success" />
+          <span>{copy.curve.legendFeasible}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-0 w-4 border-t border-dashed border-ink-3" />
+          <span>{copy.curve.legendInfeasible}</span>
+        </div>
       </div>
     </section>
   );

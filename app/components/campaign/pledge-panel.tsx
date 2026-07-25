@@ -10,14 +10,17 @@ import {
 } from "@/app/lib/chain/hooks";
 import { usePlaceOrder, useSettle } from "@/app/lib/chain/write";
 import { CampaignId } from "@/app/lib/types";
-import { copy } from "@/app/lib/copy";
-import { formatInj } from "@/app/lib/chain/format";
+import { useCopy } from "@/app/lib/i18n/use-copy";
+import { formatInj, explorerTx } from "@/app/lib/chain/format";
+import { ExternalLink } from "lucide-react";
 import { MAX_ORDERS } from "@/app/lib/chain/config";
 import { BackDrawer } from "./back-drawer";
 
-const CHIPS = ["0.019", "0.024", "0.026"];
+// Spec 008 §1 frozen suggested prices, straddling both retail tiers.
+const SUGGESTED_PRICES = ["0.020", "0.024", "0.030"];
 
 export function PledgePanel({ id }: { id: CampaignId }) {
+  const copy = useCopy();
   const { address } = useAccount();
   const campaign = useCampaign(id);
   const myOrderQuery = useMyOrder(id, address);
@@ -25,6 +28,7 @@ export function PledgePanel({ id }: { id: CampaignId }) {
   const settle = useSettle(id);
 
   const [input, setInput] = useState("");
+  const [inputError, setInputError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const state = campaign.state;
@@ -33,6 +37,7 @@ export function PledgePanel({ id }: { id: CampaignId }) {
   const preview = campaign.preview;
   const feasible = preview?.[0];
   const clearingPrice = preview?.[3];
+  const chips = SUGGESTED_PRICES;
 
   const myOrder = myOrderQuery.data as
     | { buyer: `0x${string}`; variantHash: `0x${string}`; maxPriceWei: bigint; refundClaimed: boolean }
@@ -52,10 +57,20 @@ export function PledgePanel({ id }: { id: CampaignId }) {
 
   const handleChip = (price: string) => {
     setInput(price);
+    setInputError(null);
+  };
+
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    if (inputError) setInputError(null);
   };
 
   const handleSubmit = () => {
-    if (!input || parseFloat(input) <= 0) return;
+    if (!input || parseFloat(input) <= 0) {
+      setInputError(copy.pledge.inputError);
+      return;
+    }
+    setInputError(null);
     setDrawerOpen(true);
   };
 
@@ -109,7 +124,6 @@ export function PledgePanel({ id }: { id: CampaignId }) {
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!input || parseFloat(input) <= 0}
         className="btn btn-primary w-full"
       >
         {copy.pledge.cta}
@@ -137,7 +151,7 @@ export function PledgePanel({ id }: { id: CampaignId }) {
                 step="0.001"
                 min="0"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => handleInputChange(e.target.value)}
                 placeholder="0.000"
                 className="num text-base text-ink"
               />
@@ -147,7 +161,7 @@ export function PledgePanel({ id }: { id: CampaignId }) {
             <div className="mt-4">
               <p className="text-xs text-ink-3">{copy.pledge.chipHint}</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {CHIPS.map((price) => (
+                {chips.map((price) => (
                   <button
                     key={price}
                     type="button"
@@ -170,10 +184,25 @@ export function PledgePanel({ id }: { id: CampaignId }) {
                 {wouldClear ? copy.pledge.feasibleNow : copy.pledge.infeasibleNow}
               </p>
             )}
+            {inputError && (
+              <p className="mt-4 text-sm text-danger">{inputError}</p>
+            )}
           </div>
         ) : null}
 
         <div className="mt-5">{cta}</div>
+
+        {settle.result && (
+          <a
+            href={explorerTx(settle.result.txHash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1 text-sm text-accent hover:underline"
+          >
+            {copy.orders.viewTx}
+            <ExternalLink size={14} />
+          </a>
+        )}
 
         {placeOrder.error && (
           <p className="mt-4 text-sm text-danger">{placeOrder.error}</p>

@@ -2,11 +2,12 @@
 
 import { useCampaign } from "@/app/lib/chain/hooks";
 import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, formatCountdown } from "@/app/lib/chain/format";
 import { Clock } from "lucide-react";
 
 function AdminRow({ id }: { id: CampaignId }) {
+  const copy = useCopy();
   const campaign = useCampaign(id);
   const meta = CAMPAIGNS[id];
   const preview = campaign.preview;
@@ -54,25 +55,28 @@ function AdminRow({ id }: { id: CampaignId }) {
           {stateLabel}
         </span>
       </td>
-      <td className="num py-3 pr-4 text-sm text-ink">
+      <td className="num py-3 pr-4 text-right text-sm text-ink">
         {campaign.ordersLength?.toString() ?? "—"}
       </td>
       <td className="py-3 pr-4 text-sm text-ink-2">
-        {quoteText || "No quotes"}
+        {quoteText || copy.console.admin.noQuotes}
       </td>
       <td className="py-3 pr-4 text-sm">
         {campaign.state === "Open" ? (
           feasible ? (
             <span className="text-success">
-              {formatInj(clearingPrice ?? 0n)} · {winnerCount?.toString() ?? "—"} clearing
+              {copy.console.admin.clearing
+                .replace("{price}", formatInj(clearingPrice ?? 0n))
+                .replace("{count}", winnerCount?.toString() ?? "—")}
             </span>
           ) : (
             <span className="text-warn">{copy.batch.card.previewInfeasible}</span>
           )
         ) : campaign.state === "Succeeded" || campaign.state === "PaidOut" ? (
           <span className="text-accent">
-            {formatInj(campaign.clearingPrice ?? 0n)} ·{" "}
-            {campaign.winnerCount?.toString() ?? "—"} cleared
+            {copy.console.admin.cleared
+              .replace("{price}", formatInj(campaign.clearingPrice ?? 0n))
+              .replace("{count}", campaign.winnerCount?.toString() ?? "—")}
           </span>
         ) : campaign.state === "Failed" ? (
           <span className="text-danger">{copy.result.failure}</span>
@@ -80,7 +84,7 @@ function AdminRow({ id }: { id: CampaignId }) {
           <span className="text-ink-3">—</span>
         )}
       </td>
-      <td className="num py-3 text-sm text-ink-2">
+      <td className="num py-3 pr-4 text-right text-sm text-ink-2">
         {campaign.deadline ? (
           <span className="inline-flex items-center gap-1.5">
             <Clock size={12} />
@@ -95,6 +99,8 @@ function AdminRow({ id }: { id: CampaignId }) {
 }
 
 export function AdminTable() {
+  const copy = useCopy();
+
   return (
     <section className="surface p-5 lg:p-6">
       <h2 className="text-base font-semibold text-ink">
@@ -104,13 +110,13 @@ export function AdminTable() {
       <div className="mt-5 overflow-x-auto">
         <table className="w-full min-w-[640px] text-left">
           <thead>
-            <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-3">
-              <th className="pb-2 pr-4 font-medium">Batch</th>
-              <th className="pb-2 pr-4 font-medium">State</th>
-              <th className="pb-2 pr-4 font-medium">Orders</th>
-              <th className="pb-2 pr-4 font-medium">Factory quotes</th>
-              <th className="pb-2 pr-4 font-medium">Current preview</th>
-              <th className="pb-2 font-medium">Deadline</th>
+            <tr className="bg-paper-2 text-micro uppercase tracking-wide text-ink-3">
+              <th className="py-2 pr-4 pl-4 text-left font-medium">{copy.console.admin.headers.batch}</th>
+              <th className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.state}</th>
+              <th className="py-2 pr-4 text-right font-medium">{copy.console.admin.headers.orders}</th>
+              <th className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.factoryQuotes}</th>
+              <th className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.currentPreview}</th>
+              <th className="py-2 pr-4 text-right font-medium">{copy.console.admin.headers.deadline}</th>
             </tr>
           </thead>
           <tbody>

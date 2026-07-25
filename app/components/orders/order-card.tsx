@@ -11,7 +11,7 @@ import {
 } from "@/app/lib/chain/hooks";
 import { useClaimRefund } from "@/app/lib/chain/write";
 import { CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, explorerTx } from "@/app/lib/chain/format";
 
 type OrderCardProps = {
@@ -19,6 +19,7 @@ type OrderCardProps = {
 };
 
 export function OrderCard({ id }: OrderCardProps) {
+  const copy = useCopy();
   const { address } = useAccount();
   const campaign = useCampaign(id);
   const myOrderQuery = useMyOrder(id, address);
@@ -122,7 +123,7 @@ export function OrderCard({ id }: OrderCardProps) {
             )}
           </p>
           <p className="mt-3 text-sm text-ink-2">
-            Your bid{" "}
+            {copy.orders.bidLabel}{" "}
             <span className="num font-medium text-ink">
               {formatInj(myOrder.maxPriceWei)}
             </span>{" "}

@@ -9,10 +9,11 @@ import {
   useNowSec,
 } from "@/app/lib/chain/hooks";
 import { CampaignId } from "@/app/lib/types";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj } from "@/app/lib/chain/format";
 
 export function ResultBlock({ id }: { id: CampaignId }) {
+  const copy = useCopy();
   const { address } = useAccount();
   const campaign = useCampaign(id);
   const myOrderQuery = useMyOrder(id, address);
@@ -53,7 +54,7 @@ export function ResultBlock({ id }: { id: CampaignId }) {
 
   return (
     <section className="section">
-      <h2 className="text-base font-semibold text-ink">Settlement result</h2>
+      <h2 className="text-base font-semibold text-ink">{copy.result.title}</h2>
 
       {isSuccess ? (
         <p className="mt-2 text-sm font-medium text-accent">
@@ -68,9 +69,7 @@ export function ResultBlock({ id }: { id: CampaignId }) {
       )}
 
       {state === "PaidOut" && (
-        <p className="mt-2 text-sm text-ink-2">
-          Factory payout claimed. Buyers can still claim their refunds.
-        </p>
+        <p className="mt-2 text-sm text-ink-2">{copy.result.factoryPaidOut}</p>
       )}
 
       {myOrder ? (

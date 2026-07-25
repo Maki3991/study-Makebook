@@ -4,6 +4,7 @@ import { RoleBar } from "@/app/components/console/role-bar";
 import { CompilePanel } from "@/app/components/console/compile-panel";
 import { AdminTable } from "@/app/components/console/admin-table";
 import { FactoryPanel } from "@/app/components/console/factory-panel";
+import { CreatorPanel } from "@/app/components/console/creator-panel";
 
 export default function ConsolePage() {
   return (
@@ -12,6 +13,7 @@ export default function ConsolePage() {
         <RoleBar />
         <CompilePanel />
         <FactoryPanel />
+        <CreatorPanel />
         <AdminTable />
       </div>
     </main>

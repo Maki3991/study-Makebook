@@ -13,7 +13,7 @@ const Checkbox = React.forwardRef<
     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-line bg-canvas data-[state=checked]:border-accent data-[state=checked]:bg-accent ${className ?? ""}`}
     {...props}
   >
-    <CheckboxPrimitive.Indicator className="text-white">
+    <CheckboxPrimitive.Indicator className="text-paper-1">
       <Check size={14} />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>

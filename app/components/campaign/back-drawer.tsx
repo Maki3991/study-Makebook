@@ -14,7 +14,7 @@ import {
 } from "@/app/components/ui/drawer";
 import { Checkbox } from "@/app/components/ui/checkbox";
 import { CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, explorerTx, truncateAddress } from "@/app/lib/chain/format";
 import { TxStage, PlaceOrderResult } from "@/app/lib/chain/write";
 import { X, ExternalLink, Loader2 } from "lucide-react";
@@ -42,6 +42,7 @@ export function BackDrawer({
   onSubmit,
   onReset,
 }: BackDrawerProps) {
+  const copy = useCopy();
   const [checked1, setChecked1] = useState(false);
   const [checked2, setChecked2] = useState(false);
   const meta = CAMPAIGNS[id];
@@ -75,7 +76,7 @@ export function BackDrawer({
               type="button"
               disabled={isBusy}
               className="inline-flex h-9 w-9 items-center justify-center rounded-md text-ink-2 hover:bg-surface disabled:opacity-50"
-              aria-label="Close"
+              aria-label={copy.global.a11y.close}
             >
               <X size={18} />
             </button>
@@ -100,7 +101,7 @@ export function BackDrawer({
                   rel="noopener noreferrer"
                   className="btn btn-secondary w-full"
                 >
-                  View on Blockscout
+                  {copy.drawer.viewTxBlockscout}
                   <ExternalLink size={14} />
                 </a>
                 <p className="num text-center text-xs text-ink-3">

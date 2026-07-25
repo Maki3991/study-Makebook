@@ -16,6 +16,9 @@ const errorMap: ErrorMap = {
   NoOrder: copy.errors.NoOrder,
   AlreadyClaimed: copy.errors.AlreadyClaimed,
   NotSelectedFactory: copy.errors.NotSelectedFactory,
+  NotCreator: copy.errors.NotCreator,
+  NotFeeRecipient: copy.errors.NotFeeRecipient,
+  InvalidFeeConfig: copy.errors.InvalidFeeConfig,
   TransferFailed: copy.errors.TransferFailed,
   RpcError: copy.errors.RpcError,
 };

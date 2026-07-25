@@ -22,6 +22,10 @@ export const makebookAbi = parseAbi([
   "error AlreadyClaimed()",
   "error NotSelectedFactory()",
   "error TransferFailed()",
+  // P1 three-way split (spec 008)
+  "error NotCreator()",
+  "error NotFeeRecipient()",
+  "error InvalidFeeConfig()",
 
   // Write functions
   "function registerFactory(address factory, bytes32 profileHash)",
@@ -31,6 +35,9 @@ export const makebookAbi = parseAbi([
   "function settle()",
   "function claimRefund()",
   "function claimPayout()",
+  // P1 three-way split (spec 008)
+  "function claimCreatorPayout()",
+  "function claimPlatformFee()",
 
   // Read functions
   "function previewSettlement() view returns (bool feasible, uint256 quoteId, uint256 tierIndex, uint256 clearingPrice, uint256 winnerCount)",
@@ -56,6 +63,15 @@ export const makebookAbi = parseAbi([
   "function selectedFactory() view returns (address)",
   "function factoryReceivable() view returns (uint256)",
   "function factoryPayoutClaimed() view returns (bool)",
+  // P1 three-way split (spec 008)
+  "function creator() view returns (address)",
+  "function feeRecipient() view returns (address)",
+  "function marginBps() view returns (uint32)",
+  "function feeBps() view returns (uint32)",
+  "function creatorReceivable() view returns (uint256)",
+  "function platformFee() view returns (uint256)",
+  "function creatorPayoutClaimed() view returns (bool)",
+  "function platformFeeClaimed() view returns (bool)",
   "function MAX_ORDERS() view returns (uint256)",
   "function MAX_FACTORIES() view returns (uint256)",
   "function MAX_TIERS() view returns (uint256)",
@@ -68,4 +84,7 @@ export const makebookAbi = parseAbi([
   "event CampaignSettled(bool success, uint256 winningQuoteId, uint256 tierIndex, uint256 clearingPrice, uint256 winnerCount)",
   "event RefundClaimed(address indexed buyer, uint256 amount)",
   "event FactoryPayoutClaimed(address indexed factory, uint256 amount)",
+  // P1 three-way split (spec 008)
+  "event CreatorPayoutClaimed(address indexed creator, uint256 amount)",
+  "event PlatformFeeClaimed(address indexed feeRecipient, uint256 amount)",
 ]);

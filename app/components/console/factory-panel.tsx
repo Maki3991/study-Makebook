@@ -8,7 +8,7 @@ import {
 } from "@/app/lib/chain/hooks";
 import { useClaimPayout } from "@/app/lib/chain/write";
 import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, explorerTx, truncateAddress } from "@/app/lib/chain/format";
 
 function FactoryCampaignCard({
@@ -18,6 +18,7 @@ function FactoryCampaignCard({
   id: CampaignId;
   address: `0x${string}`;
 }) {
+  const copy = useCopy();
   const campaign = useCampaign(id);
   const claim = useClaimPayout(id);
   const meta = CAMPAIGNS[id];
@@ -126,6 +127,7 @@ function FactoryCampaignCard({
 }
 
 export function FactoryPanel() {
+  const copy = useCopy();
   const { address, isConnected } = useAccount();
   const { role } = useConsoleRole(address);
 

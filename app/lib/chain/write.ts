@@ -67,6 +67,18 @@ export type ClaimPayoutResult = {
   amount: bigint;
 };
 
+export type ClaimCreatorPayoutResult = {
+  txHash: Hash;
+  creator: Address;
+  amount: bigint;
+};
+
+export type ClaimPlatformFeeResult = {
+  txHash: Hash;
+  feeRecipient: Address;
+  amount: bigint;
+};
+
 function invalidateCampaignReads(
   queryClient: ReturnType<typeof useQueryClient>,
   campaignAddress: Address,
@@ -408,4 +420,124 @@ export function useClaimPayout(id: CampaignId): UseTxResult<ClaimPayoutResult> &
   }, [address, chainId, campaign, id, queryClient, tx, writeContractAsync]);
 
   return { ...tx, claimPayout };
+}
+
+export function useClaimCreatorPayout(
+  id: CampaignId,
+): UseTxResult<ClaimCreatorPayoutResult> & {
+  claimCreatorPayout: () => Promise<void>;
+} {
+  const { address } = useAccount();
+  const chainId = useChainId();
+  const { writeContractAsync } = useWriteContract();
+  const queryClient = useQueryClient();
+  const tx = useTx<ClaimCreatorPayoutResult>();
+  const campaign = CAMPAIGNS[id];
+
+  const claimCreatorPayout = useCallback(async () => {
+    const result = await tx.execute({
+      preflight: () => {
+        if (!address) return mapErrorName("");
+        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork");
+        if (!campaign.deployed || !campaign.deployment) {
+          return mapErrorName("CampaignNotOpen");
+        }
+        return undefined;
+      },
+      send: async () => {
+        return writeContractAsync({
+          address: campaign.deployment!.address as Address,
+          abi: makebookAbi,
+          functionName: "claimCreatorPayout",
+        });
+      },
+      decode: (receipt) => {
+        const logs = parseEventLogs({
+          abi: makebookAbi,
+          eventName: "CreatorPayoutClaimed",
+          logs: receipt.logs,
+        });
+        const claimed = logs[0];
+        if (!claimed) {
+          throw new Error("CreatorPayoutClaimed event not found in receipt");
+        }
+        return {
+          txHash: receipt.transactionHash,
+          creator: claimed.args.creator as Address,
+          amount: claimed.args.amount as bigint,
+        };
+      },
+    });
+    if (result) {
+      queryClient.invalidateQueries({ queryKey: ["orders", id] });
+      if (campaign.deployed && campaign.deployment) {
+        invalidateCampaignReads(
+          queryClient,
+          campaign.deployment.address as Address,
+        );
+      }
+    }
+  }, [address, chainId, campaign, id, queryClient, tx, writeContractAsync]);
+
+  return { ...tx, claimCreatorPayout };
+}
+
+export function useClaimPlatformFee(
+  id: CampaignId,
+): UseTxResult<ClaimPlatformFeeResult> & {
+  claimPlatformFee: () => Promise<void>;
+} {
+  const { address } = useAccount();
+  const chainId = useChainId();
+  const { writeContractAsync } = useWriteContract();
+  const queryClient = useQueryClient();
+  const tx = useTx<ClaimPlatformFeeResult>();
+  const campaign = CAMPAIGNS[id];
+
+  const claimPlatformFee = useCallback(async () => {
+    const result = await tx.execute({
+      preflight: () => {
+        if (!address) return mapErrorName("");
+        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork");
+        if (!campaign.deployed || !campaign.deployment) {
+          return mapErrorName("CampaignNotOpen");
+        }
+        return undefined;
+      },
+      send: async () => {
+        return writeContractAsync({
+          address: campaign.deployment!.address as Address,
+          abi: makebookAbi,
+          functionName: "claimPlatformFee",
+        });
+      },
+      decode: (receipt) => {
+        const logs = parseEventLogs({
+          abi: makebookAbi,
+          eventName: "PlatformFeeClaimed",
+          logs: receipt.logs,
+        });
+        const claimed = logs[0];
+        if (!claimed) {
+          throw new Error("PlatformFeeClaimed event not found in receipt");
+        }
+        return {
+          txHash: receipt.transactionHash,
+          feeRecipient: claimed.args.feeRecipient as Address,
+          amount: claimed.args.amount as bigint,
+        };
+      },
+    });
+    if (result) {
+      queryClient.invalidateQueries({ queryKey: ["orders", id] });
+      if (campaign.deployed && campaign.deployment) {
+        invalidateCampaignReads(
+          queryClient,
+          campaign.deployment.address as Address,
+        );
+      }
+    }
+  }, [address, chainId, campaign, id, queryClient, tx, writeContractAsync]);
+
+  return { ...tx, claimPlatformFee };
 }

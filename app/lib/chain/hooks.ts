@@ -15,6 +15,7 @@ import { makebookAbi } from "./abi";
 import { publicClient } from "./client";
 import {
   CAMPAIGNS,
+  DEPLOYED_CAMPAIGNS,
   type CampaignId,
   POLL_INTERVAL_MS,
 } from "./config";
@@ -48,7 +49,14 @@ function deployBlock(id: CampaignId): bigint {
 async function fetchOrderPlacedEvents(
   address: Address,
   fromBlock: bigint,
-): Promise<{ buyer: Address; maxPrice: bigint; variantHash: `0x${string}` }[]> {
+): Promise<
+  {
+    buyer: Address;
+    maxPrice: bigint;
+    variantHash: `0x${string}`;
+    blockNumber: bigint;
+  }[]
+> {
   const latest = await publicClient.getBlockNumber();
   const chunkSize = 5000n;
   const allLogs = [] as Awaited<ReturnType<typeof publicClient.getLogs>>;
@@ -82,6 +90,7 @@ async function fetchOrderPlacedEvents(
     buyer: log.args.buyer as Address,
     maxPrice: log.args.maxPrice as bigint,
     variantHash: log.args.variantHash as `0x${string}`,
+    blockNumber: log.blockNumber,
   }));
 }
 
@@ -148,6 +157,27 @@ function useBaseRead<T>(
   return result as BaseReadResult<T>;
 }
 
+// P1 reads (spec 008) do not exist on the currently deployed P0 contracts and
+// would revert there. They are kept out of the aggregate loading/error state
+// so a failure just yields `undefined` and the UI skips the P1 blocks.
+function useOptionalRead<T>(
+  address: Address,
+  functionName: string,
+  enabled: boolean,
+): BaseReadResult<T> {
+  const result = useReadContract({
+    address,
+    abi: makebookAbi,
+    functionName: functionName as never,
+    query: {
+      refetchInterval: POLL_INTERVAL_MS,
+      enabled,
+      retry: false,
+    },
+  });
+  return result as BaseReadResult<T>;
+}
+
 export function useCampaign(id: CampaignId) {
   const address = campaignAddress(id);
   const meta = CAMPAIGNS[id];
@@ -166,6 +196,16 @@ export function useCampaign(id: CampaignId) {
   const selectedFactory = useBaseRead<Address>(address, "selectedFactory", enabled);
   const factoryReceivable = useBaseRead<bigint>(address, "factoryReceivable", enabled);
   const factoryPayoutClaimed = useBaseRead<boolean>(address, "factoryPayoutClaimed", enabled);
+
+  // P1 three-way split reads (spec 008). Undefined on P0 contracts.
+  const creator = useOptionalRead<Address>(address, "creator", enabled);
+  const feeRecipient = useOptionalRead<Address>(address, "feeRecipient", enabled);
+  const marginBps = useOptionalRead<number>(address, "marginBps", enabled);
+  const feeBps = useOptionalRead<number>(address, "feeBps", enabled);
+  const creatorReceivable = useOptionalRead<bigint>(address, "creatorReceivable", enabled);
+  const platformFee = useOptionalRead<bigint>(address, "platformFee", enabled);
+  const creatorPayoutClaimed = useOptionalRead<boolean>(address, "creatorPayoutClaimed", enabled);
+  const platformFeeClaimed = useOptionalRead<boolean>(address, "platformFeeClaimed", enabled);
 
   // MAX_FACTORIES is 2 on the contract, so at most 2 quotes. Hard-code two
   // hook calls so we stay inside the Rules of Hooks.
@@ -253,6 +293,14 @@ export function useCampaign(id: CampaignId) {
     selectedFactory: selectedFactory.data,
     factoryReceivable: factoryReceivable.data,
     factoryPayoutClaimed: factoryPayoutClaimed.data,
+    creator: creator.data,
+    feeRecipient: feeRecipient.data,
+    marginBps: marginBps.data,
+    feeBps: feeBps.data,
+    creatorReceivable: creatorReceivable.data,
+    platformFee: platformFee.data,
+    creatorPayoutClaimed: creatorPayoutClaimed.data,
+    platformFeeClaimed: platformFeeClaimed.data,
     isLoading,
     isError,
     error,
@@ -440,7 +488,47 @@ export function useHasQuoted(id: CampaignId, factory?: Address) {
   });
 }
 
-export type ConsoleRole = "guest" | "viewer" | "operator" | "factory";
+// P1 role reads (spec 008). Revert on P0 contracts — data stays undefined,
+// which simply means the connected wallet cannot match that role.
+export function useCreator(id: CampaignId) {
+  const meta = CAMPAIGNS[id];
+  const enabled = meta.deployed;
+
+  return useReadContract({
+    address: (meta.deployment?.address as Address) ?? "0x0",
+    abi: makebookAbi,
+    functionName: "creator",
+    query: {
+      refetchInterval: POLL_INTERVAL_MS,
+      enabled,
+      retry: false,
+    },
+  });
+}
+
+export function useFeeRecipient(id: CampaignId) {
+  const meta = CAMPAIGNS[id];
+  const enabled = meta.deployed;
+
+  return useReadContract({
+    address: (meta.deployment?.address as Address) ?? "0x0",
+    abi: makebookAbi,
+    functionName: "feeRecipient",
+    query: {
+      refetchInterval: POLL_INTERVAL_MS,
+      enabled,
+      retry: false,
+    },
+  });
+}
+
+export type ConsoleRole =
+  | "guest"
+  | "viewer"
+  | "operator"
+  | "factory"
+  | "creator"
+  | "platform";
 
 const ALL_CAMPAIGN_IDS: CampaignId[] = ["success", "failure", "bracelet"];
 
@@ -455,11 +543,24 @@ export function useConsoleRole(address?: Address): {
   const factory0 = useIsRegisteredFactory(ALL_CAMPAIGN_IDS[0], address);
   const factory1 = useIsRegisteredFactory(ALL_CAMPAIGN_IDS[1], address);
   const factory2 = useIsRegisteredFactory(ALL_CAMPAIGN_IDS[2], address);
+  const creator0 = useCreator(ALL_CAMPAIGN_IDS[0]);
+  const creator1 = useCreator(ALL_CAMPAIGN_IDS[1]);
+  const creator2 = useCreator(ALL_CAMPAIGN_IDS[2]);
+  const feeRecipient0 = useFeeRecipient(ALL_CAMPAIGN_IDS[0]);
+  const feeRecipient1 = useFeeRecipient(ALL_CAMPAIGN_IDS[1]);
+  const feeRecipient2 = useFeeRecipient(ALL_CAMPAIGN_IDS[2]);
 
   const operatorReads = [operator0, operator1, operator2];
   const factoryReads = [factory0, factory1, factory2];
+  const creatorReads = [creator0, creator1, creator2];
+  const feeRecipientReads = [feeRecipient0, feeRecipient1, feeRecipient2];
 
-  const isLoading = [...operatorReads, ...factoryReads].some((r) => r.isLoading);
+  const isLoading = [
+    ...operatorReads,
+    ...factoryReads,
+    ...creatorReads,
+    ...feeRecipientReads,
+  ].some((r) => r.isLoading);
 
   if (!address) {
     return { role: "guest", isLoading: false };
@@ -473,8 +574,18 @@ export function useConsoleRole(address?: Address): {
     .filter((_, idx) => CAMPAIGNS[ALL_CAMPAIGN_IDS[idx]].deployed)
     .some((r) => r.data === true);
 
+  const isCreator = creatorReads
+    .filter((_, idx) => CAMPAIGNS[ALL_CAMPAIGN_IDS[idx]].deployed)
+    .some((r) => r.data?.toLowerCase() === address.toLowerCase());
+
+  const isPlatform = feeRecipientReads
+    .filter((_, idx) => CAMPAIGNS[ALL_CAMPAIGN_IDS[idx]].deployed)
+    .some((r) => r.data?.toLowerCase() === address.toLowerCase());
+
   if (isOperator) return { role: "operator", isLoading };
   if (isFactory) return { role: "factory", isLoading };
+  if (isCreator) return { role: "creator", isLoading };
+  if (isPlatform) return { role: "platform", isLoading };
   return { role: "viewer", isLoading };
 }
 
@@ -494,4 +605,75 @@ export function useNowSec(): number {
     () => Math.floor(Date.now() / 1000),
     () => 0,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Aggregate: total escrow across all deployed campaigns (Σ OrderPlaced.maxPrice)
+// ---------------------------------------------------------------------------
+
+export function useTotalEscrow() {
+  return useQuery({
+    queryKey: ["totalEscrow"],
+    queryFn: async (): Promise<bigint> => {
+      const sums = await Promise.all(
+        DEPLOYED_CAMPAIGNS.map(async (id) => {
+          const events = await fetchOrderPlacedEvents(
+            campaignAddress(id),
+            deployBlock(id),
+          );
+          return events.reduce((sum, event) => sum + event.maxPrice, 0n);
+        }),
+      );
+      return sums.reduce((total, sum) => total + sum, 0n);
+    },
+    refetchInterval: POLL_INTERVAL_MS,
+    staleTime: POLL_INTERVAL_MS / 2,
+    retry: 2,
+    enabled: DEPLOYED_CAMPAIGNS.length > 0,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Recent OrderPlaced activity for one campaign (newest first)
+// ---------------------------------------------------------------------------
+
+export type OrderActivityItem = {
+  buyer: Address;
+  maxPrice: bigint;
+  blockNumber: number;
+  timestamp: number;
+};
+
+export function useRecentOrderActivity(id: CampaignId, limit = 8) {
+  const address = campaignAddress(id);
+
+  return useQuery({
+    queryKey: ["orderActivity", id, limit],
+    queryFn: async (): Promise<OrderActivityItem[]> => {
+      const events = await fetchOrderPlacedEvents(address, deployBlock(id));
+      const recent = events.slice(-limit).reverse();
+
+      // Batch-fetch timestamps for the unique blocks only (no per-row RPC).
+      const uniqueBlocks = Array.from(new Set(recent.map((e) => e.blockNumber)));
+      const blocks = await Promise.all(
+        uniqueBlocks.map((blockNumber) =>
+          publicClient.getBlock({ blockNumber }),
+        ),
+      );
+      const timestampByBlock = new Map<bigint, bigint>(
+        blocks.map((b) => [b.number, b.timestamp]),
+      );
+
+      return recent.map((e) => ({
+        buyer: e.buyer,
+        maxPrice: e.maxPrice,
+        blockNumber: Number(e.blockNumber),
+        timestamp: Number(timestampByBlock.get(e.blockNumber) ?? 0n),
+      }));
+    },
+    refetchInterval: POLL_INTERVAL_MS,
+    staleTime: POLL_INTERVAL_MS / 2,
+    retry: 2,
+    enabled: true,
+  });
 }

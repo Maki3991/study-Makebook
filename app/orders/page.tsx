@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Wallet } from "lucide-react";
 import { OrderCard } from "@/app/components/orders/order-card";
+import { WalletButton } from "@/app/components/site/wallet-button";
 import { DEPLOYED_CAMPAIGNS } from "@/app/lib/chain/config";
 import { useMyOrder } from "@/app/lib/chain/hooks";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 
 function ConnectEmptyState() {
+  const copy = useCopy();
+
   return (
     <div className="surface flex flex-col items-center justify-center py-16 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
@@ -19,17 +21,18 @@ function ConnectEmptyState() {
         {copy.orders.empty.connect}
       </h2>
       <p className="mt-2 max-w-sm text-sm text-ink-2">
-        Connect your wallet to see your active bids, refunds, and settlement
-        results across all batches.
+        {copy.orders.empty.connectBody}
       </p>
       <div className="mt-5">
-        <ConnectButton />
+        <WalletButton />
       </div>
     </div>
   );
 }
 
 function NoOrdersState() {
+  const copy = useCopy();
+
   return (
     <div className="surface flex flex-col items-center justify-center py-16 text-center">
       <h2 className="text-base font-semibold text-ink">
@@ -46,6 +49,7 @@ function NoOrdersState() {
 }
 
 export default function OrdersPage() {
+  const copy = useCopy();
   const { address, isConnected } = useAccount();
 
   // Call hooks for every possible campaign in fixed order to obey Rules of Hooks.
@@ -65,12 +69,10 @@ export default function OrdersPage() {
     <main className="page py-10 lg:py-16">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-[22px] font-semibold leading-tight text-ink lg:text-[30px]">
+          <h1 className="text-h2 font-semibold leading-tight text-ink lg:text-h1">
             {copy.global.nav.orders}
           </h1>
-          <p className="mt-1 text-sm text-ink-2">
-            Manage your bids and refunds across all active batches.
-          </p>
+          <p className="mt-1 text-sm text-ink-2">{copy.orders.subtitle}</p>
         </div>
       </div>
 

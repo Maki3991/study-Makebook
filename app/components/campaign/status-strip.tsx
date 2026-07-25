@@ -2,11 +2,12 @@
 
 import { Clock } from "lucide-react";
 import { useCampaign, useNowSec } from "@/app/lib/chain/hooks";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 import { CampaignId } from "@/app/lib/types";
 import { formatInj, getCountdownParts } from "@/app/lib/chain/format";
 
 export function StatusStrip({ id }: { id: CampaignId }) {
+  const copy = useCopy();
   const campaign = useCampaign(id);
   const now = useNowSec();
 
@@ -57,8 +58,10 @@ export function StatusStrip({ id }: { id: CampaignId }) {
 
       <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
         <div>
-          <p className="text-xs uppercase tracking-wide text-ink-3">orders</p>
-          <p className="num mt-0.5 text-2xl font-semibold text-ink">
+          <p className="text-xs uppercase tracking-wide text-ink-3">
+            {copy.status.ordersLabel}
+          </p>
+          <p className="num mt-0.5 text-h2 font-semibold text-ink">
             {campaign.ordersLength?.toString() ?? "—"}
             <span className="text-base font-normal text-ink-3"> / 50</span>
           </p>
@@ -66,7 +69,7 @@ export function StatusStrip({ id }: { id: CampaignId }) {
 
         <div>
           <p className="text-xs uppercase tracking-wide text-ink-3">
-            current preview
+            {copy.status.currentPreviewLabel}
           </p>
           {state === "Open" ? (
             feasible ? (

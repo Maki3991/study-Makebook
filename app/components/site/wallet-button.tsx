@@ -3,10 +3,11 @@
 import { useChainId, useSwitchChain } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { CHAIN_ID } from "@/app/lib/chain/config";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 import { truncateAddress } from "@/app/lib/chain/format";
 
 export function WalletButton() {
+  const copy = useCopy();
   const chainId = useChainId();
   const { switchChain, isPending } = useSwitchChain();
   const isWrongNetwork = chainId !== CHAIN_ID;

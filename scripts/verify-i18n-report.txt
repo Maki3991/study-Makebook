@@ -1,0 +1,184 @@
+MAKEBOOK i18n verification — 2026-07-25T05:31:57.026Z
+Base URL: http://localhost:3000
+============================================================
+
+--- en home mobile (http://localhost:3000/) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-home-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- en campaign-success mobile (http://localhost:3000/campaigns/success) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-campaign-success-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- en campaign-failure mobile (http://localhost:3000/campaigns/failure) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-campaign-failure-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- en orders mobile (http://localhost:3000/orders) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-orders-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- en console mobile (http://localhost:3000/console) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-console-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- en home demo (http://localhost:3000/) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-home-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- en campaign-success demo (http://localhost:3000/campaigns/success) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-campaign-success-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- en campaign-failure demo (http://localhost:3000/campaigns/failure) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-campaign-failure-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- en orders demo (http://localhost:3000/orders) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-orders-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- en console demo (http://localhost:3000/console) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-console-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- en home desktop (http://localhost:3000/) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-home-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+
+--- en campaign-success desktop (http://localhost:3000/campaigns/success) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-campaign-success-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+
+--- en campaign-failure desktop (http://localhost:3000/campaigns/failure) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-campaign-failure-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+
+--- en orders desktop (http://localhost:3000/orders) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-orders-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+
+--- en console desktop (http://localhost:3000/console) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-en-console-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+
+--- zh home mobile (http://localhost:3000/) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-home-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- zh campaign-success mobile (http://localhost:3000/campaigns/success) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-campaign-success-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- zh campaign-failure mobile (http://localhost:3000/campaigns/failure) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-campaign-failure-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- zh orders mobile (http://localhost:3000/orders) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-orders-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- zh console mobile (http://localhost:3000/console) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-console-mobile.png
+overflow: [{"selector":"body","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"main","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":"header","scrollWidth":390,"clientWidth":390,"overflowX":false},{"selector":".page","scrollWidth":390,"clientWidth":390,"overflowX":false}]
+hasOverflow: false
+
+--- zh home demo (http://localhost:3000/) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-home-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- zh campaign-success demo (http://localhost:3000/campaigns/success) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-campaign-success-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- zh campaign-failure demo (http://localhost:3000/campaigns/failure) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-campaign-failure-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- zh orders demo (http://localhost:3000/orders) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-orders-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- zh console demo (http://localhost:3000/console) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-console-demo.png
+overflow: [{"selector":"body","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"main","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":"header","scrollWidth":1024,"clientWidth":1024,"overflowX":false},{"selector":".page","scrollWidth":1024,"clientWidth":1024,"overflowX":false}]
+hasOverflow: false
+
+--- zh home desktop (http://localhost:3000/) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-home-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+
+--- zh campaign-success desktop (http://localhost:3000/campaigns/success) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-campaign-success-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+
+--- zh campaign-failure desktop (http://localhost:3000/campaigns/failure) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-campaign-failure-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+
+--- zh orders desktop (http://localhost:3000/orders) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-orders-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+
+--- zh console desktop (http://localhost:3000/console) ---
+title: MAKEBOOK — Production Demand Clearing
+screenshot: ./visual-snapshots/i18n-zh-console-desktop.png
+overflow: [{"selector":"body","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":"main","scrollWidth":1280,"clientWidth":1280,"overflowX":false},{"selector":"header","scrollWidth":1920,"clientWidth":1920,"overflowX":false},{"selector":".page","scrollWidth":1280,"clientWidth":1280,"overflowX":false}]
+hasOverflow: false
+

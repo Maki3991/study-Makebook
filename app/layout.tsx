@@ -4,6 +4,8 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { ProvidersShell } from "@/app/components/site/providers-shell";
 import { TopBar } from "@/app/components/site/top-bar";
 import { TestnetBanner } from "@/app/components/site/testnet-banner";
+import { LanguageProvider } from "@/app/lib/i18n/context";
+import { Fonts } from "@/app/components/site/fonts";
 
 export const metadata: Metadata = {
   title: "MAKEBOOK — Production Demand Clearing",
@@ -30,7 +32,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#F5F3EF",
 };
 
 export default function RootLayout({
@@ -38,12 +40,15 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="min-h-dvh bg-canvas text-ink">
-        <ProvidersShell>
-          <TopBar />
-          <TestnetBanner />
-          {children}
-        </ProvidersShell>
+      <body className="min-h-dvh bg-canvas text-ink" data-ambient="on">
+        <Fonts />
+        <LanguageProvider>
+          <ProvidersShell>
+            <TopBar />
+            <TestnetBanner />
+            {children}
+          </ProvidersShell>
+        </LanguageProvider>
       </body>
     </html>
   );

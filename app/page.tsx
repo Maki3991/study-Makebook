@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 import { useCampaign, useNowSec } from "@/app/lib/chain/hooks";
 import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
-import { copy } from "@/app/lib/copy";
+import { ProvenanceTag } from "@/app/components/site/provenance-tag";
+import { LiveTicker } from "@/app/components/site/live-ticker";
+import { useCopy } from "@/app/lib/i18n/use-copy";
 import { FIXTURE_RESULT } from "@/lib/ai/fixture";
 import { formatInj, getCountdownParts } from "@/app/lib/chain/format";
 import { FAUCET_URL } from "@/app/lib/chain/config";
@@ -25,6 +27,7 @@ function StatusTag({
   state: ReturnType<typeof useCampaign>["state"];
   deadline: bigint | undefined;
 }) {
+  const copy = useCopy();
   const now = useNowSec();
   const isPastDeadline =
     state === "Open" && deadline !== undefined && now >= Number(deadline);
@@ -52,6 +55,7 @@ function StatusTag({
 }
 
 function BatchCard({ id }: { id: CampaignId }) {
+  const copy = useCopy();
   const campaign = useCampaign(id);
   const now = useNowSec();
   const meta = CAMPAIGNS[id];
@@ -64,14 +68,14 @@ function BatchCard({ id }: { id: CampaignId }) {
   return (
     <Link
       href={meta.route}
-      className="surface group flex flex-col overflow-hidden transition-colors hover:border-ink-3"
+      className="surface group flex flex-col overflow-hidden transition-colors hover:border-rule-2"
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-surface">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={meta.heroImage}
           alt={meta.product}
-          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+          className="h-full w-full object-cover object-center transition-transform duration-200 group-hover:scale-[1.02]"
         />
       </div>
       <div className="flex flex-1 flex-col p-5">
@@ -148,6 +152,8 @@ function PreviewCard({
   image: string;
   commentIds: string[];
 }) {
+  const copy = useCopy();
+
   return (
     <div className="surface flex flex-col overflow-hidden">
       <div className="relative aspect-[3/4] overflow-hidden bg-surface">
@@ -155,7 +161,7 @@ function PreviewCard({
         <img
           src={image}
           alt={title}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover object-center"
         />
         <div className="absolute left-3 top-3">
           <span className="tag tag-warn">
@@ -165,7 +171,10 @@ function PreviewCard({
         </div>
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="text-base font-semibold text-ink">{title}</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-base font-semibold text-ink">{title}</h3>
+          <ProvenanceTag type="AI GENERATED" />
+        </div>
         <p className="mt-4 text-xs text-ink-3">
           {copy.preview.from.replace("{ids}", commentIds.join(", "))}
         </p>
@@ -175,6 +184,7 @@ function PreviewCard({
 }
 
 function StepBar() {
+  const copy = useCopy();
   const { isConnected } = useAccount();
 
   const steps = [
@@ -210,7 +220,7 @@ function StepBar() {
               <div
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${
                   step.done
-                    ? "bg-success text-white"
+                    ? "bg-success text-paper-1"
                     : "bg-accent-soft text-accent"
                 }`}
               >
@@ -218,7 +228,7 @@ function StepBar() {
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-ink-3">
-                  Step {step.number}
+                  {copy.home.steps.stepLabel.replace("{n}", String(step.number))}
                 </p>
                 <p className="mt-0.5 text-sm font-medium text-ink">
                   {step.text}
@@ -256,28 +266,82 @@ function StepBar() {
   );
 }
 
-export default function Home() {
+function HeroDimensionLines({ copy }: { copy: ReturnType<typeof useCopy> }) {
+  const values = copy.product.spec.value as Record<string, string>;
+
   return (
-    <main className="page py-12 lg:py-16">
+    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      {/* Width line */}
+      <div className="absolute left-[10%] right-[10%] top-[6%] h-px bg-rule-2">
+        <div className="absolute left-0 top-[-2px] h-1 w-px bg-rule-2" />
+        <div className="absolute right-0 top-[-2px] h-1 w-px bg-rule-2" />
+      </div>
+      <span className="num absolute left-1/2 top-[3%] -translate-x-1/2 text-micro text-ink-3">
+        280 mm
+      </span>
+
+      {/* Height line */}
+      <div className="absolute bottom-[10%] right-[6%] top-[10%] w-px bg-rule-2">
+        <div className="absolute left-[-2px] top-0 h-px w-1 bg-rule-2" />
+        <div className="absolute bottom-0 left-[-2px] h-px w-1 bg-rule-2" />
+      </div>
+      <span className="num absolute right-[2%] top-1/2 -translate-y-1/2 text-micro text-ink-3 [writing-mode:vertical-rl]">
+        190 mm
+      </span>
+
+      {/* Feature callouts — use the same localized spec values as the product card. */}
+      <span className="num absolute left-[8%] top-[28%] text-micro text-ink-3">
+        8L
+      </span>
+      <span className="num absolute right-[10%] top-[62%] text-micro text-ink-3">
+        {values.black ?? "Black"}
+      </span>
+      <span className="num absolute left-[10%] top-[78%] text-micro text-ink-3">
+        {values.removable ?? "Removable"}
+      </span>
+    </div>
+  );
+}
+
+export default function Home() {
+  const copy = useCopy();
+
+  return (
+    <main className="page">
       {/* Hero */}
-      <section className="text-center">
-        <h1 className="mx-auto max-w-3xl text-[30px] font-semibold leading-tight tracking-tight text-ink lg:text-[38px]">
-          {copy.home.hero.title}
-        </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-ink-2">
-          {copy.home.hero.sub}
-        </p>
-        <Link
-          href="/campaigns/success"
-          className="btn btn-primary mt-8 inline-flex"
-        >
-          {copy.home.hero.cta}
-          <ArrowRight size={16} />
-        </Link>
+      <section className="section relative overflow-hidden">
+        <div className="ambient-grid" aria-hidden="true" />
+        <div className="relative grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+          <div>
+            <h1 className="max-w-xl text-h1">{copy.home.hero.title}</h1>
+            <p className="mt-5 max-w-lg text-body text-ink-2">
+              {copy.home.hero.sub}
+            </p>
+            <Link
+              href="/campaigns/success"
+              className="btn btn-primary mt-8 inline-flex"
+            >
+              {copy.home.hero.cta}
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+          <div className="relative aspect-[3/4] overflow-hidden bg-surface">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/products/frame-01/hero.png"
+              alt="FRAME-01 Camera Sling"
+              className="h-full w-full object-cover object-center"
+            />
+            <HeroDimensionLines copy={copy} />
+          </div>
+        </div>
       </section>
 
+      {/* Live on-chain ticker */}
+      <LiveTicker />
+
       {/* Steps */}
-      <section className="mt-14 lg:mt-20">
+      <section className="section">
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="text-base font-semibold text-ink">
             {copy.home.steps.title}
@@ -287,7 +351,7 @@ export default function Home() {
       </section>
 
       {/* Active batches */}
-      <section className="mt-14 lg:mt-20">
+      <section className="section">
         <h2 className="text-base font-semibold text-ink">
           {copy.home.batches.title}
         </h2>
@@ -299,7 +363,7 @@ export default function Home() {
       </section>
 
       {/* Preview — kept to 2 columns so the row is balanced */}
-      <section className="mt-14 lg:mt-20">
+      <section className="section">
         <h2 className="text-base font-semibold text-ink">{copy.preview.title}</h2>
         <p className="mt-1 text-sm text-ink-2">{copy.preview.note}</p>
         <div className="mt-5 grid gap-5 md:grid-cols-2">

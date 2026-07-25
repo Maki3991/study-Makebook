@@ -1,17 +1,74 @@
 "use client";
 
-import { Check, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
 import { useCampaign, useManifest } from "@/app/lib/chain/hooks";
-import { copy } from "@/app/lib/copy";
+import { useCopy } from "@/app/lib/i18n/use-copy";
+import { ProvenanceTag } from "@/app/components/site/provenance-tag";
+
+function ProductDimensionLines({
+  id,
+  batchName,
+  copy,
+}: {
+  id: CampaignId;
+  batchName: string;
+  copy: ReturnType<typeof useCopy>;
+}) {
+  if (id === "bracelet") return null;
+
+  const values = copy.product.spec.value as Record<string, string>;
+
+  return (
+    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      {/* Width line */}
+      <div className="absolute left-[8%] right-[8%] top-[6%] h-px bg-rule-2">
+        <div className="absolute left-0 top-[-2px] h-1 w-px bg-rule-2" />
+        <div className="absolute right-0 top-[-2px] h-1 w-px bg-rule-2" />
+      </div>
+
+      {/* Height line */}
+      <div className="absolute bottom-[8%] right-[6%] top-[8%] w-px bg-rule-2">
+        <div className="absolute left-[-2px] top-0 h-px w-1 bg-rule-2" />
+        <div className="absolute bottom-0 left-[-2px] h-px w-1 bg-rule-2" />
+      </div>
+
+      {/* Labels */}
+      <span className="num absolute left-[8%] top-[9%] text-micro text-ink-3">
+        8L
+      </span>
+      <span className="num absolute right-[8%] top-[36%] text-micro text-ink-3">
+        {values.black ?? "Black"}
+      </span>
+      <span className="num absolute left-[10%] top-[58%] text-micro text-ink-3">
+        {values.removable ?? "Removable"}
+      </span>
+      <span className="num absolute right-[10%] top-[78%] text-micro text-ink-3">
+        {batchName}
+      </span>
+    </div>
+  );
+}
 
 export function ProductCard({ id }: { id: CampaignId }) {
+  const copy = useCopy();
   const campaign = useCampaign(id);
   const manifest = useManifest(id, campaign.manifestHash);
   const meta = CAMPAIGNS[id];
 
   const data = manifest.data;
   const specs = data?.manifest.specs ?? [];
+
+  // Expandable trust panel (spec 008 §6 Owner-B #3): presentation only — the
+  // manifest/hash verification logic above is untouched. Opening fades the
+  // panel in over 150ms (opacity); closing is immediate.
+  const [trustOpen, setTrustOpen] = useState(false);
 
   return (
     <section className="surface overflow-hidden">
@@ -23,11 +80,12 @@ export function ProductCard({ id }: { id: CampaignId }) {
             alt={meta.product}
             className="h-full w-full object-cover"
           />
+          <ProductDimensionLines id={id} batchName={meta.batchName} copy={copy} />
         </div>
 
         <div className="flex flex-1 flex-col p-5 lg:p-6">
           <div>
-            <h1 className="text-[22px] font-semibold leading-tight tracking-tight text-ink lg:text-[30px]">
+            <h1 className="text-h2 font-semibold leading-tight tracking-tight text-ink lg:text-h1">
               {meta.product}
             </h1>
             <p className="mt-1 text-sm text-ink-2">{meta.batchName}</p>
@@ -35,7 +93,7 @@ export function ProductCard({ id }: { id: CampaignId }) {
 
           <div className="mt-6">
             <p className="text-xs font-medium uppercase tracking-wide text-ink-3">
-              Specs
+              {copy.product.specsTitle}
             </p>
             <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
               {specs.map((spec, idx) => {
@@ -59,29 +117,114 @@ export function ProductCard({ id }: { id: CampaignId }) {
           </div>
 
           <div className="mt-auto border-t border-line pt-4 lg:pt-5">
-            <p className="text-xs leading-relaxed text-ink-3">
-              {copy.product.specsFrom}
-            </p>
-            {data ? (
-              <p
-                className={`mt-2 flex items-center gap-1.5 text-xs ${
-                  data.hashOk ? "text-success" : "text-danger"
-                }`}
+            <div className="flex flex-wrap items-center gap-2">
+              <ProvenanceTag type="AI GENERATED" />
+              <ProvenanceTag type="HUMAN CONFIRMED" />
+              {data ? (
+                <>
+                  {data.hashOk ? (
+                    <ProvenanceTag type="ONCHAIN" />
+                  ) : (
+                    <p className="flex items-center gap-1.5 text-xs text-danger">
+                      <AlertTriangle size={14} />
+                      {copy.product.hashBad}
+                    </p>
+                  )}
+                </>
+              ) : manifest.isLoading ? (
+                <span className="text-xs text-ink-3">
+                  {copy.product.manifestLoading}
+                </span>
+              ) : manifest.isError ? (
+                <span className="text-xs text-danger">
+                  {copy.product.manifestError}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => setTrustOpen((v) => !v)}
+                aria-expanded={trustOpen}
+                className="btn btn-secondary"
               >
-                {data.hashOk ? (
-                  <Check size={14} />
+                {trustOpen ? (
+                  <ChevronDown size={16} />
                 ) : (
-                  <AlertTriangle size={14} />
+                  <ChevronRight size={16} />
                 )}
-                {data.hashOk ? copy.product.hashOk : copy.product.hashBad}
-              </p>
-            ) : manifest.isLoading ? (
-              <p className="mt-2 text-xs text-ink-3">Loading manifest…</p>
-            ) : manifest.isError ? (
-              <p className="mt-2 text-xs text-danger">
-                Failed to load manifest: {manifest.error?.message}
-              </p>
-            ) : null}
+                {copy.product.trust.toggle}
+              </button>
+
+              {trustOpen ? (
+                <div className="animate-fade-in mt-3 border border-line p-4">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-ink-3">
+                        {copy.product.trust.manifestTitle}
+                      </p>
+                      <pre className="num mt-2 max-h-64 overflow-auto bg-canvas p-3 text-xs text-ink-2">
+                        {data
+                          ? JSON.stringify(data.manifest, null, 2)
+                          : manifest.isError
+                            ? copy.product.manifestError
+                            : copy.product.manifestLoading}
+                      </pre>
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-ink-2">
+                        {copy.product.trust.canonicalNote}
+                      </p>
+                      <pre className="num mt-1 overflow-x-auto text-xs text-ink">
+                        {data?.canonicalHash ?? "—"}
+                      </pre>
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-ink-2">
+                        {copy.product.trust.onchainNote}
+                      </p>
+                      <pre className="num mt-1 overflow-x-auto text-xs text-ink">
+                        {campaign.manifestHash ?? "—"}
+                      </pre>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      {data ? (
+                        data.hashOk ? (
+                          <>
+                            <Check size={16} className="text-success" />
+                            <span className="text-success">
+                              {copy.product.trust.match}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle size={16} className="text-danger" />
+                            <span className="text-danger">
+                              {copy.product.hashBad}
+                            </span>
+                          </>
+                        )
+                      ) : manifest.isLoading ? (
+                        <span className="text-ink-3">
+                          {copy.product.manifestLoading}
+                        </span>
+                      ) : manifest.isError ? (
+                        <>
+                          <AlertTriangle size={16} className="text-danger" />
+                          <span className="text-danger">
+                            {copy.product.manifestError}
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
