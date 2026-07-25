@@ -1,25 +1,25 @@
 # MAKEBOOK 演示手册（Pitch Runbook）
 
 面向黑客松现场：如何把项目跑通并完成 2 分钟 pitch。配合 PRD 第 18 章使用。
-本仓库当前状态：合约与后端模块已完成并测试通过（forge 51/51、lib 9/9）；前端已按 specs/006/007 重建并接真链（T1–T6/T8 完成；/orders 与 /console 仍为占位桩，对应 spec 007 的 T7/T9）；Testnet 预部署两套 Campaign ✅ 已完成（2026-07-24，地址见 deployments/injective-testnet.json，链上实况见 specs/006 §0）。
+本仓库当前状态：P1 三方分账已全链路上线（spec 008，2026-07-25）——合约 forge 73/73、lib 9/9；前端 T1–T9 全部完成并接真链；Testnet 三套 Campaign 以 P1 合约重新部署 ✅（旧 P0 地址废弃；地址见 deployments/injective-testnet.json，链上实况见 specs/006 §0），线上 https://makebook-frontend.jiachexie6.workers.dev 。
 
 ## 当前进度与剩余工作
 
 | 部分 | 状态 | 负责人 |
 |---|---|---|
-| 合约 MakebookCampaign.sol + 51 测试 | ✅ 完成 | 后端 |
+| 合约 MakebookCampaign.sol + 73 测试（51 P0 + 22 P1） | ✅ 完成 | 后端 |
 | AI 编译模块 lib/ai（fixture 降级） | ✅ 完成 | 后端 |
 | canonical JSON + manifestHash（lib/schema） | ✅ 完成，hash 锚点 `0x92e96e07…cc6ec` | 后端 |
 | fixtures 成功/失败剧本 + 20 条评论（英文，面向欧美用户） | ✅ 完成 | 后端 |
-| 部署流水线 demo-pipeline.sh | ✅ anvil 全链路排练通过（PaidOut + Failed 双路径） | 后端 |
-| 前端重建（specs/006/007：极简三页 + 真链全流程） | ✅ T1–T6/T8 完成；/orders 与 /console 仍为占位桩（T7/T9 待施工） | 前端 |
-| Testnet 预部署两套 Campaign | ✅ 完成（2026-07-24，地址见 deployments/injective-testnet.json，链上实况见 specs/006 §0） | 后端 |
+| 部署流水线 demo-pipeline.sh | ✅ anvil 全链路排练通过（PaidOut + Failed 双路径 + 五路领取） | 后端 |
+| 前端重建（specs/006/007：极简三页 + 真链全流程） | ✅ T1–T9 全部完成；P1 面板（品牌/平台领取、每一分钱去哪了）已上线 | 前端 |
+| Testnet 预部署三套 Campaign | ✅ P1 重部署完成（2026-07-25 中午，旧 P0 地址废弃；地址见 deployments/injective-testnet.json，链上实况见 specs/006 §0） | 后端 |
 | 证据页 / 视频 / README 素材 | 🔲 演示前一天完成 | Producer |
 
 ## 1. 赛前准备（T+0 必做）
 
 1. 准备 8 个角色钱包：1 operator、2 factory（North/Loom）、5 buyer（与 .env.example 一致）。只记录地址，私钥只在各自 MetaMask / 本地环境变量。
-2. 每个钱包去 faucet 领 test INJ：<https://testnet.faucet.injective.network/>（buyer 至少 0.03，operator/factory 少量 gas 即可）。
+2. 每个钱包去 faucet 领 test INJ：<https://testnet.faucet.injective.network/>（buyer A 至少 0.06（成功线 0.034 + 失败线 0.023 + gas），其余 buyer ≥0.03，operator/factory 少量 gas 即可）。
 3. 只读验证网络：`cast chain-id --rpc-url https://k8s.testnet.json-rpc.injective.network/` 应返回 `1439`；Blockscout 能打开。
 4. 复核 manifestHash：`npm test` 中 lib/schema 单测会打印并断言 FRAME-01 的 hash，必须与部署参数一致。
 
@@ -33,12 +33,12 @@ contracts/script/demo-pipeline.sh testnet up       # 部署×2 → 登记/报价
 contracts/script/demo-pipeline.sh testnet status   # 只读核对 state / orders / previewSettlement
 # 现场（deadline 过后）：
 contracts/script/demo-pipeline.sh testnet settle   # 两套各自触发清算
-contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + Loom 领取应收
+contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + 工厂/品牌/平台三路领取
 ```
 
-- **Success Campaign**：5 个 buyer 按 fixtures/success.json 下单（0.026 / 0.024 / 0.021 / 0.019 / 0.017），**先不 settle**，留到现场触发；保留 rehearsal 轮已 settle 的 tx 作为兜底。
+- **Success Campaign**：5 个 buyer 按 fixtures/success.json 下单（P1 口径：0.034 / 0.032 / 0.028 / 0.026 / 0.022），**先不 settle**，留到现场触发；保留 rehearsal 轮已 settle 的 tx 作为兜底。
 - **Failure Campaign**：只下 2 单（Buyer A/B，低于 MOQ 3），现场 settle → Failed → 全额退款。
-- `DEADLINE` 部署后不可改：设为演示日清晨、早于任何演示时段（.env.example 默认 2026-07-26 06:00 UTC+8 = 1785016800）。
+- `DEADLINE` 部署后不可改：设为演示日清晨、早于任何演示时段（P1 社区批次已用 1785024000 = 2026-07-26 08:00 UTC+8，pitch 当天早晨现场 settle）。
 - 每次运行生成 `deployments/receipts/testnet-<时间戳>.jsonl` 证据文件（deploy/订单/settle/refund/payout 全部 tx hash），提交前随仓库公开。
 - 部署后流水线自动回填 `deployments/injective-testnet.json`（address / manifestHash / deadline），前端从此文件读取；两个合约自动做 Blockscout verify（失败可 `demo-pipeline.sh testnet verify` 重试）。
 

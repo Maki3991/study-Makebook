@@ -1,31 +1,34 @@
 {
   "scenario": "failure",
-  "label": "Appendix A.2 failure campaign (Hackathon scaled test data)",
+  "label": "Appendix A.2 failure campaign (Hackathon scaled test data, P1 three-way split)",
   "campaignCode": "FRAME-01-FAIL",
+  "params": { "marginBps": 2500, "feeBps": 200, "note": "retailTierPrice = factory tierPrice x 1.25; platform fee = GMV x 2%" },
   "quotes": [
     {
       "quoteId": 0,
       "factory": "Factory North",
       "demoFactory": true,
-      "tiers": [{ "minQty": 3, "unitPrice": "0.024", "unit": "testINJ" }]
+      "tiers": [{ "minQty": 3, "unitPrice": "0.024", "retailTierPrice": "0.030", "unit": "testINJ" }]
     },
     {
       "quoteId": 1,
       "factory": "Factory Loom",
       "demoFactory": true,
-      "tiers": [{ "minQty": 3, "unitPrice": "0.019", "unit": "testINJ" }]
+      "tiers": [{ "minQty": 3, "unitPrice": "0.019", "retailTierPrice": "0.02375", "unit": "testINJ" }]
     }
   ],
   "orders": [
-    { "buyer": "Buyer A", "maxPrice": "0.026", "unit": "testINJ", "expected": { "winner": false, "refund": "0.026" } },
-    { "buyer": "Buyer B", "maxPrice": "0.024", "unit": "testINJ", "expected": { "winner": false, "refund": "0.024" } }
+    { "buyer": "Buyer A", "maxPrice": "0.023", "unit": "testINJ", "expected": { "winner": false, "refund": "0.023" } },
+    { "buyer": "Buyer B", "maxPrice": "0.022", "unit": "testINJ", "expected": { "winner": false, "refund": "0.022" } }
   ],
   "settlement": {
     "success": false,
     "state": "Failed",
     "winnerCount": 0,
     "factoryReceivable": "0",
+    "creatorReceivable": "0",
+    "platformFee": "0",
     "unit": "testINJ",
-    "note": "min MOQ=3 with only 2 valid orders; everyone refunded in full, no factory receivable"
+    "note": "no order reaches retail tier price 0.02375 (factory 0.019 x 1.25); everyone refunded in full, no factory/creator/platform receivable"
   }
 }

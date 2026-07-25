@@ -4,7 +4,7 @@
 # 用法：
 #   contracts/script/demo-pipeline.sh <anvil|testnet> up       部署两套 Campaign → 登记/报价/开盘/下单 → 回填地址（testnet 附 verify）
 #   contracts/script/demo-pipeline.sh <anvil|testnet> settle   对两套 Campaign 触发 settle（anvil 自动时间旅行到 deadline 后）
-#   contracts/script/demo-pipeline.sh <anvil|testnet> claims   成功线：5 buyer 退差额/落选款 + Loom 领应收；失败线：2 buyer 全额退款
+#   contracts/script/demo-pipeline.sh <anvil|testnet> claims   成功线：5 buyer 退差额/落选款 + Loom/品牌/平台三路领取；失败线：2 buyer 全额退款
 #   contracts/script/demo-pipeline.sh <anvil|testnet> status   只读检查两套 Campaign 的 state / orders / previewSettlement
 #   contracts/script/demo-pipeline.sh <anvil|testnet> all      up + settle + claims（完整排练）
 #
@@ -32,7 +32,7 @@ case "$NETWORK" in
     ;;
   testnet)
     RPC_URL="${INJ_RPC:-https://k8s.testnet.json-rpc.injective.network/}"
-    GAS_FLAGS=(--legacy --gas-price 160000000 --gas-limit 2000000)
+    GAS_FLAGS=(--legacy --gas-price 160000000 --gas-limit 4000000)
     STATE_FILE="$ROOT/deployments/injective-testnet.json"
     NETWORK_LABEL="injectiveEvmTestnet"
     ;;
@@ -118,6 +118,17 @@ wait_contract_address() {
     [[ -n "$addr" && "$addr" != "null" ]] && { echo "$addr"; return 0; }
     sleep 2
   done
+  # Injective RPC 的 receipt/tx 查询经常滞后：从 operator 最新 nonce 往下反推 CREATE 地址兜底
+  # （部署在脚本内严格串行，最新一个有代码的地址即本次部署）
+  local nonce n
+  nonce="$("$CAST" nonce "$OPERATOR_ADDR" --rpc-url "$RPC_URL" 2>/dev/null || echo 0)"
+  for (( n=nonce-1; n>=0; n-- )); do
+    addr="$("$CAST" compute-address --nonce "$n" "$OPERATOR_ADDR" 2>/dev/null | awk '{print $NF}')"
+    [[ -z "$addr" ]] && continue
+    if [[ -n "$("$CAST" code "$addr" --rpc-url "$RPC_URL" 2>/dev/null | tr -d '0x')" ]]; then
+      echo "$addr"; return 0
+    fi
+  done
   return 1
 }
 
@@ -167,13 +178,16 @@ deploy_campaign() { # <label> → stdout: 合约地址
   [[ -f "$ROOT/contracts/out/MakebookCampaign.sol/MakebookCampaign.json" ]] || \
     (cd "$ROOT/contracts" && "$FORGE" build >/dev/null)
   bytecode="$("$JQ" -r '.bytecode.object' "$ROOT/contracts/out/MakebookCampaign.sol/MakebookCampaign.json")"
-  args="$("$CAST" abi-encode "constructor(address,bytes32,string,uint64)" \
-    "$OPERATOR_ADDR" "$MANIFEST_HASH" "$MANIFEST_URI" "$DEADLINE")"
+  args="$("$CAST" abi-encode "constructor(address,address,address,bytes32,string,uint64,uint32,uint32)" \
+    "$OPERATOR_ADDR" "$CREATOR_ADDR" "$PLATFORM_ADDR" "$MANIFEST_HASH" "$MANIFEST_URI" "$DEADLINE" "$MARGIN_BPS" "$FEE_BPS")"
   tx="$(broadcast --private-key "$OPERATOR_KEY" --rpc-url "$RPC_URL" "${GAS_FLAGS[@]}" \
     --create "${bytecode}${args:2}")" || { echo "!! ${label} 部署广播失败" >&2; return 1; }
   wait_mined "$tx" || { echo "!! ${label} 部署交易未确认或已 revert: ${tx}" >&2; return 1; }
   addr="$(wait_contract_address "$tx")" || { echo "!! ${label} 无法读取 contractAddress: ${tx}" >&2; return 1; }
-  record "$label" "deploy(operator=$OPERATOR_ADDR,manifestHash=$MANIFEST_HASH,deadline=$DEADLINE)" "operator" "$addr" "$tx"
+  local dblock
+  dblock="$("$CAST" block-number --rpc-url "$RPC_URL" 2>/dev/null || echo 0)"
+  printf -v "DEPLOY_BLOCK_${label}" '%s' "$dblock"
+  record "$label" "deploy(operator=$OPERATOR_ADDR,creator=$CREATOR_ADDR,feeRecipient=$PLATFORM_ADDR,manifestHash=$MANIFEST_HASH,deadline=$DEADLINE,marginBps=$MARGIN_BPS,feeBps=$FEE_BPS)" "operator" "$addr" "$tx"
   log "$label: 部署于 $addr (tx $tx)"
   echo "$addr"
 }
@@ -223,15 +237,15 @@ place_order() { # <label> <addr> <buyerLabel> <key> <priceEther>（幂等：已�
 }
 
 place_all_orders() {
-  # 成功线：A–E 五单（fixtures/success.json）
-  place_order success "$SUCCESS_ADDR" buyerA "$BUYER_A_KEY" 0.026
-  place_order success "$SUCCESS_ADDR" buyerB "$BUYER_B_KEY" 0.024
-  place_order success "$SUCCESS_ADDR" buyerC "$BUYER_C_KEY" 0.021
-  place_order success "$SUCCESS_ADDR" buyerD "$BUYER_D_KEY" 0.019
-  place_order success "$SUCCESS_ADDR" buyerE "$BUYER_E_KEY" 0.017
-  # 失败线：A、B 两单（fixtures/failure.json，MOQ=3 达不到）
-  place_order failure "$FAILURE_ADDR" buyerA "$BUYER_A_KEY" 0.026
-  place_order failure "$FAILURE_ADDR" buyerB "$BUYER_B_KEY" 0.024
+  # 成功线：A–E 五单（fixtures/success.json，P1 零售口径：Loom 零售档 0.02375 成交 4 单，末单落选）
+  place_order success "$SUCCESS_ADDR" buyerA "$BUYER_A_KEY" 0.034
+  place_order success "$SUCCESS_ADDR" buyerB "$BUYER_B_KEY" 0.032
+  place_order success "$SUCCESS_ADDR" buyerC "$BUYER_C_KEY" 0.028
+  place_order success "$SUCCESS_ADDR" buyerD "$BUYER_D_KEY" 0.026
+  place_order success "$SUCCESS_ADDR" buyerE "$BUYER_E_KEY" 0.022
+  # 失败线：A、B 两单（fixtures/failure.json，均低于 Loom 零售档 0.02375）
+  place_order failure "$FAILURE_ADDR" buyerA "$BUYER_A_KEY" 0.023
+  place_order failure "$FAILURE_ADDR" buyerB "$BUYER_B_KEY" 0.022
 }
 
 backfill_state() {
@@ -242,9 +256,12 @@ backfill_state() {
     --arg saddr "$SUCCESS_ADDR" --arg faddr "$FAILURE_ADDR" \
     --arg mhash "$MANIFEST_HASH" --arg muri "$MANIFEST_URI" \
     --argjson deadline "$DEADLINE" \
+    --arg creator "$CREATOR_ADDR" --arg feeRecipient "$PLATFORM_ADDR" \
+    --argjson marginBps "$MARGIN_BPS" --argjson feeBps "$FEE_BPS" \
+    --argjson sblock "${DEPLOY_BLOCK_success:-0}" --argjson fblock "${DEPLOY_BLOCK_failure:-0}" \
     '{chainId:$chainId,network:$network,rpc:$rpc,explorer:$explorer,
-      success:{address:$saddr,manifestHash:$mhash,manifestURI:$muri,deadline:$deadline},
-      failure:{address:$faddr,manifestHash:$mhash,manifestURI:$muri,deadline:$deadline}}' \
+      success:{address:$saddr,manifestHash:$mhash,manifestURI:$muri,deadline:$deadline,deployBlock:$sblock,creator:$creator,feeRecipient:$feeRecipient,marginBps:$marginBps,feeBps:$feeBps},
+      failure:{address:$faddr,manifestHash:$mhash,manifestURI:$muri,deadline:$deadline,deployBlock:$fblock,creator:$creator,feeRecipient:$feeRecipient,marginBps:$marginBps,feeBps:$feeBps}}' \
     > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
   log "地址已回填 $STATE_FILE"
 }
@@ -281,8 +298,8 @@ setup() {
 
 verify_contract() { # <addr>
   local addr="$1" args
-  args="$("$CAST" abi-encode "constructor(address,bytes32,string,uint64)" \
-    "$OPERATOR_ADDR" "$MANIFEST_HASH" "$MANIFEST_URI" "$DEADLINE")"
+  args="$("$CAST" abi-encode "constructor(address,address,address,bytes32,string,uint64,uint32,uint32)" \
+    "$OPERATOR_ADDR" "$CREATOR_ADDR" "$PLATFORM_ADDR" "$MANIFEST_HASH" "$MANIFEST_URI" "$DEADLINE" "$MARGIN_BPS" "$FEE_BPS")"
   (cd "$ROOT/contracts" && "$FORGE" verify-contract "$addr" \
     src/MakebookCampaign.sol:MakebookCampaign \
     --chain-id 1439 --verifier blockscout \
@@ -327,6 +344,8 @@ claims() {
     send success "buyer$b" "${!key_var}" "$SUCCESS_ADDR" "claimRefund()"
   done
   send success "loom" "$LOOM_KEY" "$SUCCESS_ADDR" "claimPayout()"
+  send success "creator" "$CREATOR_KEY" "$SUCCESS_ADDR" "claimCreatorPayout()"
+  send success "platform" "$PLATFORM_KEY" "$SUCCESS_ADDR" "claimPlatformFee()"
   for b in A B; do
     local key_var="BUYER_${b}_KEY"
     send failure "buyer$b" "${!key_var}" "$FAILURE_ADDR" "claimRefund()"
@@ -339,7 +358,8 @@ status_one() { # <label> <addr>
   echo "   state(0=Draft,1=Open,2=Succeeded,3=Failed,4=PaidOut): $("$CAST" call "$addr" "state()(uint8)" --rpc-url "$RPC_URL")"
   echo "   orders: $("$CAST" call "$addr" "ordersLength()(uint256)" --rpc-url "$RPC_URL")"
   echo "   previewSettlement(feasible,quoteId,tierIndex,price,count): $("$CAST" call "$addr" "previewSettlement()(bool,uint256,uint256,uint256,uint256)" --rpc-url "$RPC_URL" | tr '\n' ' ')"
-  echo "   factoryReceivable: $("$CAST" call "$addr" "factoryReceivable()(uint256)" --rpc-url "$RPC_URL")"
+  echo "   receivables(factory/creator/platform): $("$CAST" call "$addr" "factoryReceivable()(uint256)" --rpc-url "$RPC_URL") / $("$CAST" call "$addr" "creatorReceivable()(uint256)" --rpc-url "$RPC_URL") / $("$CAST" call "$addr" "platformFee()(uint256)" --rpc-url "$RPC_URL")"
+  echo "   params(creator/feeRecipient/marginBps/feeBps): $("$CAST" call "$addr" "creator()(address)" --rpc-url "$RPC_URL") / $("$CAST" call "$addr" "feeRecipient()(address)" --rpc-url "$RPC_URL") / $("$CAST" call "$addr" "marginBps()(uint32)" --rpc-url "$RPC_URL") / $("$CAST" call "$addr" "feeBps()(uint32)" --rpc-url "$RPC_URL")"
 }
 
 status() { require_state; status_one success "$SUCCESS_ADDR"; status_one failure "$FAILURE_ADDR"; }
@@ -348,18 +368,24 @@ status() { require_state; status_one success "$SUCCESS_ADDR"; status_one failure
 
 # 角色地址与演示 hash（确定性，可复算）；仅需要签名的阶段才加载私钥
 require_keys() {
-  : "${OPERATOR_KEY:?}.env 需要 OPERATOR_KEY / NORTH_KEY / LOOM_KEY / BUYER_A..E_KEY"
+  : "${OPERATOR_KEY:?}.env 需要 OPERATOR_KEY / NORTH_KEY / LOOM_KEY / BUYER_A..E_KEY / CREATOR_KEY / PLATFORM_KEY"
   : "${NORTH_KEY:?}"; : "${LOOM_KEY:?}"
+  : "${CREATOR_KEY:?}.env 需要 CREATOR_KEY（P1 品牌应收领取方）"
+  : "${PLATFORM_KEY:?}.env 需要 PLATFORM_KEY（P1 平台费领取方 feeRecipient）"
+  MARGIN_BPS="${MARGIN_BPS:-2500}"
+  FEE_BPS="${FEE_BPS:-200}"
   OPERATOR_ADDR="$(addr_of "$OPERATOR_KEY")"
   NORTH_ADDR="$(addr_of "$NORTH_KEY")"
   LOOM_ADDR="$(addr_of "$LOOM_KEY")"
+  CREATOR_ADDR="$(addr_of "$CREATOR_KEY")"
+  PLATFORM_ADDR="$(addr_of "$PLATFORM_KEY")"
   NORTH_PROFILE_HASH="${NORTH_PROFILE_HASH:-$("$CAST" keccak "makebook.factory.north.v1")}"
   LOOM_PROFILE_HASH="${LOOM_PROFILE_HASH:-$("$CAST" keccak "makebook.factory.loom.v1")}"
   NORTH_QUOTE_HASH="${NORTH_QUOTE_HASH:-$("$CAST" keccak "makebook.quote.north.v1")}"
   LOOM_QUOTE_HASH="${LOOM_QUOTE_HASH:-$("$CAST" keccak "makebook.quote.loom.v1")}"
   NORTH_PRICE_WEI="$("$CAST" --to-wei 0.024 ether)"
   LOOM_PRICE_WEI="$("$CAST" --to-wei 0.019 ether)"
-  log "operator=$OPERATOR_ADDR north=$NORTH_ADDR loom=$LOOM_ADDR"
+  log "operator=$OPERATOR_ADDR north=$NORTH_ADDR loom=$LOOM_ADDR creator=$CREATOR_ADDR feeRecipient=$PLATFORM_ADDR marginBps=$MARGIN_BPS feeBps=$FEE_BPS"
 }
 
 case "$PHASE" in

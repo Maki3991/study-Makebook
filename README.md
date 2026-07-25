@@ -4,6 +4,8 @@ MAKEBOOK 是面向实体新品的预生产订单簿：AI 将评论与访谈整�
 
 当前首个案例是 `FRAME-01`——一款黑色 8L 模块化摄影斜挎包。
 
+线上 demo：https://makebook-frontend.jiachexie6.workers.dev（2026-07-25 上线，Cloudflare Workers，Injective EVM Testnet）。
+
 ## 这份仓库包含什么
 
 本仓库当前聚焦 MAKEBOOK 的前端、视觉系统和完整演示路径：
@@ -25,12 +27,12 @@ MAKEBOOK 是面向实体新品的预生产订单簿：AI 将评论与访谈整�
 ## 仓库结构（Monorepo）
 
 - `app/` — 前端：首页 + /campaigns/[id] + /orders + /console + /api/compile（specs/006 信息架构）
-- `contracts/` — MakebookCampaign 清算合约（Foundry，51 个测试全绿；见 `contracts/README.md`）
+- `contracts/` — MakebookCampaign 清算合约（Foundry，73 个测试全绿，含 P1 三方分账 22 例；见 `contracts/README.md`）
 - `lib/schema/` — Market Manifest Zod schema + canonical JSON / manifestHash（前后端共用）
 - `lib/ai/` — AI 需求编译器：脱敏、OpenAI 兼容适配器、Zod 校验、fixture 降级
 - `fixtures/` — 成功/失败清算剧本与评论样本（comments.json、bracelet-comments.json；Demo 模式数据源，数值与 PRD 附录 A 逐 wei 对齐）
 - `public/manifests/` — 人工确认版 manifest（canonical 格式）：frame-01.json、heritage-bracelet.json
-- `deployments/injective-testnet.json` — 预部署 Campaign 地址（已回填真实地址，两套 Campaign）
+- `deployments/injective-testnet.json` — 预部署 Campaign 地址（已回填真实地址，三套 Campaign，2026-07-25 重新部署）
 - `docs/FRONTEND_INTERFACE.md` — 前后端唯一对接入口（ABI / revert 文案 / 状态机 / 事件 / hash 算法）
 - `docs/DEMO_RUNBOOK.md` — 演示手册：预部署步骤、2 分钟流程、降级预案、评委问答
 - `specs/` — SDD 规格文档（见 `specs/README.md`）

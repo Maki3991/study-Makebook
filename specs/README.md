@@ -18,13 +18,14 @@ PRD v1.0 为仓外文档（不在本仓库内）。
 
 | Spec | 主题 | 状态 |
 |---|---|---|
-| [001](001-campaign-contract.md) | 清算合约：状态机、ABI 冻结、不变量与测试映射 | 已实现（51/51 测试） |
+| [001](001-campaign-contract.md) | 清算合约：状态机、ABI 冻结、不变量与测试映射 | 已实现（73/73 测试，含 P1 三方分账 22 例） |
 | [002](002-ai-compiler.md) | AI 需求编译器：I/O 契约、脱敏、fixture 降级 | 已实现（9/9 测试） |
 | [003](003-frontend-integration.md) | 前端集成：mock → 链上替换规则与数值对齐清单 | 已归档（被 006 取代） |
-| [004](004-testnet-deployment.md) | Testnet 预部署与演示证据 | 已完成（2026-07-24 两套 Campaign 已部署并预下单，见 deployments/injective-testnet.json） |
+| [004](004-testnet-deployment.md) | Testnet 预部署与演示证据 | 已完成（2026-07-25 三套 Campaign 重新部署并预下单，见 deployments/injective-testnet.json） |
 | [005](005-stakeholder-requirements.md) | 三方真实需求矩阵：P0 机制 / 有意推迟 / 永不承诺 | 已评审 |
-| [006](006-frontend-rebuild.md) | 前端重建：用户上手 demo（极简三页 + 真链全流程） | 施工中（T1–T6/T8 已完成，T7 /orders 与 T9 /console 待施工） |
-| [007](007-frontend-construction.md) | 前端施工蓝图：token/文件树/hooks/逐字文案/任务分解（零判断施工版） | 施工中（同 006） |
+| [006](006-frontend-rebuild.md) | 前端重建：用户上手 demo（极简三页 + 真链全流程） | 已完成（T1–T9 全部落地并上线） |
+| [007](007-frontend-construction.md) | 前端施工蓝图：token/文件树/hooks/逐字文案/任务分解（零判断施工版） | 已完成（同 006） |
+| [008](008-p1-three-way-split.md) | P1 三方分账 + 社区上线：creator/feeRecipient/marginBps/feeBps、零售清算价、三路领取、叙事对齐 | 已上线（2026-07-25：73 测试绿、三套 P1 合约部署+verify、前端 P1 版上线） |
 
 ## 变更记录
 
@@ -42,3 +43,5 @@ PRD v1.0 为仓外文档（不在本仓库内）。
 | 2026-07-25 | 产品图资产策划定稿：8 张拍摄清单 + manifest 提示词 + 并发批量生成脚本 + 验收标准；新增 OG 分享图与 favicon（SVG 代码画）要求 | scripts/product-images.*、specs/007 |
 | 2026-07-25 | 新增 BRACELET-01（Tech & AI Heritage Bracelet）：评论 fixtures、manifest（hash `0x1c503957…c958dd`）、产品图 ×2、部署脚本 `contracts/script/deploy-bracelet.sh`（.env 缺角色私钥，待运营执行）；首页升级为"在售区+预告区"商城网格 | fixtures/、public/manifests/、public/products/、contracts/script/、specs/006、specs/007 |
 | 2026-07-25 | 全角色链路补全：新增 `/console` 工作台（品牌方编译+监控 / 工厂报价+claimPayout，按钱包角色切换）；spec 006 加 §3.4 与状态矩阵工厂列；spec 007 加 T9 与 console 文案 | specs/006、specs/007、AGENTS.md |
+| 2026-07-25 | 三套 Campaign 重新部署（deadline 1785187183 = 2026-07-28 05:19 UTC+8，now+72h；operator `0x9d60…DA89`），旧 2026-07-24 地址废弃；BRACELET-01 已部署（Open，0 单，已 verify）；前端上线 https://makebook-frontend.jiachexie6.workers.dev | deployments/、docs/、AGENTS.md、specs/006 |
+| 2026-07-25 | **P1 三方分账全链路上线**（spec 008）：合约 8 参构造 + `_computeSettlement` 零售口径 + settle 三笔账 + 品牌/平台两路新 claim（73 测试绿）；三套 P1 合约重部署（success `0x260A…556e` / failure `0x785C…77AA9` / bracelet `0x8Bb4…C691`，deadline 1785024000 = 2026-07-26 08:00 UTC+8，均 verify）；前端 P1 版上线（creator/platform 领取面板、每一分钱去哪了、chips 0.020/0.024/0.030、曲线零售口径）；PRD/PITCH/005/fixtures 叙事对齐 | contracts/、app/、deployments/、docs/、specs/、fixtures/、AGENTS.md |

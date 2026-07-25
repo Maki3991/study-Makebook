@@ -7,6 +7,8 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 /// @notice MAKEBOOK（造物簿）单个 Campaign 的托管与确定性统一清算合约。
 ///         一个部署 = 一个 Campaign。无 proxy / delegatecall / selfdestruct / ownerWithdraw。
 ///         清算规则见 PRD 第 09 章 R-01 ~ R-10；不变量见 13A INV-01 ~ INV-10。
+///         P1（spec 008）：零售价 = 出厂价 × (1 + marginBps/10000)，eligibility 与统一清算价
+///         一律用零售价；settle 记三笔账（工厂出厂价 / 平台费 / 品牌差价），三路各自 pull 领取。
 contract MakebookCampaign is ReentrancyGuard {
     // ---------------------------------------------------------------------
     // 类型与常量（PRD 13.2）
@@ -41,15 +43,25 @@ contract MakebookCampaign is ReentrancyGuard {
     uint256 public constant MAX_ORDERS = 50;
     uint256 public constant MAX_FACTORIES = 2;
     uint256 public constant MAX_TIERS = 3;
+    /// @dev 零售加价系数上限（spec 008 §1）
+    uint32 public constant MAX_MARGIN_BPS = 5000;
 
     // ---------------------------------------------------------------------
     // 不可变参数（部署时冻结，INV-04）
     // ---------------------------------------------------------------------
 
     address public immutable operator;
+    /// @dev 品牌应收唯一领取方（P1）
+    address public immutable creator;
+    /// @dev 平台费唯一领取方（P1）；≠ operator，守住 INV-06
+    address public immutable feeRecipient;
     bytes32 public immutable manifestHash;
     string public manifestURI;
     uint64 public immutable deadline;
+    /// @dev 零售加价系数：零售价 = 出厂价 × (10000 + marginBps) / 10000（floor）
+    uint32 public immutable marginBps;
+    /// @dev 平台费率：平台费 = 成交 GMV（零售口径）× feeBps / 10000，封顶差价池
+    uint32 public immutable feeBps;
 
     // ---------------------------------------------------------------------
     // 可变状态
@@ -72,11 +84,19 @@ contract MakebookCampaign is ReentrancyGuard {
     bool public settlementFeasible;
     uint256 public winningQuoteId;
     uint256 public winningTierIndex;
+    /// @dev 统一清算价（P1 起为零售价口径）
     uint256 public clearingPrice;
     uint256 public winnerCount;
     address public selectedFactory;
+    /// @dev 工厂应收 = winnerCount × 出厂价（R-09，P1 不改量纲）
     uint256 public factoryReceivable;
     bool public factoryPayoutClaimed;
+    /// @dev 品牌应收 = 差价池 − 平台费（P1）
+    uint256 public creatorReceivable;
+    /// @dev 平台费 = min(winnerCount × 零售清算价 × feeBps / 10000, 差价池)（P1）
+    uint256 public platformFee;
+    bool public creatorPayoutClaimed;
+    bool public platformFeeClaimed;
 
     // ---------------------------------------------------------------------
     // 事件（PRD 13.4）
@@ -91,6 +111,8 @@ contract MakebookCampaign is ReentrancyGuard {
     );
     event RefundClaimed(address indexed buyer, uint256 amount);
     event FactoryPayoutClaimed(address indexed factory, uint256 amount);
+    event CreatorPayoutClaimed(address indexed creator, uint256 amount);
+    event PlatformFeeClaimed(address indexed feeRecipient, uint256 amount);
 
     // ---------------------------------------------------------------------
     // 自定义错误（前端按名字映射人话文案）
@@ -116,6 +138,9 @@ contract MakebookCampaign is ReentrancyGuard {
     error AlreadyClaimed();
     error NotSelectedFactory();
     error TransferFailed();
+    error NotCreator();
+    error NotFeeRecipient();
+    error InvalidFeeConfig();
 
     // ---------------------------------------------------------------------
     // 修饰器
@@ -135,13 +160,27 @@ contract MakebookCampaign is ReentrancyGuard {
     // 构造
     // ---------------------------------------------------------------------
 
-    constructor(address operator_, bytes32 manifestHash_, string memory manifestURI_, uint64 deadline_) {
-        if (operator_ == address(0)) revert ZeroAddress();
+    constructor(
+        address operator_,
+        address creator_,
+        address feeRecipient_,
+        bytes32 manifestHash_,
+        string memory manifestURI_,
+        uint64 deadline_,
+        uint32 marginBps_,
+        uint32 feeBps_
+    ) {
+        if (operator_ == address(0) || creator_ == address(0) || feeRecipient_ == address(0)) revert ZeroAddress();
         if (deadline_ <= block.timestamp) revert DeadlineNotInFuture();
+        if (marginBps_ > MAX_MARGIN_BPS || feeBps_ > marginBps_) revert InvalidFeeConfig();
         operator = operator_;
+        creator = creator_;
+        feeRecipient = feeRecipient_;
         manifestHash = manifestHash_;
         manifestURI = manifestURI_;
         deadline = deadline_;
+        marginBps = marginBps_;
+        feeBps = feeBps_;
         state = State.Draft;
     }
 
@@ -206,7 +245,7 @@ contract MakebookCampaign is ReentrancyGuard {
     // ---------------------------------------------------------------------
 
     /// @notice 预览当前候选清算结果；与 settle 使用同一算法，不改状态。
-    /// @dev settle 后返回已写入的唯一结果。
+    /// @dev settle 后返回已写入的唯一结果。clearingPrice 为零售价口径（P1）。
     function previewSettlement()
         external
         view
@@ -230,10 +269,17 @@ contract MakebookCampaign is ReentrancyGuard {
         if (feasible) {
             winningQuoteId = quoteId;
             winningTierIndex = tierIndex;
-            clearingPrice = price;
+            clearingPrice = price; // 零售清算价（P1）
             winnerCount = count;
             selectedFactory = _quotes[quoteId].factory;
-            factoryReceivable = count * price; // R-09
+            // P1 三方分账（spec 008 §2）：工厂出厂价 + 平台费 + 品牌差价
+            uint256 tierPrice = _quotes[quoteId].tiers[tierIndex].unitPriceWei; // 出厂价
+            uint256 marginPool = count * (price - tierPrice); // 零售差价池（price ≥ tierPrice 恒成立）
+            uint256 fee = (count * price * feeBps) / 10000;
+            if (fee > marginPool) fee = marginPool; // min 兜底，永不下溢
+            factoryReceivable = count * tierPrice; // R-09：出厂价量纲不变
+            platformFee = fee;
+            creatorReceivable = marginPool - fee;
             state = State.Succeeded;
         } else {
             // R-10：无可行 tier → Failed；无成功批次、无工厂应收
@@ -243,7 +289,7 @@ contract MakebookCampaign is ReentrancyGuard {
     }
 
     // ---------------------------------------------------------------------
-    // Pull payment：Buyer 退款与工厂应收（INV-02 / INV-07）
+    // Pull payment：Buyer 退款与工厂/品牌/平台三笔应收（INV-02 / INV-07）
     // ---------------------------------------------------------------------
 
     /// @notice Buyer 主动领取退款：赢家退 maxPrice-clearingPrice（可为 0），落选/失败退全额。仅本人一次。
@@ -276,7 +322,7 @@ contract MakebookCampaign is ReentrancyGuard {
         }
     }
 
-    /// @notice 仅中标工厂领取应收 = winnerCount × clearingPrice，一次（R-09）。成功后进入 PaidOut。
+    /// @notice 仅中标工厂领取应收 = winnerCount × 出厂价，一次（R-09）。成功后进入 PaidOut。
     function claimPayout() external nonReentrant {
         State s = state;
         if (s != State.Succeeded) revert WrongState(State.Succeeded, s);
@@ -291,6 +337,44 @@ contract MakebookCampaign is ReentrancyGuard {
 
         (bool ok,) = msg.sender.call{value: amount}("");
         if (!ok) revert TransferFailed();
+    }
+
+    /// @notice 仅 creator 领取品牌应收 = 差价池 − 平台费，一次（P1）。
+    ///         Succeeded 与 PaidOut 均可调用；金额 0 也允许（与 refund-0 同模式，幂等防卡）。
+    function claimCreatorPayout() external nonReentrant {
+        State s = state;
+        if (s != State.Succeeded && s != State.PaidOut) revert WrongState(State.Succeeded, s);
+        if (msg.sender != creator) revert NotCreator();
+        if (creatorPayoutClaimed) revert AlreadyClaimed();
+
+        uint256 amount = creatorReceivable;
+        // 先置状态再转账（INV-07）
+        creatorPayoutClaimed = true;
+        emit CreatorPayoutClaimed(msg.sender, amount);
+
+        if (amount > 0) {
+            (bool ok,) = msg.sender.call{value: amount}("");
+            if (!ok) revert TransferFailed();
+        }
+    }
+
+    /// @notice 仅 feeRecipient 领取平台费，一次（P1）。
+    ///         Succeeded 与 PaidOut 均可调用；金额 0 也允许（与 refund-0 同模式，幂等防卡）。
+    function claimPlatformFee() external nonReentrant {
+        State s = state;
+        if (s != State.Succeeded && s != State.PaidOut) revert WrongState(State.Succeeded, s);
+        if (msg.sender != feeRecipient) revert NotFeeRecipient();
+        if (platformFeeClaimed) revert AlreadyClaimed();
+
+        uint256 amount = platformFee;
+        // 先置状态再转账（INV-07）
+        platformFeeClaimed = true;
+        emit PlatformFeeClaimed(msg.sender, amount);
+
+        if (amount > 0) {
+            (bool ok,) = msg.sender.call{value: amount}("");
+            if (!ok) revert TransferFailed();
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -324,6 +408,9 @@ contract MakebookCampaign is ReentrancyGuard {
     // ---------------------------------------------------------------------
 
     /// @dev 有界循环：最多 MAX_FACTORIES × MAX_TIERS × MAX_ORDERS = 300 次比较（INV-08）。
+    ///      P1（R-V1-01/02）：每个 tier 先折算零售价 retailTierPrice = 出厂价 × (10000+marginBps)/10000（floor），
+    ///      eligibility（R-02）、R-04~R-06 选择与返回价格一律用零售价。marginBps=0 时 retailTierPrice == 出厂价，
+    ///      逐字退化为 P0。
     function _computeSettlement()
         internal
         view
@@ -338,18 +425,19 @@ contract MakebookCampaign is ReentrancyGuard {
             uint256 nTiers = quote.tiers.length;
             for (uint256 t = 0; t < nTiers; t++) {
                 Tier memory tier = quote.tiers[t];
+                uint256 retailTierPrice = (tier.unitPriceWei * (10000 + marginBps)) / 10000;
                 uint256 count = 0;
                 for (uint256 i = 0; i < nOrders; i++) {
-                    if (_orders[i].maxPriceWei >= tier.unitPriceWei) count++; // R-02
+                    if (_orders[i].maxPriceWei >= retailTierPrice) count++; // R-02（P1：按零售价判定）
                 }
                 if (count < tier.minQty) continue; // R-03：不可行
                 // R-04 先取 eligibleCount 最大；R-05 并列取价低；
                 // R-06 完全并列时保留先遇到的（循环顺序保证 quoteId/tierIndex 更小者优先）。
-                if (!feasible || count > bestCount || (count == bestCount && tier.unitPriceWei < bestPrice)) {
+                if (!feasible || count > bestCount || (count == bestCount && retailTierPrice < bestPrice)) {
                     feasible = true;
                     bestQuoteId = q;
                     bestTierIndex = t;
-                    bestPrice = tier.unitPriceWei;
+                    bestPrice = retailTierPrice;
                     bestCount = count;
                 }
             }

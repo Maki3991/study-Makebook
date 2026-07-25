@@ -4,17 +4,36 @@
   "rpc": "https://k8s.testnet.json-rpc.injective.network/",
   "explorer": "https://testnet.blockscout.injective.network/",
   "success": {
-    "address": "0x378bb7d08e92317ff8a5f7750bb7a91332bab03d",
+    "address": "0x260A9C9075B09B5950385fEB1AEa7d83a25E556e",
     "manifestHash": "0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec",
     "manifestURI": "https://raw.githubusercontent.com/gmy20060609-jpg/ACL-team/main/public/manifests/frame-01.json",
-    "deadline": 1785016800,
-    "deployBlock": 134529577
+    "deadline": 1785024000,
+    "deployBlock": 134614629,
+    "creator": "0x42a0c1B8fC4e804972Eb522C6C8043Ce72393B0a",
+    "feeRecipient": "0x04A47233230bEd2aE963cfA7DCCf4D59B77dE2D3",
+    "marginBps": 2500,
+    "feeBps": 200
   },
   "failure": {
-    "address": "0x01c51b7c50dd0537933bf245b8a5ea6252735f51",
+    "address": "0x785CbE7E2C874413CF5430BA272Bfa02bcc77AA9",
     "manifestHash": "0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec",
     "manifestURI": "https://raw.githubusercontent.com/gmy20060609-jpg/ACL-team/main/public/manifests/frame-01.json",
-    "deadline": 1785016800,
-    "deployBlock": 134533159
+    "deadline": 1785024000,
+    "deployBlock": 134614708,
+    "creator": "0x42a0c1B8fC4e804972Eb522C6C8043Ce72393B0a",
+    "feeRecipient": "0x04A47233230bEd2aE963cfA7DCCf4D59B77dE2D3",
+    "marginBps": 2500,
+    "feeBps": 200
+  },
+  "bracelet": {
+    "address": "0x8Bb41E7195eD2b440c868BBa1d3d1146970dC691",
+    "manifestHash": "0x1c503957667bb009a161c7d9bfe70e59db01c61c80920faae60f98a1e3c958dd",
+    "manifestURI": "https://raw.githubusercontent.com/gmy20060609-jpg/ACL-team/main/public/manifests/heritage-bracelet.json",
+    "deadline": 1785024000,
+    "deployBlock": 134615480,
+    "creator": "0x42a0c1B8fC4e804972Eb522C6C8043Ce72393B0a",
+    "feeRecipient": "0x04A47233230bEd2aE963cfA7DCCf4D59B77dE2D3",
+    "marginBps": 2500,
+    "feeBps": 200
   }
 }

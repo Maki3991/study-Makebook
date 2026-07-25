@@ -2,17 +2,19 @@
 
 > v2 改写说明（2026-07-25）：产品定位从"评委演示机"改为**给用户上手的 demo**。原则：页面能少则少、解释能砍则砍、主链路一路走通、全部接真链上线。v1 中评委向内容（逐条清算解释、规则长文、FAQ、证据墙、AI Studio、证据页、标签图例）全部移除；签名前知情同意保留（那不是解释，是保护用户）。接口字段仍以 `docs/FRONTEND_INTERFACE.md` 为唯一事实来源。
 
-## 0. 链上实况（2026-07-25 01:20 验证，非估算）
+## 0. 链上实况（2026-07-25 P1 三方分账重部署后验证，非估算）
+
+P1（spec 008）：清算价 = 零售价 = 出厂价 ×1.25（marginBps=2500），settle 三笔账，品牌/平台/工厂三路领取。
 
 | Campaign | 地址 | state | orders | previewSettlement |
 |---|---|---|---|---|
-| success | `0x378bb7d08e92317ff8a5f7750bb7a91332bab03d` | Open | 5/50 | feasible，统一价 0.019，成交 4 单 |
-| failure | `0x01c51b7c50dd0537933bf245b8a5ea6252735f51` | Open | 2/50 | 不可行（MOQ 3 未达） |
-| bracelet | **待部署**：`contracts/script/deploy-bracelet.sh`（manifestHash `0x1c503957…c958dd`，已校验锚定） | — | 0 | 新批次从 0 单起步，前 3 单成团是天然传播点 |
+| success | `0x260A9C9075B09B5950385fEB1AEa7d83a25E556e` | Open | 5/50（0.034/0.032/0.028/0.026/0.022） | feasible，零售统一价 0.02375，成交 4 单 |
+| failure | `0x785CbE7E2C874413CF5430BA272Bfa02bcc77AA9` | Open | 2/50（0.023/0.022） | 不可行（零售 0.02375 无人达标） |
+| bracelet | `0x8Bb41E7195eD2b440c868BBa1d3d1146970dC691`（manifestHash `0x1c503957…c958dd`，已校验锚定） | Open | 0 | 新批次从 0 单起步，前 3 单成团是天然传播点 |
 
-- deadline：`2026-07-25T22:00Z`（= 2026-07-26 06:00 UTC+8），两套相同；manifestHash 与锚点 `0x92e96e07…cc6ec` 一致。
-- 数据源：`ACL-team/deployments/injective-testnet.json`（已回填真实地址，live 模式成立；`makebook/` 仓的同名文件仍是占位，不供前端使用）。
-- **运营注意**：① 两套 Campaign 都在 Open，访客仍可下单——failure 批次再来 1 单 ≥0.019 就会变可行，"失败示例"可能被用户行为改变；② 若上线时间错过 deadline，用户将无法下单，完整流程断在第一步。**上线前建议重新跑 `demo-pipeline.sh testnet up`，把 `DEADLINE` 设到上线之后**（如 +72h），并在上线时确认两套批次状态符合预期。
+- deadline：1785024000（= 2026-07-26 08:00 UTC+8，pitch 当天早晨现场 settle），三套相同；两套 FRAME-01 的 manifestHash 与锚点 `0x92e96e07…cc6ec` 一致（bracelet 为 `0x1c503957…c958dd`）；operator `0x9d60cab786720520038008640b9f7ea56348DA89`；creator `0x42a0c1B8…93B0a`、feeRecipient `0x04a47233…E2D3`。
+- 数据源：`ACL-team/deployments/injective-testnet.json`（已回填真实地址与 P1 参数字段，live 模式成立；`makebook/` 仓的同名文件仍是占位，不供前端使用）。
+- **运营注意**：① 三套 Campaign 都在 Open，访客仍可下单——failure 批次当前 2 单，再来 1 单 ≥0.02375（零售价）就会变可行，"失败示例"可能被用户行为改变；② deadline 2026-07-26 08:00 UTC+8 过后用户无法下单，完整流程断在第一步；pitch 后若继续开放社区试用，需再跑 `demo-pipeline.sh testnet up` 把 `DEADLINE` 设到新的未来时点。
 
 ## 1. 用户完整流程（全角色）
 
@@ -66,9 +68,9 @@ Connect →      MetaMask 缺币 →     项目页输入 maxPrice →   deadline
 
 | 区块 | 内容 | 数据 |
 |---|---|---|
-| 状态条 | 徽标（接单中/已截止/已成团/未成团）+ 倒计时 + 订单数 n/50 + 当前预览（"若现在截止：统一价 0.019，4 单成团"或"暂未满 MOQ"） | `state()` `deadline()` `ordersLength()` `previewSettlement()`，10s 轮询 |
+| 状态条 | 徽标（接单中/已截止/已成团/未成团）+ 倒计时 + 订单数 n/50 + 当前预览（"若现在截止：统一价 0.02375，4 单成团"或"暂未满 MOQ"） | `state()` `deadline()` `ordersLength()` `previewSettlement()`，10s 轮询 |
 | 产品卡 | 产品图、名称、规格简表（直接渲染 manifest `specs[]` 全部行，当前为 capacity 8L / color black / insert removable 共 3 条，UI 配中文 key 映射）；一行小字：规格由 AI 从用户评论编译、人工确认上链，hash 可复制 | manifest `specs[]`；hash 由 lib/schema 计算 |
-| 出价面板 | 金额输入（test INJ）+ 建议价 chips（0.019 / 0.024 / 0.026）+ 即时反馈"当前可成团/暂不能"+ CTA「立即支持」；已下单则显示"你已出价 X · 查看订单" | `previewSettlement()` + `getOrder(我的地址)` |
+| 出价面板 | 金额输入（test INJ）+ 建议价 chips（0.020 / 0.024 / 0.030，跨零售档两侧，spec 008 §1）+ 即时反馈"当前可成团/暂不能"+ CTA「立即支持」；已下单则显示"你已出价 X · 查看订单" | `previewSettlement()` + `getOrder(我的地址)` |
 | 工厂条件简表 | 两行：工厂 A MOQ 3 @ 0.024（差 n 单）/ 工厂 B MOQ 3 @ 0.019（可成团）；工厂名旁小字"演示工厂" | `getQuote` + eligibleCount 重算 |
 | 需求曲线（轻量） | 价格点 × 累计订单数阶梯图 + 当前清算价竖线；一屏高，不配长文 | `OrderPlaced` 事件 + `getOrder` |
 | 清算结果区 | 截止前隐藏；清算后显示：统一价 / 成交人数 / 我中了没 / 「去领钱」按钮；失败批次显示"未满 MOQ，全员全额退款" | `CampaignSettled` 事件 |
@@ -161,7 +163,7 @@ Connect →      MetaMask 缺币 →     项目页输入 maxPrice →   deadline
 
 上线（Cloudflare，wrangler 已在依赖）checklist：
 
-- [ ] `demo-pipeline.sh testnet up` 重新部署，`DEADLINE` 设到上线之后（建议 +72h），回填 deployments
+- [x] `demo-pipeline.sh testnet up` 重新部署，`DEADLINE` 设到上线之后（建议 +72h），回填 deployments（P1 已完成 2026-07-25：三套 Campaign 以 8 参构造重新部署，DEADLINE=1785024000 = 2026-07-26 08:00 UTC+8）
 - [ ] 两套批次链上状态复核：`status` 命令 + 首页肉眼对得上
 - [ ] MetaMask 走通全流程：连接→切 1439→faucet→下单→（时间到）settle→claimRefund
 - [ ] 390×844 单列无横向滚动、触控目标 ≥44px

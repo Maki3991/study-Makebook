@@ -10,6 +10,16 @@
           "internalType": "address"
         },
         {
+          "name": "creator_",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "feeRecipient_",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
           "name": "manifestHash_",
           "type": "bytes32",
           "internalType": "bytes32"
@@ -23,6 +33,16 @@
           "name": "deadline_",
           "type": "uint64",
           "internalType": "uint64"
+        },
+        {
+          "name": "marginBps_",
+          "type": "uint32",
+          "internalType": "uint32"
+        },
+        {
+          "name": "feeBps_",
+          "type": "uint32",
+          "internalType": "uint32"
         }
       ],
       "stateMutability": "nonpayable"
@@ -36,6 +56,19 @@
           "name": "",
           "type": "uint256",
           "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "MAX_MARGIN_BPS",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint32",
+          "internalType": "uint32"
         }
       ],
       "stateMutability": "view"
@@ -68,7 +101,21 @@
     },
     {
       "type": "function",
+      "name": "claimCreatorPayout",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
       "name": "claimPayout",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "claimPlatformFee",
       "inputs": [],
       "outputs": [],
       "stateMutability": "nonpayable"
@@ -83,6 +130,45 @@
     {
       "type": "function",
       "name": "clearingPrice",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "creator",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "creatorPayoutClaimed",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "creatorReceivable",
       "inputs": [],
       "outputs": [
         {
@@ -147,6 +233,32 @@
           "name": "",
           "type": "uint256",
           "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "feeBps",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint32",
+          "internalType": "uint32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "feeRecipient",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "stateMutability": "view"
@@ -306,6 +418,19 @@
     },
     {
       "type": "function",
+      "name": "marginBps",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint32",
+          "internalType": "uint32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "openCampaign",
       "inputs": [],
       "outputs": [],
@@ -354,6 +479,32 @@
       ],
       "outputs": [],
       "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "platformFee",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "platformFeeClaimed",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -624,6 +775,25 @@
     },
     {
       "type": "event",
+      "name": "CreatorPayoutClaimed",
+      "inputs": [
+        {
+          "name": "creator",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
       "name": "FactoryPayoutClaimed",
       "inputs": [
         {
@@ -681,6 +851,25 @@
           "type": "bytes32",
           "indexed": false,
           "internalType": "bytes32"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "PlatformFeeClaimed",
+      "inputs": [
+        {
+          "name": "feeRecipient",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
         }
       ],
       "anonymous": false
@@ -776,6 +965,11 @@
     },
     {
       "type": "error",
+      "name": "InvalidFeeConfig",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "InvalidPayment",
       "inputs": []
     },
@@ -792,6 +986,16 @@
     {
       "type": "error",
       "name": "NoQuotes",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotCreator",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotFeeRecipient",
       "inputs": []
     },
     {

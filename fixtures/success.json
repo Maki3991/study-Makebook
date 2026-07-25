@@ -1,39 +1,42 @@
 {
   "scenario": "success",
-  "label": "Appendix A.1 scaled success campaign (Hackathon scaled test data)",
+  "label": "Appendix A.1 scaled success campaign (Hackathon scaled test data, P1 three-way split)",
   "manifestFile": "public/manifests/frame-01.json",
   "campaignCode": "FRAME-01",
+  "params": { "marginBps": 2500, "feeBps": 200, "note": "retailTierPrice = factory tierPrice x 1.25; platform fee = GMV x 2%" },
   "quotes": [
     {
       "quoteId": 0,
       "factory": "Factory North",
       "demoFactory": true,
-      "tiers": [{ "minQty": 3, "unitPrice": "0.024", "unit": "testINJ" }],
-      "expected": { "feasible": false, "reason": "only 2 orders with maxPrice >= 0.024, minQty=3 not feasible" }
+      "tiers": [{ "minQty": 3, "unitPrice": "0.024", "retailTierPrice": "0.030", "unit": "testINJ" }],
+      "expected": { "feasible": false, "reason": "only 2 orders with maxPrice >= 0.030 (retail), minQty=3 not feasible" }
     },
     {
       "quoteId": 1,
       "factory": "Factory Loom",
       "demoFactory": true,
-      "tiers": [{ "minQty": 3, "unitPrice": "0.019", "unit": "testINJ" }],
+      "tiers": [{ "minQty": 3, "unitPrice": "0.019", "retailTierPrice": "0.02375", "unit": "testINJ" }],
       "expected": { "feasible": true, "eligibleCount": 4 }
     }
   ],
   "orders": [
-    { "buyer": "Buyer A", "maxPrice": "0.026", "unit": "testINJ", "expected": { "winner": true, "refund": "0.007" } },
-    { "buyer": "Buyer B", "maxPrice": "0.024", "unit": "testINJ", "expected": { "winner": true, "refund": "0.005" } },
-    { "buyer": "Buyer C", "maxPrice": "0.021", "unit": "testINJ", "expected": { "winner": true, "refund": "0.002" } },
-    { "buyer": "Buyer D", "maxPrice": "0.019", "unit": "testINJ", "expected": { "winner": true, "refund": "0" } },
-    { "buyer": "Buyer E", "maxPrice": "0.017", "unit": "testINJ", "expected": { "winner": false, "refund": "0.017" } }
+    { "buyer": "Buyer A", "maxPrice": "0.034", "unit": "testINJ", "expected": { "winner": true, "refund": "0.01025" } },
+    { "buyer": "Buyer B", "maxPrice": "0.032", "unit": "testINJ", "expected": { "winner": true, "refund": "0.00825" } },
+    { "buyer": "Buyer C", "maxPrice": "0.028", "unit": "testINJ", "expected": { "winner": true, "refund": "0.00425" } },
+    { "buyer": "Buyer D", "maxPrice": "0.026", "unit": "testINJ", "expected": { "winner": true, "refund": "0.00225" } },
+    { "buyer": "Buyer E", "maxPrice": "0.022", "unit": "testINJ", "expected": { "winner": false, "refund": "0.022" } }
   ],
   "settlement": {
     "success": true,
     "winningQuoteId": 1,
     "tierIndex": 0,
-    "clearingPrice": "0.019",
+    "clearingPrice": "0.02375",
     "winnerCount": 4,
     "factoryReceivable": "0.076",
+    "creatorReceivable": "0.0171",
+    "platformFee": "0.0019",
     "unit": "testINJ",
-    "note": "Factory Loom receivable = 4 x 0.019 = 0.076 test INJ"
+    "note": "factory 4 x 0.019 = 0.076; platform fee 4 x 0.02375 x 2% = 0.0019; creator 4 x (0.02375 - 0.019) - 0.0019 = 0.0171; escrow conservation 0.076 + 0.0171 + 0.0019 = 0.095 = 4 x 0.02375"
   }
 }

@@ -39,7 +39,7 @@ export const injectiveEvmTestnet = defineChain({
 });
 ```
 
-合约地址从 `deployments/injective-testnet.json` 读取（成功/失败两个预部署 Campaign）。
+合约地址从 `deployments/injective-testnet.json` 读取（成功/失败/手链三个预部署 Campaign）。
 
 ---
 
@@ -49,8 +49,8 @@ export const injectiveEvmTestnet = defineChain({
 
 ```ts
 export const makebookAbi = parseAbi([
-  // 构造（仅部署脚本用）
-  "constructor(address operator, bytes32 manifestHash, string manifestURI, uint64 deadline)",
+  // 构造（仅部署脚本用；P1 2026-07-25 起为 8 参）
+  "constructor(address operator, address creator, address feeRecipient, bytes32 manifestHash, string manifestURI, uint64 deadline, uint32 marginBps, uint32 feeBps)",
 
   // 写函数
   "function registerFactory(address factory, bytes32 profileHash)",
@@ -60,6 +60,8 @@ export const makebookAbi = parseAbi([
   "function settle()",
   "function claimRefund()",
   "function claimPayout()",
+  "function claimCreatorPayout()",   // P1：品牌应收，仅 creator
+  "function claimPlatformFee()",     // P1：平台费，仅 feeRecipient
 
   // 读函数
   "function previewSettlement() view returns (bool feasible, uint256 quoteId, uint256 tierIndex, uint256 clearingPrice, uint256 winnerCount)",
@@ -74,22 +76,33 @@ export const makebookAbi = parseAbi([
   "function hasQuoted(address) view returns (bool)",
   "function state() view returns (uint8)",
   "function operator() view returns (address)",
+  "function creator() view returns (address)",               // P1：品牌应收领取方
+  "function feeRecipient() view returns (address)",          // P1：平台费领取方（≠ operator）
+  "function marginBps() view returns (uint32)",              // P1：零售加价系数（2500 = ×1.25）
+  "function feeBps() view returns (uint32)",                 // P1：平台费率（200 = 2%）
   "function manifestHash() view returns (bytes32)",
   "function manifestURI() view returns (string)",
   "function deadline() view returns (uint64)",
   "function settlementFeasible() view returns (bool)",
   "function winningQuoteId() view returns (uint256)",
   "function winningTierIndex() view returns (uint256)",
-  "function clearingPrice() view returns (uint256)",
+  "function clearingPrice() view returns (uint256)",          // P1 起为零售价口径
   "function winnerCount() view returns (uint256)",
   "function selectedFactory() view returns (address)",
-  "function factoryReceivable() view returns (uint256)",
+  "function factoryReceivable() view returns (uint256)",      // = winnerCount × 出厂价（量纲不变）
   "function factoryPayoutClaimed() view returns (bool)",
+  "function creatorReceivable() view returns (uint256)",      // P1：差价池 − 平台费
+  "function platformFee() view returns (uint256)",            // P1：min(GMV × feeBps/10000, 差价池)
+  "function creatorPayoutClaimed() view returns (bool)",      // P1
+  "function platformFeeClaimed() view returns (bool)",        // P1
   "function MAX_ORDERS() view returns (uint256)",   // 50
   "function MAX_FACTORIES() view returns (uint256)", // 2
   "function MAX_TIERS() view returns (uint256)",     // 3
+  "function MAX_MARGIN_BPS() view returns (uint32)", // P1：5000
 ]);
 ```
+
+**P1 价格口径（2026-07-25 起）**：`clearingPrice` 与 `previewSettlement` 返回的价格是**零售清算价** = 出厂 tierPrice × (10000 + marginBps) / 10000（floor）。订单 eligibility（maxPrice 是否达标）对零售价比；买家差额 = maxPrice − 零售清算价；工厂应收仍按出厂价计。
 
 ### 2.1 写函数：调用时机 / 谁可调 / revert 对照
 
@@ -121,6 +134,16 @@ export const makebookAbi = parseAbi([
 | `claimPayout()` | 仅中标工厂 | Succeeded（一次） | `WrongState(Succeeded, actual)` | 当前状态不能领取工厂应收 |
 | | | | `NotSelectedFactory` | 只有中标工厂地址可以领取 |
 | | | | `TransferFailed` | 转账失败，请重试 |
+| `claimCreatorPayout()` | 仅 creator（P1） | Succeeded / PaidOut（一次，金额 0 也可调） | `WrongState(Succeeded, actual)` | 清算完成后才能领取 |
+| | | | `NotCreator` | 只有品牌方地址可以领取品牌应收 |
+| | | | `AlreadyClaimed` | 你已领取过，不能重复领取 |
+| | | | `TransferFailed` | 转账失败，请重试 |
+| `claimPlatformFee()` | 仅 feeRecipient（P1） | Succeeded / PaidOut（一次，金额 0 也可调） | `WrongState(Succeeded, actual)` | 清算完成后才能领取 |
+| | | | `NotFeeRecipient` | 只有平台费接收地址可以领取 |
+| | | | `AlreadyClaimed` | 你已领取过，不能重复领取 |
+| | | | `TransferFailed` | 转账失败，请重试 |
+
+构造期 revert（仅部署脚本会遇到）：`ZeroAddress`（operator/creator/feeRecipient 有零地址）、`DeadlineNotInFuture`、`InvalidFeeConfig`（marginBps > 5000 或 feeBps > marginBps）。
 
 下单确认文案（PRD 15，签名前必须展示）：“你将预锁 {maxPrice} test INJ。若统一价不高于它，你会获得 1 件 {SKU}，并可领取差额；否则可领取全额。提交后不可撤销。”
 
@@ -138,13 +161,13 @@ export const makebookAbi = parseAbi([
 
 `state()` 返回值：
 
-| 值 | 枚举 | 含义 | 下单 | 清算 | 领取退款 | 工厂领取 |
-|---|---|---|---|---|---|---|
-| 0 | `Draft` | 工厂登记/报价期 | ✕ | ✕ | ✕ | ✕ |
-| 1 | `Open` | 接单中 | ✓（未截止） | ✓（截止后任何人） | ✕ | ✕ |
-| 2 | `Succeeded` | 清算成功 | ✕ | ✕（已完成） | ✓ 赢家差额 / 落选全额 | ✓ 仅中标工厂 |
-| 3 | `Failed` | 无可行档位 | ✕ | ✕（已完成） | ✓ 全员全额 | ✕ |
-| 4 | `PaidOut` | 工厂已领取 | ✕ | ✕ | ✓（仍可领取） | ✕（已完成） |
+| 值 | 枚举 | 含义 | 下单 | 清算 | 领取退款 | 工厂领取 | 品牌/平台领取（P1） |
+|---|---|---|---|---|---|---|---|
+| 0 | `Draft` | 工厂登记/报价期 | ✕ | ✕ | ✕ | ✕ | ✕ |
+| 1 | `Open` | 接单中 | ✓（未截止） | ✓（截止后任何人） | ✕ | ✕ | ✕ |
+| 2 | `Succeeded` | 清算成功 | ✕ | ✕（已完成） | ✓ 赢家差额 / 落选全额 | ✓ 仅中标工厂 | ✓ |
+| 3 | `Failed` | 无可行档位 | ✕ | ✕（已完成） | ✓ 全员全额 | ✕ | ✕ |
+| 4 | `PaidOut` | 工厂已领取 | ✕ | ✕ | ✓（仍可领取） | ✕（已完成） | ✓（仍可领取） |
 
 状态流转：`Draft → Open → Succeeded → PaidOut`；失败路径 `Draft → Open → Failed`。Succeeded → PaidOut 由中标工厂 `claimPayout()` 触发。
 
@@ -161,6 +184,8 @@ parseAbi([
   "event CampaignSettled(bool success, uint256 winningQuoteId, uint256 tierIndex, uint256 clearingPrice, uint256 winnerCount)",
   "event RefundClaimed(address indexed buyer, uint256 amount)",
   "event FactoryPayoutClaimed(address indexed factory, uint256 amount)",
+  "event CreatorPayoutClaimed(address indexed creator, uint256 amount)",
+  "event PlatformFeeClaimed(address indexed feeRecipient, uint256 amount)",
 ])
 ```
 
@@ -250,8 +275,8 @@ Content-Type: application/json
 | 文件 | 内容 |
 |---|---|
 | `fixtures/comments.json` | 20 条摄影包评论（c01~c20，含 2 条完全重复：c18=c03、c19=c07），主题覆盖容量/外观/内胆/肩带/价格 220~260 |
-| `fixtures/success.json` | 附录 A.1 成功 Campaign：North min3@0.024 不可行；Loom min3@0.019 中标（eligibleCount=4）；Buyer A~E 与预期退款、Loom 应收 0.076 test INJ |
-| `fixtures/failure.json` | 附录 A.2 失败 Campaign：MOQ=3 仅 2 单 → Failed，全员全额退款，factoryReceivable=0 |
+| `fixtures/success.json` | 附录 A.1 成功 Campaign（P1 口径 2026-07-25）：North 零售 0.030 不可行（2<3）；Loom 零售 0.02375 中标（eligibleCount=4）；Buyer A~E 出价 0.034/0.032/0.028/0.026/0.022 与预期退款；三笔应收 工厂 0.076 / 品牌 0.0171 / 平台 0.0019 test INJ |
+| `fixtures/failure.json` | 附录 A.2 失败 Campaign（P1 口径）：0.023/0.022 均未达零售 0.02375 → Failed，全员全额退款，三笔应收全 0 |
 | `public/manifests/frame-01.json` | 人工确认版 FRAME-01 manifest（canonical 格式，hash 见第 5 节） |
 
 所有 fixture 价格单位字段均为字符串 INJ（如 `"0.019"`），用 `parseUnits(v, 18)` 转 wei。页面展示时必须带 "Hackathon scaled test data" 说明（PRD 9.4）。
@@ -268,7 +293,7 @@ Content-Type: application/json
 }
 ```
 
-已回填真实地址（2026-07-24 部署，两套 Campaign）。前端启动时校验 `address` 非零地址，地址为零时启动即报错（`app/lib/chain/deployments.ts` throw）；无用户可见 Demo 模式，fixtures 仅本地开发注入；线上读取持续失败时显示加载失败文案，不静默切假数据。
+已回填真实地址（2026-07-25 重新部署，三套 Campaign）。前端启动时校验 `address` 非零地址，地址为零时启动即报错（`app/lib/chain/deployments.ts` throw）；无用户可见 Demo 模式，fixtures 仅本地开发注入；线上读取持续失败时显示加载失败文案，不静默切假数据。
 
 ## 9. 六种状态标签语义（PRD 14.2）
 

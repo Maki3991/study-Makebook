@@ -10,6 +10,7 @@ via_ir = false
 remappings = [
     "forge-std/=lib/forge-std/src/",
     "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "prb-math/=lib/prb-math/src/",
 ]
 
 [rpc_endpoints]

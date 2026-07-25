@@ -21,7 +21,7 @@
 
 ## 3. ABI 冻结面
 
-对外 ABI 以 `contracts/abi/MakebookCampaign.json` 为准：33 函数 + 7 事件 + 21 错误。前端按 `docs/FRONTEND_INTERFACE.md` 第 2 节对接。**任何 ABI 变更必须同步：abi JSON → 接口文档 → 通知前端。**
+对外 ABI 以 `contracts/abi/MakebookCampaign.json` 为准：P1（2026-07-25，spec 008）起 **44 函数 + 9 事件 + 24 错误**（错误口径含 OZ 继承的 `ReentrancyGuardReentrantCall`；自定义错误 23 个）。P0 基数为 33 函数 + 7 事件 + 21 错误。前端按 `docs/FRONTEND_INTERFACE.md` 第 2 节对接。**任何 ABI 变更必须同步：abi JSON → 接口文档 → 通知前端。**
 
 ## 4. 不变量 → 测试映射
 

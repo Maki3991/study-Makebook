@@ -70,12 +70,12 @@ async function checkManifest(path, onChainHash) {
 }
 
 const success = {
-  address: "0x378bb7d08e92317ff8a5f7750bb7a91332bab03d",
-  deployBlock: 134529577,
+  address: "0x260A9C9075B09B5950385fEB1AEa7d83a25E556e",
+  deployBlock: 134614629,
 };
 const failure = {
-  address: "0x01c51b7c50dd0537933bf245b8a5ea6252735f51",
-  deployBlock: 134533159,
+  address: "0x785CbE7E2C874413CF5430BA272Bfa02bcc77AA9",
+  deployBlock: 134614708,
 };
 
 console.log("=== Events + getOrder (success) ===");

@@ -2,7 +2,7 @@
 
 > **本文件性质**：v2.0 草案，仅重写 v1.0 的第 01 / 03 / 04 / 07 / 09 / 19 / 20 章并新增附录 A2。
 > **未重写章节**（02 术语、05 MVP 范围、06 AI 编译器、08 工厂报价、10 状态机、11 数据模型、12 技术架构、13 合约规格、13A 安全规则、14 页面、15 文案、16 安全隐私、16A 测试矩阵、17 排期、18 Demo、21 来源）**继续以 v1.0 为准，全部冻结**。
-> **双层原则**：凡写"P0（已实现）"的内容，与 Injective EVM Testnet 已部署合约（success `0x378b…b03d` / failure `0x01c5…5f51`，源码已验证）逐字一致；凡写"V1/V2（设计）"的内容，未在链上实现，演示与提交材料中不得混称。
+> **双层原则**：凡写"P0（已实现）"的内容，与 Injective EVM Testnet 已部署合约（success `0xBcA0…00c5` / failure `0x4415…4e6d`，源码已验证）逐字一致；凡写"V1/V2（设计）"的内容，未在链上实现，演示与提交材料中不得混称。
 
 **版本**：v2.0-draft · 2026-07-24 · 商业架构重构（定位、角色经济、清算价定义、分账、履约）
 **重构依据**：v1.0 存在两个根本缺陷——(1) 品牌方在资金流中没有位置，清算价实为工厂出厂价而非零售价，量纲不一致；(2) "为什么上链"是防守型论证。本版将 MAKEBOOK 重新定位为**预售交易平台，链是其信任层**。
@@ -87,37 +87,41 @@ v1.0 识别了四方断裂（点赞不等于购买、品牌不知哪个规格能
 
 ---
 
-# 07 Campaign 参数（V1 新增字段）
+# 07 Campaign 参数（P1/V2 新增字段）
 
-P0 参数（manifestHash / manifestURI / operator / deadline / paymentAsset / limits）不变。V1 部署时新增以下**开盘前冻结**参数：
+P0 参数（manifestHash / manifestURI / operator / deadline / paymentAsset / limits）不变。以下**开盘前冻结**参数分两步落地——P1（2026-07-25 已上链）与 V2（未实现）：
 
 | 字段 | 类型 | 作用 | 约束 |
 |---|---|---|---|
-| **creator** | address | 品牌应收唯一领取方 | 部署后不可改 |
-| **marginBps** | uint32 | 加价系数（基点，如 2500 = ×1.25） | 硬上限（如 ≤ 5000），开盘前冻结 |
-| **fixedCostWei** | uint256 | 固定履约成本（物流+包装+仓储履约+支付/退货准备的折算定额） | 冻结 |
-| **reservePriceWei** | uint256 | 品牌保留价：最低可接受零售清算价 | 冻结并公开 |
-| **feeBps / feeCapWei** | uint32 / uint256 | 平台费率与硬上限 | 冻结（P0 为 0） |
+| **creator** | address | 品牌应收唯一领取方 | 部署后不可改 · **P1 已实现** |
+| **feeRecipient** | address | 平台费唯一领取方（≠ operator，守 INV-06） | 部署后不可改 · **P1 已实现** |
+| **marginBps** | uint32 | 加价系数（基点，2500 = ×1.25） | 硬上限 ≤ 5000，constructor 冻结 · **P1 已实现** |
+| **feeBps** | uint32 | 平台费率（200 = 2%），失败不收费 | ≤ marginBps（InvalidFeeConfig）· **P1 已实现** |
+| **fixedCostWei** | uint256 | 固定履约成本（物流+包装+仓储履约+支付/退货准备的折算定额） | **V2，P1 未实现** |
+| **reservePriceWei** | uint256 | 品牌保留价：最低可接受零售清算价 | **V2，P1 未实现** |
+| **feeCapWei** | uint256 | 平台费累计硬上限 | **V2，P1 未实现** |
 
 ---
 
 # 09 确定性清算规则（双层）
 
-## 9.A P0 算法（已实现、已部署、不得改述）
+## 9.A P0 算法（历史口径，2026-07-25 起由 P1 取代）
 
-与 v1.0 R-01~R-10 逐字一致，链上证据：success `0x378b…b03d`（Open，5 单 2 报价）、failure `0x01c5…5f51`（Open，2 单 2 报价）。清算价 = 中标工厂档位价；无保留价；平台费 0；单一工厂应收。51 个测试（CT-01~CT-12）与 Slither 静态分析已归档。
+与 v1.0 R-01~R-10 逐字一致，链上证据：success `0xBcA0…00c5`（Open，5 单 2 报价）、failure `0x4415…4e6d`（Open，2 单 2 报价）。清算价 = 中标工厂档位价；无保留价；平台费 0；单一工厂应收。51 个测试（CT-01~CT-12）与 Slither 静态分析已归档。
 
-## 9.B V1 算法（设计，未实现）
+**P1 已实现三方分账（2026-07-25）**：算法见 9.B。P0 双批次到期后由 P1 三批次（success / failure / bracelet）取代；本节保留为历史口径，不得改述。
+
+## 9.B P1 算法（2026-07-25 已实现）与 V2 扩展（未实现）
 
 设工厂档位出厂价 `tierPrice`，冻结参数如上。
 
-- **R-V1-01（零售价构造）**：每个档位的零售档位价 `retailTierPrice = tierPrice × (1 + marginBps/10000) + fixedCostWei`（整数除法余数归入平台费，上限 feeCapWei 覆盖）。
+- **R-V1-01（零售价构造）**：每个档位的零售档位价 `retailTierPrice = tierPrice × (1 + marginBps/10000)`（floor 取整）。**P1 按此实现**；V2 扩展为 `+ fixedCostWei`（整数除法余数归入平台费，上限 feeCapWei 覆盖）。
 - **R-V1-02**：eligibleCount = maxPrice ≥ retailTierPrice 的订单数（量纲统一：消费者的零售支付意愿对零售档位价）。
 - **R-V1-03~05**：可行性与选择与 P0 相同（eligibleCount ≥ minQty → 可行；先数量后价格再 quoteId/tierIndex）。
-- **R-V1-06（保留价）**：选定中标档位后，若 `retailTierPrice < reservePriceWei`，该档位判不可行；无任何同时通过 MOQ 与保留价的档位则 state = Failed，全员全额退款。
-- **R-V1-07（分账）**：clearingRetailPrice = 中标零售档位价；factoryReceivable = winnerCount × tierPrice；creatorReceivable = winnerCount × (clearingRetailPrice − tierPrice) − platformFeeTotal；platformFeeTotal = min(winnerCount × clearingRetailPrice × feeBps/10000, feeCapWei)；买家差额 = maxPrice − clearingRetailPrice。四类均 pull 领取，互不阻塞。
+- **R-V1-06（保留价）**（**V2，P1 未实现**）：选定中标档位后，若 `retailTierPrice < reservePriceWei`，该档位判不可行；无任何同时通过 MOQ 与保留价的档位则 state = Failed，全员全额退款。
+- **R-V1-07（分账）**：clearingRetailPrice = 中标零售档位价；factoryReceivable = winnerCount × tierPrice；platformFeeTotal = winnerCount × clearingRetailPrice × feeBps/10000（合约内与 marginPool 取 min 兜底，永不下溢）；creatorReceivable = winnerCount × (clearingRetailPrice − tierPrice) − platformFeeTotal；买家差额 = maxPrice − clearingRetailPrice。工厂/品牌/平台/买家四类均 pull 领取，互不阻塞。**P1 按此实现**（V2 再加 feeCapWei 上限）。
 
-**保留价手算示例**：见附录 A2。
+**保留价手算示例**：随 V2 实现补充；附录 A2 已重写为 P1 口径（与 testnet 链上数字逐 wei 一致）。
 
 ## 9.C 为什么不用更简单的做法
 
@@ -172,7 +176,7 @@ v1.0 确实错配（零售意愿对出厂报价）；v2.0 的零售价构造（�
 
 ## 20.2 主理人怎么赚钱（零售差价模型）
 
-品牌应收 = winnerCount ×（零售清算价 − 出厂价）− 平台费。FRAME-01 完整成本拆解与分账手算见附录 A2。
+品牌应收 = winnerCount ×（零售清算价 − 出厂价）− 平台费（P1 已上链，2026-07-25）。FRAME-01 testnet 分账手算见附录 A2。
 
 ## 20.3 公开冻结加价公式与合理区间
 
@@ -219,40 +223,39 @@ v1.0 确实错配（零售意愿对出厂报价）；v2.0 的零售价构造（�
 ## 20.8 路线图（在 v1.0 20.2 基础上修订）
 
 - **MVP / P0（已完成）**：单 SKU、统一出厂价清算、单一工厂应收、testnet 双 Campaign 证据。
-- **V1 / 4–8 周**：零售价构造（marginBps + fixedCost）、保留价、三方分账、creator 角色、链下订单详情收集（收货信息收集→校验→锁定→异常队列，对照 Crowd Supply 履约工作流）、真实用户访谈、稳定币/MTS 支付。
+- **P1（2026-07-25 已实现）**：三方分账——creator/feeRecipient 角色、marginBps=2500 零售价构造、feeBps=200 平台费、三笔应收 pull 领取，合约测试全绿。
+- **V1 剩余 / 4–8 周**：fixedCostWei、保留价、feeCapWei、链下订单详情收集（收货信息收集→校验→锁定→异常队列，对照 Crowd Supply 履约工作流）、真实用户访谈、稳定币/MTS 支付。
 - **V2 / 2–4 月**：里程碑分期释放、工厂保证金、质检见证、commit-reveal、社区设计赛（资金曲线选拔 + 设计版税 1–3%，对照 LEGO Ideas）、贡献分成（sourceCommentIds → 贡献者）。
 - **V3 / 6–12 月**：多 SKU/变体、产能上限、多工厂拆单、履约声誉（真实购买加权的评价系统）、白标 API、工厂侧 SaaS。
 
 ---
 
-# 附录 A2｜V1 价格结构与分账手算示例
+# 附录 A2｜P1 价格结构与分账手算示例（2026-07-25 与链上一致）
 
-FRAME-01（黑色 8L 模块化摄影斜挎包）V1 完整成本拆解。出厂价沿用 v1.0 第 8.1 节真实场景报价例；其余科目标注来源或估算属性。
+FRAME-01 testnet success 批次真实参数：报价 North MOQ 3 @ 出厂 0.024 / Loom MOQ 3 @ 出厂 0.019（testINJ）；冻结参数 marginBps = 2500（×1.25）、feeBps = 200（2%）。
 
-| 科目 | 金额 | 依据 |
-|---|---|---|
-| 出厂价 EXW（Factory Loom 60 件档） | ¥219/件 | v1.0 8.1 报价例；相机包 OEM 行业估算 $5–40（约 ¥35–290）[来源：Alibaba/Made-in-China 挂牌价散点，行业估算] |
-| 入仓物流 | ¥12/件 | 头程占售价 5–10% 合理区间的下沿 [来源：DataCaciques 2026]；行业估算 |
-| 包装 | ¥8/件 | **无权威统一 benchmark，标注为估算** |
-| 仓储履约 | ¥18/件 | 美国 3PL 拣货打包均值 $2–3.2/单 [来源：The Fulfillment Advisor 2025 年 600+ 仓库调查，经 Fulfill.com 2026 转引] |
-| 支付手续费 | ~3% 零售额 | Kickstarter/Stripe 口径 [来源：Kickstarter 费率页] |
-| 退换货准备金 | ~5% 零售额 | 美国线上退货率 19.3–24.5% [来源：NRF 2024/2025 报告]，按退货处理成本折算的保守计提；**标注为假设** |
+**零售档位价**：North 0.024 × 1.25 = **0.030**；Loom 0.019 × 1.25 = **0.02375**。
 
-**冻结参数（示例）**：marginBps = 2500（×1.25）；fixedCost = 物流 12 + 包装 8 + 履约 18 + 支付/退货折算 22 = ¥60；reservePrice = ¥340；feeBps = 200（2%）。
+**需求**：5 笔全额预锁订单，愿付价 0.034 / 0.032 / 0.028 / 0.026 / 0.022。
 
-**零售档位价**：Loom 60 件档 retail = 219 × 1.25 + 60 = **¥333.75**；North 50 件档 retail = 239 × 1.25 + 60 = **¥358.75**。
+| 候选档位 | retailTierPrice | eligibleCount | MOQ | 结果 |
+|---|---|---|---|---|
+| North / 3 @ EXW 0.024 | 0.030 | 2（0.034、0.032） | 2 < 3 不可行 | 淘汰 |
+| Loom / 3 @ EXW 0.019 | 0.02375 | 4（≥ 0.02375） | 4 ≥ 3 可行 | **中标** |
 
-**需求**：72 个已预锁订单中，48 人 maxPrice ≥ ¥360，65 人 ≥ ¥335，其余 7 人更低。
+清算：4 名赢家各付统一价 0.02375；末单 0.022 落选，全额退 0.022。
 
-| 候选档位 | retailTierPrice | eligibleCount | MOQ | 保留价 | 结果 |
-|---|---|---|---|---|---|
-| North / 50 @ EXW 239 | ¥358.75 | 48 | 48 < 50 不可行 | — | 淘汰 |
-| Loom / 60 @ EXW 219 | ¥333.75 | 65 | 65 ≥ 60 可行 | 333.75 < 340 **触发保留价** | **Failed** |
+**三笔分账（逐 wei 可手算复现）**：
 
-→ 保留价生效：即使 MOQ 达标，清算价低于品牌底线，Campaign 失败，72 人全员全额退款。
+- 工厂应收 = 4 × 0.019 = **0.076**
+- 平台费 = 4 × 0.02375 × 2% = **0.0019**
+- 品牌应收 = 4 × (0.02375 − 0.019) − 0.0019 = 0.019 − 0.0019 = **0.0171**
+- 买家差额 = maxPrice − 0.02375（如 0.034 → 退 0.01025）
 
-**若 reservePrice = ¥330**：Loom 档可行且中标。分账（65 件）：工厂应收 = 65 × 219 = **¥14,235**；平台费 = 65 × 333.75 × 2% = **¥433.9**；品牌应收 = 65 × (333.75 − 219) − 433.9 = 65 × 114.75 − 433.9 = **¥7,024.9**（单位毛利 ~32%）；买家差额 = maxPrice − 333.75（如 maxPrice 360 退 26.25）。
+托管守恒校验：0.076 + 0.0171 + 0.0019 = 0.095 = 4 × 0.02375。✓
+
+**V2 完整形态（未实现）**：加入 fixedCostWei / reservePriceWei / feeCapWei 后公式扩展为 `retail = tierPrice × (1 + marginBps/10000) + fixedCostWei`，保留价可判失败、平台费设累计上限；¥ 计价的保留价手算例随 V2 实现一并恢复。
 
 ---
 
-> **草案说明**：本文件所有 V1/V2 内容均未实现；所有 P0 内容以链上已部署合约与 v1.0 文档为准。引用数据均标注来源；标注"估算/假设"处需在真实 Campaign 数据或工厂访谈后校准。
+> **草案说明**：P1 三方分账（creator / feeRecipient / marginBps / feeBps 与 9.B 全部规则）已于 2026-07-25 链上实现并与 demo 一致；fixedCostWei / reservePriceWei / feeCapWei 与履约分期释放仍为 V2 未实现内容；其余 P0 内容以链上合约与 v1.0 文档为准。引用数据均标注来源；标注"估算/假设"处需在真实 Campaign 数据或工厂访谈后校准。

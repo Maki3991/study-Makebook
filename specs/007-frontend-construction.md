@@ -21,8 +21,9 @@
 | RPC | `https://k8s.testnet.json-rpc.injective.network/`（可被 `NEXT_PUBLIC_INJ_RPC` 覆盖） |
 | EXPLORER | `https://testnet.blockscout.injective.network` |
 | FAUCET | `https://testnet.faucet.injective.network/` |
-| 成功批次 address | `0x378bb7d08e92317ff8a5f7750bb7a91332bab03d`，deployBlock `134529577` |
-| 失败批次 address | `0x01c51b7c50dd0537933bf245b8a5ea6252735f51`，deployBlock `134533159` |
+| 成功批次 address | `0x260A9C9075B09B5950385fEB1AEa7d83a25E556e`，deployBlock `134614629` |
+| 失败批次 address | `0x785CbE7E2C874413CF5430BA272Bfa02bcc77AA9`，deployBlock `134614708` |
+| BRACELET 批次 address | `0x8Bb41E7195eD2b440c868BBa1d3d1146970dC691`，deployBlock `134615480` |
 | manifestHash 锚点（FRAME-01） | `0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec` |
 | manifestHash 锚点（BRACELET-01） | `0x1c503957667bb009a161c7d9bfe70e59db01c61c80920faae60f98a1e3c958dd` |
 
@@ -341,9 +342,9 @@ fetch `/manifests/frame-01.json`（本地 public 副本，刻意不用链上 man
 | T2 | token + 布局：`globals.css` @theme 全量 token（§3）；`layout.tsx` 顶栏 + TESTNET 条 + Providers；WalletButton 三态 + 错网一键切换 1439 | MetaMask 错网时按钮变红且点击可切换；390px 无横向滚动 |
 | T3 | 数据层：hooks.ts 全部读函数 + 事件拉取 + §5.1 衍生计算 + errors.ts + format.ts + manifest 校验 | 页面可渲染链上实时 5 单/2 单；刷新缓存重建；manifestHash 校验 ✓ 显示 |
 | T4 | 首页（§5.1 spec 006）：hero + 三步条 + 两批次卡（实时数据） | 批次卡数字与 `cast call state/ordersLength` 一致 |
-| T5 | 项目页只读区：status-strip / product-card / quote-table / demand-curve | 曲线 5 个价格点计数正确（0.017→5 … 0.026→1）；quote 表 eligible 与预览一致 |
-| T6 | 出价面板 + 抽屉 + 下单写链路（§5.2 状态机 + 双勾选 + legal 原文） | 真钱包下 0.019 单成功，事件解码显示，列表/曲线/预览即时更新；拒签/重复单/错网三条错误各触发一次 |
-| T7 | 订单页 + 领取：订单卡状态推导 + claimRefund + 无需退款分支 | 差额 0.005 可领；领取后状态翻已领取；重复领取被 AlreadyClaimed 文案拦截 |
+| T5 | 项目页只读区：status-strip / product-card / quote-table / demand-curve | 曲线 X 轴刻度从订单派生（P1：零售口径 eligibility），计数与订单一致；quote 表 eligible 与预览一致 |
+| T6 | 出价面板 + 抽屉 + 下单写链路（§5.2 状态机 + 双勾选 + legal 原文） | 真钱包下 0.024 单成功（≥零售档 0.02375 可成团），事件解码显示，列表/曲线/预览即时更新；拒签/重复单/错网三条错误各触发一次 |
+| T7 | 订单页 + 领取：订单卡状态推导 + claimRefund + 无需退款分支 | 差额 0.00825 可领（Buyer B：0.032 − 零售清算价 0.02375）；领取后状态翻已领取；重复领取被 AlreadyClaimed 文案拦截 |
 | T8 | 清算链路 + 结果区 + 打磨：settle 按钮（截止后）、result-block、三档响应式实机目检、alan-design §16 checklist | 验收锚点（spec 006 §9）全勾 |
 | T9 | 工作台 `/console`：role-bar 角色推导 + compile-panel（调 /api/compile + manifest 确认 + hash 一致性）+ admin-table 批次监控 + factory-panel（报价卡 + claimPayout） | 普通地址只读提示正确；fixture 降级显示 Fixture 标签；编译确认后 hash 与锚点一致；中标工厂钱包可见「领取应收」并领取成功（Loom 0.076）；非中标地址触发 NotSelectedFactory 文案 |
 

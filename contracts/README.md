@@ -16,7 +16,7 @@ forge install foundry-rs/forge-std OpenZeppelin/openzeppelin-contracts --no-git
 ```bash
 cd contracts
 forge build
-forge test -vv          # 51 个测试：CT-01~CT-12 + 附录 A 端到端
+forge test -vv          # 73 个测试：CT-01~CT-12 + 附录 A 端到端 + 22 个 P1 三方分账用例（spec 008）
 forge test --match-test testCT12 -vv   # settle gas 实测日志
 ```
 
@@ -65,15 +65,15 @@ forge verify-contract <DEPLOYED_ADDRESS> \
   --verifier blockscout \
   --verifier-url 'https://testnet.blockscout-api.injective.network/api/' \
   --constructor-args $(cast abi-encode \
-    "constructor(address,bytes32,string,uint64)" \
-    $OPERATOR_ADDRESS $MANIFEST_HASH "$MANIFEST_URI" $DEADLINE)
+    "constructor(address,address,address,bytes32,string,uint64,uint32,uint32)" \
+    $OPERATOR_ADDRESS $CREATOR_ADDRESS $PLATFORM_ADDRESS $MANIFEST_HASH "$MANIFEST_URI" $DEADLINE $MARGIN_BPS $FEE_BPS)
 ```
 
 Explorer 深链：`https://testnet.blockscout.injective.network/address/<addr>` / `/tx/<hash>`。
 
 ## settle gas 实测（CT-12）
 
-50 orders × 6 tiers（2 quotes × 3 tiers，满上限）：**286,858 gas**（forge test 日志 `testCT12_SettleGasWith50OrdersAnd6Tiers`），远低于 2,000,000 gas-limit 预算；清算循环上界 2×3×50 = 300 次比较（INV-08），不随领取人数做转账。
+50 orders × 6 tiers（2 quotes × 3 tiers，满上限）：**468,877 gas**（P1，forge test 日志 `testCT12_SettleGasWith50OrdersAnd6Tiers`；P0 为 286,858），远低于 4,000,000 gas-limit 预算；清算循环上界 2×3×50 = 300 次比较（INV-08），不随领取人数做转账。
 
 ## 安全边界（PRD 13A）
 
