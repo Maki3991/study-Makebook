@@ -171,13 +171,13 @@ export function PledgePanel({ id }: { id: CampaignId }) {
   return (
     <>
       <section className="surface p-5 lg:p-6">
-        <h2 className="text-base font-semibold text-ink">{copy.pledge.title}</h2>
+        <h2 className="text-h2 text-ink">{copy.pledge.title}</h2>
 
         {!myOrder && !isSettled && !isPastDeadline && !isFull ? (
           <div className="mt-5">
             <label
               htmlFor="max-price"
-              className="text-sm font-medium text-ink-2"
+              className="text-body font-medium text-ink-2"
             >
               {copy.pledge.inputLabel}
             </label>
@@ -190,13 +190,13 @@ export function PledgePanel({ id }: { id: CampaignId }) {
                 value={input}
                 onChange={(e) => handleInputChange(e.target.value)}
                 placeholder="0.000"
-                className="num text-base text-ink"
+                className="num text-body text-ink"
               />
-              <span className="text-sm text-ink-3">test INJ</span>
+              <span className="text-body text-ink-3">test INJ</span>
             </div>
 
             <div className="mt-4">
-              <p className="text-xs text-ink-3">{copy.pledge.chipHint}</p>
+              <p className="text-micro text-ink-3">{copy.pledge.chipHint}</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {chips.map((price) => (
                   <button
@@ -214,7 +214,7 @@ export function PledgePanel({ id }: { id: CampaignId }) {
 
             {inputNum > 0 && (
               <p
-                className={`mt-4 text-sm font-medium ${
+                className={`mt-4 text-body font-medium ${
                   wouldClear ? "text-success" : "text-warn"
                 }`}
               >
@@ -222,7 +222,7 @@ export function PledgePanel({ id }: { id: CampaignId }) {
               </p>
             )}
             {inputError && (
-              <p className="mt-4 text-sm text-danger">{inputError}</p>
+              <p className="mt-4 text-body text-danger">{inputError}</p>
             )}
           </div>
         ) : null}
@@ -234,7 +234,7 @@ export function PledgePanel({ id }: { id: CampaignId }) {
             href={explorerTx(settle.result.txHash)}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1 text-sm text-accent hover:underline"
+            className="mt-3 inline-flex items-center gap-1 text-body text-accent hover:underline"
           >
             {copy.orders.viewTx}
             <ExternalLink size={14} />
@@ -242,9 +242,9 @@ export function PledgePanel({ id }: { id: CampaignId }) {
         )}
 
         {placeOrder.error && (
-          <p className="mt-4 text-sm text-danger">{placeOrder.error}</p>
+          <p className="mt-4 text-body text-danger">{placeOrder.error}</p>
         )}
-        {settle.error && <p className="mt-4 text-sm text-danger">{settle.error}</p>}
+        {settle.error && <p className="mt-4 text-body text-danger">{settle.error}</p>}
       </section>
 
       <BackDrawer

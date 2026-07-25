@@ -12,7 +12,7 @@ export function TestnetBanner() {
       {/* N-6: the faucet link never wraps mid-text; when space runs out the
           link drops to a second line (flex-wrap). N-4: horizontal padding
           comes from .page only, so it matches every other container. */}
-      <div className="page flex min-h-9 flex-wrap items-center justify-center gap-x-2 gap-y-1 py-1 text-center text-xs font-medium sm:text-sm">
+      <div className="page flex min-h-9 flex-wrap items-center justify-center gap-x-2 gap-y-1 py-1 text-center text-micro font-medium sm:text-body">
         <ProvenanceTag type="TESTNET" />
         <span className="text-ink-2">{copy.global.banner.testnet.message}</span>
         <span className="hidden sm:inline">·</span>

@@ -9,7 +9,7 @@ export default function NotFound() {
 
   return (
     <main className="page py-20 text-center">
-      <h1 className="text-h2 font-semibold text-ink lg:text-h1">
+      <h1 className="text-h2 text-ink lg:text-h1">
         {copy.global.notFound.title}
       </h1>
       <p className="mx-auto mt-3 max-w-md text-ink-2">

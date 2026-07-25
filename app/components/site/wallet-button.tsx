@@ -49,7 +49,7 @@ export function WalletButton() {
                 <button
                   type="button"
                   onClick={openConnectModal}
-                  className="btn btn-primary whitespace-nowrap px-4 text-sm"
+                  className="btn btn-primary whitespace-nowrap px-4 text-body"
                 >
                   {copy.global.wallet.connect}
                 </button>
@@ -58,7 +58,7 @@ export function WalletButton() {
                   href={METAMASK_DOWNLOAD_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn btn-primary whitespace-nowrap px-4 text-sm"
+                  className="btn btn-primary whitespace-nowrap px-4 text-body"
                 >
                   {copy.global.wallet.installMetaMask}
                 </a>
@@ -68,7 +68,7 @@ export function WalletButton() {
                 type="button"
                 disabled={isPending}
                 onClick={() => switchChain?.({ chainId: CHAIN_ID })}
-                className="btn btn-danger whitespace-nowrap px-4 text-sm"
+                className="btn btn-danger whitespace-nowrap px-4 text-body"
               >
                 {isPending
                   ? copy.global.wallet.switching
@@ -78,7 +78,7 @@ export function WalletButton() {
               <button
                 type="button"
                 onClick={openAccountModal}
-                className="btn btn-secondary whitespace-nowrap px-4 text-sm"
+                className="btn btn-secondary whitespace-nowrap px-4 text-body"
               >
                 {truncateAddress(account.address)}
               </button>

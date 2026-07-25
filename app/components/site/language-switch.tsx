@@ -29,7 +29,7 @@ export function LanguageSwitch({ onSelected }: { onSelected?: () => void }) {
             setLanguage(option.code);
             onSelected?.();
           }}
-          className={`whitespace-nowrap px-2 py-1 text-sm font-medium transition-colors ${
+          className={`whitespace-nowrap px-2 py-1 text-body font-medium transition-colors ${
             language === option.code
               ? "font-semibold text-accent"
               : "text-ink-3 hover:text-ink"

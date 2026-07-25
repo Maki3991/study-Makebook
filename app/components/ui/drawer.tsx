@@ -57,7 +57,7 @@ const DrawerTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={`text-base font-semibold text-ink ${className ?? ""}`}
+    className={`text-h2 text-ink ${className ?? ""}`}
     {...props}
   />
 ));
@@ -69,7 +69,7 @@ const DrawerDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={`text-sm text-ink-2 ${className ?? ""}`}
+    className={`text-body text-ink-2 ${className ?? ""}`}
     {...props}
   />
 ));

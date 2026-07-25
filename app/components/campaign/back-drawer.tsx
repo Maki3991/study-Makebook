@@ -124,10 +124,10 @@ export function BackDrawer({
         <DrawerBody>
           {stage === "success" && result ? (
             <div className="space-y-5">
-              <div className="rounded-md bg-success-soft p-4 text-sm font-medium text-success">
+              <div className="rounded-md bg-success-soft p-4 text-body font-medium text-success">
                 {copy.drawer.success}
               </div>
-              <p className="text-sm text-ink-2">
+              <p className="text-body text-ink-2">
                 {copy.drawer.summary
                   .replace("{product}", productTitle)
                   .replace("{price}", formatInj(result.maxPriceWei))}
@@ -142,14 +142,14 @@ export function BackDrawer({
                   {copy.drawer.viewTxBlockscout}
                   <ExternalLink size={14} />
                 </a>
-                <p className="num text-center text-xs text-ink-3">
+                <p className="num text-center text-micro text-ink-3">
                   {truncateAddress(result.txHash)}
                 </p>
               </div>
             </div>
           ) : (
             <div className="space-y-5">
-              <p className="text-sm text-ink">
+              <p className="text-body text-ink">
                 {copy.drawer.summary
                   .replace("{product}", productTitle)
                   .replace("{price}", maxPrice)}
@@ -159,35 +159,35 @@ export function BackDrawer({
                 <div className="border border-line p-3">
                   <div className="space-y-1">
                     <div className="flex items-baseline justify-between gap-4">
-                      <span className="text-sm text-ink-2">
+                      <span className="text-body text-ink-2">
                         {copy.drawer.breakdown.factory}
                       </span>
-                      <span className="num text-sm text-ink">
+                      <span className="num text-body text-ink">
                         {formatInj(breakdown.tierWei)}
-                        <span className="text-xs text-ink-3"> test INJ</span>
+                        <span className="text-micro text-ink-3"> test INJ</span>
                       </span>
                     </div>
                     <div className="flex items-baseline justify-between gap-4">
-                      <span className="text-sm text-ink-2">
+                      <span className="text-body text-ink-2">
                         {copy.drawer.breakdown.markup.replace(
                           "{factor}",
                           String((10000 + marginBps!) / 10000),
                         )}
                       </span>
-                      <span className="num text-sm text-ink">
+                      <span className="num text-body text-ink">
                         + {formatInj(breakdown.markupWei)}
-                        <span className="text-xs text-ink-3"> test INJ</span>
+                        <span className="text-micro text-ink-3"> test INJ</span>
                       </span>
                     </div>
                   </div>
                   <div className="hairline my-2" />
                   <div className="flex items-baseline justify-between gap-4">
-                    <span className="text-sm font-medium text-ink">
+                    <span className="text-body font-medium text-ink">
                       {copy.drawer.breakdown.youPay}
                     </span>
-                    <span className="num text-sm font-medium text-ink">
+                    <span className="num text-body font-medium text-ink">
                       {formatInj(breakdown.retailWei)}
-                      <span className="text-xs font-normal text-ink-3">
+                      <span className="text-micro font-normal text-ink-3">
                         {" "}
                         test INJ
                       </span>
@@ -195,24 +195,24 @@ export function BackDrawer({
                   </div>
                   <div className="mt-2 space-y-1">
                     <div className="flex items-baseline justify-between gap-4">
-                      <span className="text-xs text-ink-3">
+                      <span className="text-micro text-ink-3">
                         {copy.drawer.breakdown.ofWhich} ·{" "}
                         {copy.drawer.breakdown.creatorNet}{" "}
                         {copy.drawer.breakdown.creatorNetNote}
                       </span>
-                      <span className="num text-xs text-ink-2">
+                      <span className="num text-micro text-ink-2">
                         {formatInj(breakdown.creatorWei)}
                       </span>
                     </div>
                     <div className="flex items-baseline justify-between gap-4">
-                      <span className="text-xs text-ink-3">
+                      <span className="text-micro text-ink-3">
                         {copy.drawer.breakdown.platformFee}{" "}
                         {copy.drawer.breakdown.platformFeeNote.replace(
                           "{pct}",
                           String(feeBps! / 100),
                         )}
                       </span>
-                      <span className="num text-xs text-ink-2">
+                      <span className="num text-micro text-ink-2">
                         {formatInj(breakdown.platformWei)}
                       </span>
                     </div>
@@ -220,7 +220,7 @@ export function BackDrawer({
                 </div>
               )}
 
-              <div className="legal space-y-3 text-sm text-ink-2">
+              <div className="legal space-y-3 text-body text-ink-2">
                 <p>
                   {copy.drawer.legal1
                     .replace("{product}", productTitle)
@@ -236,7 +236,7 @@ export function BackDrawer({
                     onCheckedChange={(v) => setChecked1(Boolean(v))}
                     disabled={isBusy}
                   />
-                  <span className="pt-0.5 text-sm leading-5 text-ink-2">
+                  <span className="pt-0.5 text-body leading-5 text-ink-2">
                     {copy.drawer.check1}
                   </span>
                 </label>
@@ -246,13 +246,13 @@ export function BackDrawer({
                     onCheckedChange={(v) => setChecked2(Boolean(v))}
                     disabled={isBusy}
                   />
-                  <span className="pt-0.5 text-sm leading-5 text-ink-2">
+                  <span className="pt-0.5 text-body leading-5 text-ink-2">
                     {copy.drawer.check2}
                   </span>
                 </label>
               </div>
 
-              {error && <p className="text-sm text-danger">{error}</p>}
+              {error && <p className="text-body text-danger">{error}</p>}
             </div>
           )}
         </DrawerBody>

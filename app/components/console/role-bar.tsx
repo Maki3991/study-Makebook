@@ -36,12 +36,12 @@ export function RoleBar() {
     <section className="surface p-5 lg:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-h2 font-semibold leading-tight text-ink lg:text-h1">
+          <h1 className="text-h2 text-ink lg:text-h1">
             {copy.console.title}
           </h1>
-          <p className="mt-1 text-sm text-ink-2">{copy.console.role.subtitle}</p>
+          <p className="mt-1 text-body text-ink-2">{copy.console.role.subtitle}</p>
           {roles.includes("operator") && (
-            <p className="mt-1 text-xs text-ink-3">
+            <p className="mt-1 text-micro text-ink-3">
               {copy.console.role.operatorNote}
             </p>
           )}

@@ -145,27 +145,28 @@ export function DemandCurve({ id }: { id: CampaignId }) {
   const hoveredY = hovered ? yForCount(hovered.count) : 0;
   let tooltipStatus: { text: string; className: string } | null = null;
   if (hovered && feasible !== undefined) {
+    // N-12: feasibility on the curve is expressed in ink, not semantic colors.
     if (!feasible || clearingPriceNum === undefined) {
       tooltipStatus = {
         text: copy.curve.tooltip.infeasible,
-        className: "text-warn",
+        className: "text-ink-3",
       };
     } else if (hovered.price >= clearingPriceNum) {
       tooltipStatus = {
         text: copy.curve.tooltip.clears,
-        className: "text-success",
+        className: "text-ink",
       };
     } else {
       tooltipStatus = {
         text: copy.curve.tooltip.below,
-        className: "text-warn",
+        className: "text-ink-3",
       };
     }
   }
 
   return (
     <section className="section">
-      <h2 className="text-base font-semibold text-ink">{copy.curve.title}</h2>
+      <h2 className="text-h2 text-ink">{copy.curve.title}</h2>
 
       <div className="mt-4 overflow-x-auto">
         <div className="relative max-w-[600px]">
@@ -192,9 +193,16 @@ export function DemandCurve({ id }: { id: CampaignId }) {
             );
           })}
 
-          {/* Factory tier horizontal lines at the eligible order count */}
+          {/* Factory tier horizontal lines at the eligible order count.
+              N-12: feasible = ink-1, infeasible = ink-3; the winning tier is
+              the one accent highlight on the chart. */}
           {tierLines.map((tier) => {
             const y = yForCount(tier.eligible);
+            const tierColor = tier.isWinner
+              ? "var(--color-accent)"
+              : tier.isFeasible
+                ? "var(--color-ink-1)"
+                : "var(--color-ink-3)";
             return (
               <g key={`tier-${tier.quoteId}-${tier.tierIdx}`}>
                 <line
@@ -202,13 +210,7 @@ export function DemandCurve({ id }: { id: CampaignId }) {
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke={
-                    tier.isWinner
-                      ? "var(--color-success)"
-                      : tier.isFeasible
-                        ? "var(--color-success)"
-                        : "var(--color-ink-3)"
-                  }
+                  stroke={tierColor}
                   strokeWidth={tier.isWinner ? 3 : 1.5}
                   strokeDasharray={tier.isFeasible ? "none" : "4 4"}
                   opacity={tier.isWinner ? 1 : 0.7}
@@ -219,13 +221,7 @@ export function DemandCurve({ id }: { id: CampaignId }) {
                   textAnchor="end"
                   className="num"
                   fontSize={10}
-                  fill={
-                    tier.isWinner
-                      ? "var(--color-success)"
-                      : tier.isFeasible
-                        ? "var(--color-success)"
-                        : "var(--color-ink-3)"
-                  }
+                  fill={tierColor}
                   fontWeight={tier.isWinner ? 600 : 400}
                 >
                   {tier.label} {tier.unitPrice}
@@ -320,7 +316,7 @@ export function DemandCurve({ id }: { id: CampaignId }) {
                 y1={padding.top}
                 x2={xForPrice(clearingPriceNum)}
                 y2={height - padding.bottom}
-                stroke="var(--color-success)"
+                stroke="var(--color-accent)"
                 strokeWidth={2}
                 strokeDasharray="4 4"
               />
@@ -338,7 +334,7 @@ export function DemandCurve({ id }: { id: CampaignId }) {
                 }
                 className="num"
                 fontSize={10}
-                fill="var(--color-success)"
+                fill="var(--color-accent)"
                 fontWeight={600}
               >
                 {copy.curve.clearingLabel
@@ -415,14 +411,14 @@ export function DemandCurve({ id }: { id: CampaignId }) {
               }, ${hoveredY > 84 ? "calc(-100% - 10px)" : "10px"})`,
             }}
           >
-            <p className="num text-xs font-medium text-ink">
+            <p className="num text-micro font-medium text-ink">
               {copy.curve.tooltip.price.replace("{price}", String(hovered.price))}
             </p>
-            <p className="num mt-0.5 text-xs text-ink-2">
+            <p className="num mt-0.5 text-micro text-ink-2">
               {copy.curve.tooltip.orders.replace("{count}", String(hovered.count))}
             </p>
             {tooltipStatus ? (
-              <p className={`mt-0.5 text-xs ${tooltipStatus.className}`}>
+              <p className={`mt-0.5 text-micro ${tooltipStatus.className}`}>
                 {tooltipStatus.text}
               </p>
             ) : null}
@@ -431,18 +427,18 @@ export function DemandCurve({ id }: { id: CampaignId }) {
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-2">
+      {/* Legend — swatches mirror the N-12 ink/accent grammar above */}
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-micro text-ink-2">
         <div className="flex items-center gap-2">
           <span className="inline-block h-0.5 w-4 bg-accent" />
           <span>{copy.curve.legendDemand}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block h-0 w-4 border-t-2 border-dashed border-success" />
+          <span className="inline-block h-0 w-4 border-t-2 border-dashed border-accent" />
           <span>{copy.curve.legendClearing}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block h-0 w-4 border-t border-success" />
+          <span className="inline-block h-0 w-4 border-t border-ink-1" />
           <span>{copy.curve.legendFeasible}</span>
         </div>
         <div className="flex items-center gap-2">

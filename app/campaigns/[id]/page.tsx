@@ -31,7 +31,7 @@ export default function CampaignPage() {
   if (!meta.deployed) {
     return (
       <main className="page py-20 text-center">
-        <h1 className="text-h1 font-semibold text-ink">{copy.notOpen.title}</h1>
+        <h1 className="text-h1 text-ink">{copy.notOpen.title}</h1>
         <p className="mx-auto mt-3 max-w-md text-ink-2">{copy.notOpen.body}</p>
       </main>
     );
@@ -61,7 +61,7 @@ export default function CampaignPage() {
 
       <EvidenceBlock id={campaignId} />
 
-      <footer className="mt-12 border-t border-line pt-6 text-xs text-ink-3">
+      <footer className="mt-12 border-t border-line pt-6 text-micro text-ink-3">
         <p className="font-mono">
           {copy.campaign.contractLabel} {meta.deployment?.address}
         </p>

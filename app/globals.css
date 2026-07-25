@@ -54,13 +54,15 @@
   --radius-md: 0px;
   --radius-lg: 2px;
 
-  /* Typography */
-  --text-display: 3rem;
-  --text-h1: 2.25rem;
-  --text-h2: 1.5rem;
-  --text-body: 0.875rem;
-  --text-small: 0.75rem;
-  --text-micro: 0.625rem;
+  /* Typography — spec 009 §1.4 six-step scale (2026-07-25 retune).
+     --text-monument is reserved for the clearing-price monument (§11.2 N-2). */
+  --text-display: 4.5rem;
+  --text-monument: 6rem;
+  --text-h1: 2.5rem;
+  --text-h2: 1.25rem;
+  --text-label: 0.6875rem;
+  --text-body: 0.9375rem;
+  --text-micro: 0.75rem;
 
   /* Fonts */
   --font-sans: "Instrument Sans", "Noto Sans SC Variable", -apple-system,
@@ -107,7 +109,7 @@
   h1,
   .text-h1 {
     font-size: var(--text-h1);
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.03em;
   }
@@ -115,7 +117,7 @@
   h2,
   .text-h2 {
     font-size: var(--text-h2);
-    font-weight: 600;
+    font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.03em;
   }
@@ -208,12 +210,15 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .text-micro {
-    font-size: var(--text-micro);
+  /* Spec 009 §1.4: labels (table headers / status / units / section numbers)
+     are 11px uppercase with 0.14em tracking — a distinct role from --text-micro
+     (12px footnotes/timestamps), which carries no case transform. */
+  .text-label {
+    font-size: var(--text-label);
     font-weight: 500;
     line-height: 1;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
   }
 
   .btn {
@@ -232,10 +237,16 @@
       color 150ms ease-out, filter 150ms ease-out;
   }
 
+  /* Spec 009 §1.7: explicit disabled palette — never opacity (accent at 60%
+     on paper mixes into a dirty mauve; the pledge drawer CTA is disabled by
+     default, so it must not look broken). */
   .btn:disabled,
   .btn[aria-disabled="true"] {
     cursor: not-allowed;
-    opacity: 0.6;
+    background: var(--color-paper-2);
+    color: var(--color-ink-3);
+    border-color: var(--color-rule-1);
+    filter: none;
   }
 
   .btn-primary {
@@ -273,7 +284,7 @@
     padding: 4px 8px;
     border: 1px solid transparent;
     border-radius: var(--radius-1);
-    font-size: var(--text-micro);
+    font-size: var(--text-label);
     font-weight: 500;
     line-height: 1;
     text-transform: uppercase;
@@ -323,7 +334,7 @@
     color: var(--color-ink-2);
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
-    font-size: var(--text-small);
+    font-size: var(--text-micro);
     font-weight: 500;
     line-height: 1;
     transition: background-color 150ms ease-out, border-color 150ms ease-out,
@@ -332,7 +343,9 @@
 
   .chip:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    background: var(--color-paper-2);
+    color: var(--color-ink-3);
+    border-color: var(--color-rule-1);
   }
 
   .chip[aria-pressed="true"],
@@ -384,21 +397,33 @@
     border-top: 0;
   }
 
-  .ambient-grid {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image: radial-gradient(
-      circle at center,
-      var(--color-rule-1) 1px,
-      transparent 1px
-    );
-    background-size: 8px 8px;
-    opacity: 0.35;
+  /* Clearing-price monument (spec 009 §11.2 N-2): the number is the hero of
+     the campaign page. 96px on desktop, clamped down to the 72px --text-display
+     floor on mobile so a priced value + unit never overflows 390px. */
+  .monument-value {
+    font-size: clamp(var(--text-display), 16vw, var(--text-monument));
+    line-height: 1;
+    letter-spacing: -0.03em;
   }
 
-  body[data-ambient="off"] .ambient-grid {
-    display: none;
+  .stat-value {
+    font-size: var(--text-h1);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .monument-unit {
+    font-size: var(--text-body);
+    font-weight: 500;
+  }
+
+  /* N-12: solid square marker for feasibility indications (replaces semantic
+     green dots on curves/tables). */
+  .sq {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    flex: none;
   }
 
   .animate-fade-in {

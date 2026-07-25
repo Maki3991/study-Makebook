@@ -57,15 +57,15 @@ export function QuoteTable({ id }: { id: CampaignId }) {
   return (
     <section className="section">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-base font-semibold text-ink">{copy.quotes.title}</h2>
+        <h2 className="text-h2 text-ink">{copy.quotes.title}</h2>
       </div>
 
       <div className="mt-4">
         {rows.length === 0 ? (
-          <p className="text-sm text-ink-3">{copy.quotes.empty}</p>
+          <p className="text-body text-ink-3">{copy.quotes.empty}</p>
         ) : (
           <div className="min-w-full">
-            <div className="hidden grid-cols-6 gap-4 bg-paper-2 p-2 text-micro uppercase tracking-wide text-ink-3 md:grid">
+            <div className="hidden grid-cols-6 gap-4 bg-paper-2 p-2 text-label text-ink-3 md:grid">
               <span>{copy.quotes.headers.factory}</span>
               <span className="text-right">{copy.quotes.headers.moq}</span>
               <span className="text-right">{copy.quotes.headers.factoryPrice}</span>
@@ -88,19 +88,21 @@ export function QuoteTable({ id }: { id: CampaignId }) {
                 let reasonText: string;
                 if (isWinner) {
                   statusText = copy.quotes.result.win;
-                  statusClass = "text-sm font-medium text-success";
+                  // N-12: the winning tier is the one place accent is allowed
+                  // outside the primary CTA; everything else stays ink.
+                  statusClass = "text-body font-medium text-accent";
                   reasonText = copy.quotes.reason.win
                     .replace("{n}", String(eligible))
                     .replace("{moq}", String(tier.minQty));
                 } else if (eligible < tier.minQty) {
                   statusText = copy.quotes.result.lost;
-                  statusClass = "text-sm text-ink-3";
+                  statusClass = "text-body text-ink-3";
                   reasonText = copy.quotes.reason.infeasible
                     .replace("{n}", String(eligible))
                     .replace("{moq}", String(tier.minQty));
                 } else {
                   statusText = copy.quotes.result.lost;
-                  statusClass = "text-sm text-ink-3";
+                  statusClass = "text-body text-ink-3";
                   reasonText = copy.quotes.reason.lost
                     .replace("{n}", String(eligible))
                     .replace("{moq}", String(tier.minQty))
@@ -113,62 +115,67 @@ export function QuoteTable({ id }: { id: CampaignId }) {
                     className="grid grid-cols-2 items-baseline gap-x-4 gap-y-2 py-3 md:grid-cols-6 md:items-center"
                   >
                     <div className="flex flex-col items-start gap-1">
-                      <span className="text-sm font-medium text-ink md:text-xs md:uppercase md:tracking-wide">
+                      <span className="text-body font-medium text-ink md:text-micro md:uppercase md:tracking-wide">
                         {factoryLabel(quote.quoteId)}
                       </span>
                       <ProvenanceTag type="DEMO FACTORY" />
                     </div>
 
                     <div className="text-right">
-                      <span className="text-xs text-ink-3 md:hidden">
+                      <span className="text-micro text-ink-3 md:hidden">
                         {copy.quotes.headers.moq}{" "}
                       </span>
-                      <span className="num text-sm text-ink">
+                      <span className="num text-body text-ink">
                         {tier.minQty}
                       </span>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-xs text-ink-3 md:hidden">
+                      <span className="text-micro text-ink-3 md:hidden">
                         {copy.quotes.headers.factoryPrice}{" "}
                       </span>
-                      <span className="num text-sm text-ink">
+                      <span className="num text-body text-ink">
                         {formatInj(tier.unitPriceWei)}
                       </span>
-                      <span className="text-xs text-ink-3"> test INJ</span>
+                      <span className="text-micro text-ink-3"> test INJ</span>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-xs text-ink-3 md:hidden">
+                      <span className="text-micro text-ink-3 md:hidden">
                         {copy.quotes.headers.retailPrice}{" "}
                       </span>
-                      <span className="num text-sm text-ink">
+                      <span className="num text-body text-ink">
                         {formatInj(retailWei)}
                       </span>
-                      <span className="text-xs text-ink-3"> test INJ</span>
+                      <span className="text-micro text-ink-3"> test INJ</span>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-xs text-ink-3 md:hidden">
+                      <span className="text-micro text-ink-3 md:hidden">
                         {copy.quotes.headers.eligible}{" "}
                       </span>
-                      <span className="num text-sm text-ink">{eligible}</span>
-                      <span className="text-xs text-ink-3">
+                      <span className="num text-body text-ink">{eligible}</span>
+                      <span className="text-micro text-ink-3">
                         {" "}
                         {copy.quotes.ordersSuffix}
                       </span>
                     </div>
 
                     <div className="col-span-2 text-right md:col-span-1">
-                      <span className={statusClass}>{statusText}</span>
-                      <p className="mt-0.5 text-xs text-ink-3">{reasonText}</p>
+                      <span className="inline-flex items-center gap-1.5">
+                        {isWinner ? (
+                          <span className="sq bg-accent" aria-hidden="true" />
+                        ) : null}
+                        <span className={statusClass}>{statusText}</span>
+                      </span>
+                      <p className="mt-0.5 text-micro text-ink-3">{reasonText}</p>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            <p className="mt-2 text-xs text-ink-3">{copy.quotes.tiebreak}</p>
+            <p className="mt-2 text-micro text-ink-3">{copy.quotes.tiebreak}</p>
           </div>
         )}
       </div>

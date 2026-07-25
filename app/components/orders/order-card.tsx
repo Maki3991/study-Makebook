@@ -115,14 +115,14 @@ export function OrderCard({ id }: OrderCardProps) {
     <article className="surface p-5 lg:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="text-base font-semibold text-ink">{meta.product}</h3>
-          <p className="mt-0.5 text-sm text-ink-2">
+          <h3 className="text-h2 text-ink">{meta.product}</h3>
+          <p className="num mt-0.5 text-body text-ink-2">
             {meta.batchName}
             {id === "failure" && (
               <span className="ml-2 text-ink-3">({copy.batch.b.note})</span>
             )}
           </p>
-          <p className="mt-3 text-sm text-ink-2">
+          <p className="mt-3 text-body text-ink-2">
             {copy.orders.bidLabel}{" "}
             <span className="num font-medium text-ink">
               {formatInj(myOrder.maxPriceWei)}
@@ -130,7 +130,7 @@ export function OrderCard({ id }: OrderCardProps) {
             test INJ
           </p>
           <p
-            className={`mt-2 text-sm font-medium ${
+            className={`mt-2 text-body font-medium ${
               status === "claimed"
                 ? "text-ink-3"
                 : status === "refund_diff" || status === "refund_full"
@@ -177,7 +177,7 @@ export function OrderCard({ id }: OrderCardProps) {
               href={explorerTx(claim.result.txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-accent hover:underline"
+              className="inline-flex items-center gap-1 text-body text-accent hover:underline"
             >
               {copy.orders.viewTx}
               <ExternalLink size={14} />
@@ -187,7 +187,7 @@ export function OrderCard({ id }: OrderCardProps) {
       </div>
 
       {claim.error && (
-        <p className="mt-4 text-sm text-danger">{claim.error}</p>
+        <p className="mt-4 text-body text-danger">{claim.error}</p>
       )}
     </article>
   );

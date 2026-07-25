@@ -59,22 +59,22 @@ export function ResultBlock({ id }: { id: CampaignId }) {
 
   return (
     <section className="section">
-      <h2 className="text-base font-semibold text-ink">{copy.result.title}</h2>
+      <h2 className="text-h2 text-ink">{copy.result.title}</h2>
 
       {isSuccess ? (
-        <p className="mt-2 text-sm font-medium text-accent">
+        <p className="num mt-2 text-body font-medium text-accent">
           {copy.result.success
             .replace("{price}", formatInj(clearingPrice ?? 0n))
             .replace("{count}", winnerCount?.toString() ?? "—")}
         </p>
       ) : (
-        <p className="mt-2 text-sm font-medium text-danger">
+        <p className="mt-2 text-body font-medium text-danger">
           {copy.result.failure}
         </p>
       )}
 
       {state === "PaidOut" && (
-        <p className="mt-2 text-sm text-ink-2">{copy.result.factoryPaidOut}</p>
+        <p className="mt-2 text-body text-ink-2">{copy.result.factoryPaidOut}</p>
       )}
 
       {settleTx.data ? (
@@ -82,10 +82,10 @@ export function ResultBlock({ id }: { id: CampaignId }) {
           href={explorerTx(settleTx.data)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1 text-sm text-accent hover:underline"
+          className="mt-3 inline-flex items-center gap-1 text-body text-accent hover:underline"
         >
           {copy.result.viewSettleTx}
-          <span className="num text-xs">{truncateAddress(settleTx.data)}</span>
+          <span className="num text-micro">{truncateAddress(settleTx.data)}</span>
           <ExternalLink size={14} />
         </a>
       ) : null}
@@ -93,7 +93,7 @@ export function ResultBlock({ id }: { id: CampaignId }) {
       {myOrder ? (
         <div className="mt-4 border-t border-line pt-4">
           {status === "refund_diff" ? (
-            <p className="text-sm text-ink">
+            <p className="text-body text-ink">
               {copy.result.mine.win
                 .replace("{clearing}", formatInj(clearingPrice ?? 0n))
                 .replace(
@@ -102,14 +102,14 @@ export function ResultBlock({ id }: { id: CampaignId }) {
                 )}
             </p>
           ) : status === "refund_full" ? (
-            <p className="text-sm text-ink">
+            <p className="text-body text-ink">
               {copy.result.mine.lose.replace(
                 "{amount}",
                 formatInj(myOrder.maxPriceWei),
               )}
             </p>
           ) : status === "claimed" ? (
-            <p className="text-sm text-success">{copy.result.mine.claimed}</p>
+            <p className="text-body text-success">{copy.result.mine.claimed}</p>
           ) : null}
 
           {(status === "refund_diff" || status === "refund_full") && (

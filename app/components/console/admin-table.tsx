@@ -36,17 +36,18 @@ function AdminRow({ id }: { id: CampaignId }) {
 
   return (
     <tr className="border-b border-line">
-      <td className="py-3 pr-4 text-sm font-medium text-ink">
+      <td className="py-3 pr-4 text-body font-medium text-ink">
         {meta.product}
-        <span className="ml-2 text-ink-3">{meta.batchName}</span>
+        <span className="num ml-2 text-ink-3">{meta.batchName}</span>
       </td>
-      <td className="py-3 pr-4 text-sm">
+      <td className="py-3 pr-4 text-body">
+        {/* N-9: one badge grammar — uppercase, outline, semantic colors */}
         <span
           className={`tag ${
             campaign.state === "Open"
               ? "tag-success"
               : campaign.state === "Succeeded" || campaign.state === "PaidOut"
-                ? "tag-accent"
+                ? "tag-success"
                 : campaign.state === "Failed"
                   ? "tag-danger"
                   : "tag-neutral"
@@ -55,36 +56,47 @@ function AdminRow({ id }: { id: CampaignId }) {
           {stateLabel}
         </span>
       </td>
-      <td className="num py-3 pr-4 text-right text-sm text-ink">
+      <td className="num py-3 pr-4 text-right text-body text-ink">
         {campaign.ordersLength?.toString() ?? "—"}
       </td>
-      <td className="py-3 pr-4 text-sm text-ink-2">
+      <td className="num py-3 pr-4 text-body text-ink-2">
         {quoteText || copy.console.admin.noQuotes}
       </td>
-      <td className="py-3 pr-4 text-sm">
+      <td className="py-3 pr-4 text-body">
         {campaign.state === "Open" ? (
           feasible ? (
-            <span className="text-success">
-              {copy.console.admin.clearing
-                .replace("{price}", formatInj(clearingPrice ?? 0n))
-                .replace("{count}", winnerCount?.toString() ?? "—")}
+            // N-12: feasibility in tables reads as ink + a solid square, not
+            // semantic green.
+            <span className="inline-flex items-center gap-1.5">
+              <span className="sq bg-ink-1" aria-hidden="true" />
+              <span className="num text-ink">
+                {copy.console.admin.clearing
+                  .replace("{price}", formatInj(clearingPrice ?? 0n))
+                  .replace("{count}", winnerCount?.toString() ?? "—")}
+              </span>
             </span>
           ) : (
-            <span className="text-warn">{copy.batch.card.previewInfeasible}</span>
+            // N-9: short badge + micro explanation instead of one long sentence.
+            <span>
+              <span className="tag tag-warn">{copy.status.badge.belowMoq}</span>
+              <span className="mt-1 block text-micro text-ink-3">
+                {copy.batch.card.previewInfeasible}
+              </span>
+            </span>
           )
         ) : campaign.state === "Succeeded" || campaign.state === "PaidOut" ? (
-          <span className="text-accent">
+          <span className="num text-accent">
             {copy.console.admin.cleared
               .replace("{price}", formatInj(campaign.clearingPrice ?? 0n))
               .replace("{count}", campaign.winnerCount?.toString() ?? "—")}
           </span>
         ) : campaign.state === "Failed" ? (
-          <span className="text-danger">{copy.result.failure}</span>
+          <span className="tag tag-danger">{copy.status.failed}</span>
         ) : (
           <span className="text-ink-3">—</span>
         )}
       </td>
-      <td className="num py-3 pr-4 text-right text-sm text-ink-2">
+      <td className="num py-3 pr-4 text-right text-body text-ink-2">
         {campaign.deadline ? (
           <span className="inline-flex items-center gap-1.5">
             <Clock size={12} />
@@ -103,14 +115,14 @@ export function AdminTable() {
 
   return (
     <section className="surface p-5 lg:p-6">
-      <h2 className="text-base font-semibold text-ink">
+      <h2 className="text-h2 text-ink">
         {copy.console.admin.title}
       </h2>
 
       <div className="mt-5 overflow-x-auto">
         <table className="w-full min-w-[640px] text-left">
           <thead>
-            <tr className="bg-paper-2 text-micro uppercase tracking-wide text-ink-3">
+            <tr className="bg-paper-2 text-label text-ink-3">
               <th className="py-2 pr-4 pl-4 text-left font-medium">{copy.console.admin.headers.batch}</th>
               <th className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.state}</th>
               <th className="py-2 pr-4 text-right font-medium">{copy.console.admin.headers.orders}</th>
@@ -127,7 +139,7 @@ export function AdminTable() {
         </table>
       </div>
 
-      <p className="mt-4 text-xs text-ink-3">{copy.console.admin.note}</p>
+      <p className="mt-4 text-micro text-ink-3">{copy.console.admin.note}</p>
     </section>
   );
 }

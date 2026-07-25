@@ -7,6 +7,7 @@ import { http } from "viem";
 import { injected } from "wagmi/connectors";
 import { CHAIN_ID, RPC_URL } from "@/app/lib/chain/config";
 import { injectiveEvmTestnet } from "@/app/lib/chain/client";
+import { tokens } from "@/app/lib/design-tokens";
 
 const config = createConfig({
   chains: [injectiveEvmTestnet],
@@ -30,8 +31,8 @@ const queryClient = new QueryClient({
 });
 
 const theme = lightTheme({
-  accentColor: "#B23A18",
-  accentColorForeground: "#FCFBF9",
+  accentColor: tokens.accent,
+  accentColorForeground: tokens.paper1,
   borderRadius: "none",
   fontStack: "system",
   overlayBlur: "none",

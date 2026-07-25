@@ -68,7 +68,31 @@ export function formatCountdownParts(
   return getCountdownParts(deadlineSec, Math.floor(Date.now() / 1000));
 }
 
+export type CountdownSpanTemplates = {
+  dhm: string;
+  hm: string;
+  m: string;
+};
+
+// Spec 009 §11.2 N-8: omit leading zero units — "0d 17h 26m" renders as
+// "17h 26m". Once days are non-zero the smaller zero units stay visible.
+export function formatCountdownSpan(
+  parts: { dd: number; hh: number; mm: number },
+  templates: CountdownSpanTemplates,
+): string {
+  const template =
+    parts.dd > 0 ? templates.dhm : parts.hh > 0 ? templates.hm : templates.m;
+  return template
+    .replace("{dd}", String(parts.dd))
+    .replace("{hh}", String(parts.hh))
+    .replace("{mm}", String(parts.mm));
+}
+
 export function formatCountdown(deadlineSec: bigint | number | undefined): string {
   const parts = formatCountdownParts(deadlineSec);
-  return `${parts.dd}d ${parts.hh}h ${parts.mm}m`;
+  return formatCountdownSpan(parts, {
+    dhm: "{dd}d {hh}h {mm}m",
+    hm: "{hh}h {mm}m",
+    m: "{mm}m",
+  });
 }

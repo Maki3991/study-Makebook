@@ -8,10 +8,10 @@ import { LanguageSwitch } from "./language-switch";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 
 const NAV_LINK_CLASS =
-  "inline-flex shrink-0 items-center whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-ink-2 transition-colors hover:bg-surface hover:text-ink";
+  "inline-flex shrink-0 items-center whitespace-nowrap rounded-md px-3 py-2 text-body font-medium text-ink-2 transition-colors hover:bg-surface hover:text-ink";
 
 const DRAWER_LINK_CLASS =
-  "flex items-center whitespace-nowrap border-b border-line py-3 text-sm font-medium text-ink";
+  "flex items-center whitespace-nowrap border-b border-line py-3 text-body font-medium text-ink";
 
 export function TopBar() {
   const copy = useCopy();

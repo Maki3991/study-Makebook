@@ -31,14 +31,14 @@ export function BrandByline({ id }: { id: CampaignId }) {
 
   return (
     <section className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-      <p className="text-sm text-ink-2">
+      <p className="text-body text-ink-2">
         {copy.campaign.brand.byline.replace("{brand}", meta.brandName)}
       </p>
       <ProvenanceTag type="DEMO BRAND" />
       <button
         type="button"
         onClick={handleCopy}
-        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-ink-2 transition-colors hover:bg-surface hover:text-ink"
+        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-body font-medium text-ink-2 transition-colors hover:bg-surface hover:text-ink"
       >
         <span className="num">{truncateAddress(creator)}</span>
         {copied ? <Check size={14} /> : <Copy size={14} />}

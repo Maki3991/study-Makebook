@@ -17,7 +17,11 @@ import { ProvenanceTag } from "@/app/components/site/provenance-tag";
 import { LiveTicker } from "@/app/components/site/live-ticker";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 import { FIXTURE_RESULT } from "@/lib/ai/fixture";
-import { formatInj, getCountdownParts } from "@/app/lib/chain/format";
+import {
+  formatCountdownSpan,
+  formatInj,
+  getCountdownParts,
+} from "@/app/lib/chain/format";
 import { FAUCET_URL } from "@/app/lib/chain/config";
 
 function StatusTag({
@@ -44,6 +48,7 @@ function StatusTag({
   const isPastDeadline =
     state === "Open" && deadline !== undefined && now >= Number(deadline);
 
+  // N-9: badges are the only status grammar — semantic colors, never accent.
   let label: string = copy.status.open;
   let variant: string = "tag-success";
 
@@ -56,7 +61,7 @@ function StatusTag({
     variant = "tag-neutral";
   } else if (state === "Succeeded" || state === "PaidOut") {
     label = copy.status.succeeded;
-    variant = "tag-accent";
+    variant = "tag-success";
   } else if (state === "Failed") {
     label = copy.status.failed;
     variant = "tag-danger";
@@ -102,8 +107,8 @@ function BatchCard({ id }: { id: CampaignId }) {
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-ink">{meta.product}</h3>
-            <p className="mt-0.5 text-sm text-ink-2">
+            <h3 className="text-h2 text-ink">{meta.product}</h3>
+            <p className="num mt-0.5 text-body text-ink-2">
               {meta.batchName}
               {id === "failure" && (
                 <span className="ml-2 text-ink-3">({copy.batch.b.note})</span>
@@ -114,7 +119,7 @@ function BatchCard({ id }: { id: CampaignId }) {
         </div>
 
         <div className="mt-4 space-y-2">
-          <p className="text-sm text-ink-2">
+          <p className="num text-body text-ink-2">
             {copy.batch.card.orders.replace(
               "{n}",
               campaign.ordersLength?.toString() ?? "—",
@@ -124,14 +129,14 @@ function BatchCard({ id }: { id: CampaignId }) {
           {campaign.state === "Open" &&
           campaign.deadline !== undefined &&
           !getCountdownParts(campaign.deadline, now).expired ? (
-            <p className="text-sm text-ink-3">
+            <p className="num text-body text-ink-3">
               <Clock size={14} className="mr-1 inline-block" />
               {(() => {
                 const parts = getCountdownParts(campaign.deadline, now);
-                return copy.status.countdown
-                  .replace("{dd}", String(parts.dd))
-                  .replace("{hh}", String(parts.hh))
-                  .replace("{mm}", String(parts.mm));
+                return copy.status.countdownUntil.replace(
+                  "{span}",
+                  formatCountdownSpan(parts, copy.status.countdown),
+                );
               })()}
             </p>
           ) : null}
@@ -143,21 +148,33 @@ function BatchCard({ id }: { id: CampaignId }) {
               aria-label={copy.global.a11y.loading}
             />
           ) : campaign.isError ? (
-            <p className="text-sm text-danger">{copy.errors.RpcError}</p>
+            <p className="text-body text-danger">{copy.errors.RpcError}</p>
           ) : campaign.state === "Open" ? (
+            // N-9: the badge carries only the short status; the longer
+            // explanation drops to a micro line underneath.
             feasible ? (
-              <p className="text-sm text-success">
-                {copy.batch.card.preview
-                  .replace("{price}", formatInj(clearingPrice ?? 0n))
-                  .replace("{count}", winnerCount?.toString() ?? "—")}
-              </p>
+              <div>
+                <span className="tag tag-success">
+                  {copy.status.badge.canClear}
+                </span>
+                <p className="num mt-2 text-micro text-ink-3">
+                  {copy.batch.card.preview
+                    .replace("{price}", formatInj(clearingPrice ?? 0n))
+                    .replace("{count}", winnerCount?.toString() ?? "—")}
+                </p>
+              </div>
             ) : (
-              <p className="text-sm text-warn">
-                {copy.batch.card.previewInfeasible}
-              </p>
+              <div>
+                <span className="tag tag-warn">
+                  {copy.status.badge.belowMoq}
+                </span>
+                <p className="mt-2 text-micro text-ink-3">
+                  {copy.batch.card.previewInfeasible}
+                </p>
+              </div>
             )
           ) : (
-            <p className="text-sm text-ink-3">{copy.batch.card.closed}</p>
+            <p className="text-body text-ink-3">{copy.batch.card.closed}</p>
           )}
         </div>
 
@@ -201,10 +218,10 @@ function PreviewCard({
       </div>
       <div className="flex flex-1 flex-col p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-base font-semibold text-ink">{title}</h3>
+          <h3 className="text-h2 text-ink">{title}</h3>
           <ProvenanceTag type="AI GENERATED" />
         </div>
-        <p className="mt-4 text-xs text-ink-3">
+        <p className="mt-4 text-micro text-ink-3">
           {copy.preview.from.replace("{ids}", commentIds.join(", "))}
         </p>
       </div>
@@ -256,10 +273,10 @@ function StepBar() {
                 {step.done ? <Check size={20} /> : <step.icon size={20} />}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-medium text-ink-3">
+                <p className="text-micro font-medium text-ink-3">
                   {copy.home.steps.stepLabel.replace("{n}", String(step.number))}
                 </p>
-                <p className="mt-0.5 text-sm font-medium text-ink">
+                <p className="mt-0.5 text-body font-medium text-ink">
                   {step.text}
                 </p>
               </div>
@@ -305,7 +322,7 @@ function HeroDimensionLines({ copy }: { copy: ReturnType<typeof useCopy> }) {
         <div className="absolute left-0 top-[-2px] h-1 w-px bg-rule-2" />
         <div className="absolute right-0 top-[-2px] h-1 w-px bg-rule-2" />
       </div>
-      <span className="num absolute left-1/2 top-[3%] -translate-x-1/2 text-micro text-ink-3">
+      <span className="num absolute left-1/2 top-[3%] -translate-x-1/2 text-label text-ink-3">
         280 mm
       </span>
 
@@ -314,18 +331,18 @@ function HeroDimensionLines({ copy }: { copy: ReturnType<typeof useCopy> }) {
         <div className="absolute left-[-2px] top-0 h-px w-1 bg-rule-2" />
         <div className="absolute bottom-0 left-[-2px] h-px w-1 bg-rule-2" />
       </div>
-      <span className="num absolute right-[2%] top-1/2 -translate-y-1/2 text-micro text-ink-3 [writing-mode:vertical-rl]">
+      <span className="num absolute right-[2%] top-1/2 -translate-y-1/2 text-label text-ink-3 [writing-mode:vertical-rl]">
         190 mm
       </span>
 
       {/* Feature callouts — use the same localized spec values as the product card. */}
-      <span className="num absolute left-[8%] top-[28%] text-micro text-ink-3">
+      <span className="num absolute left-[8%] top-[28%] text-label text-ink-3">
         8L
       </span>
-      <span className="num absolute right-[10%] top-[62%] text-micro text-ink-3">
+      <span className="num absolute right-[10%] top-[62%] text-label text-ink-3">
         {values.black ?? "Black"}
       </span>
-      <span className="num absolute left-[10%] top-[78%] text-micro text-ink-3">
+      <span className="num absolute left-[10%] top-[78%] text-label text-ink-3">
         {values.removable ?? "Removable"}
       </span>
     </div>
@@ -339,9 +356,8 @@ export default function Home() {
     <main className="page">
       {/* Hero — mobile padding stays tight (N-5): the CTA must sit inside the
           first viewport. Desktop keeps the --spacing-7 section rhythm. */}
-      <section className="relative overflow-hidden py-5 lg:py-24">
-        <div className="ambient-grid" aria-hidden="true" />
-        <div className="relative grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+      <section className="py-5 lg:py-24">
+        <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
           <div>
             <h1 className="max-w-xl text-h1">{copy.home.hero.title}</h1>
             <p className="mt-5 max-w-lg text-body text-ink-2">
@@ -373,7 +389,7 @@ export default function Home() {
       {/* Steps */}
       <section className="section">
         <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-base font-semibold text-ink">
+          <h2 className="text-h2 text-ink">
             {copy.home.steps.title}
           </h2>
         </div>
@@ -382,7 +398,7 @@ export default function Home() {
 
       {/* Active batches */}
       <section className="section">
-        <h2 className="text-base font-semibold text-ink">
+        <h2 className="text-h2 text-ink">
           {copy.home.batches.title}
         </h2>
         <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -394,8 +410,8 @@ export default function Home() {
 
       {/* Preview — kept to 2 columns so the row is balanced */}
       <section className="section">
-        <h2 className="text-base font-semibold text-ink">{copy.preview.title}</h2>
-        <p className="mt-1 text-sm text-ink-2">{copy.preview.note}</p>
+        <h2 className="text-h2 text-ink">{copy.preview.title}</h2>
+        <p className="mt-1 text-body text-ink-2">{copy.preview.note}</p>
         <div className="mt-5 grid gap-5 md:grid-cols-2">
           <PreviewCard
             title={FIXTURE_RESULT.candidates[1].title}

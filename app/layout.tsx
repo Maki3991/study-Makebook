@@ -6,6 +6,7 @@ import { TopBar } from "@/app/components/site/top-bar";
 import { TestnetBanner } from "@/app/components/site/testnet-banner";
 import { LanguageProvider } from "@/app/lib/i18n/context";
 import { Fonts } from "@/app/components/site/fonts";
+import { tokens } from "@/app/lib/design-tokens";
 
 export const metadata: Metadata = {
   title: "MAKEBOOK — Production Demand Clearing",
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#F5F3EF",
+  themeColor: tokens.paper0,
 };
 
 export default function RootLayout({
@@ -40,7 +41,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="min-h-dvh bg-canvas text-ink" data-ambient="on">
+      <body className="min-h-dvh bg-canvas text-ink">
         <Fonts />
         <LanguageProvider>
           <ProvidersShell>

@@ -101,7 +101,7 @@ export function FundsSplit({ id }: { id: CampaignId }) {
 
   return (
     <section className="section">
-      <h2 className="text-base font-semibold text-ink">
+      <h2 className="text-h2 text-ink">
         {copy.fundsSplit.title}
       </h2>
 
@@ -127,7 +127,7 @@ export function FundsSplit({ id }: { id: CampaignId }) {
               />
             ))}
           </div>
-          <div className="mt-1 flex justify-between text-micro text-ink-3">
+          <div className="num mt-1 flex justify-between text-micro text-ink-3">
             <span>0%</span>
             <span>25%</span>
             <span>50%</span>
@@ -137,7 +137,7 @@ export function FundsSplit({ id }: { id: CampaignId }) {
 
           {/* Role / amount / share columns */}
           <div className="mt-4">
-            <div className="grid grid-cols-3 gap-4 text-micro uppercase tracking-wide text-ink-3">
+            <div className="grid grid-cols-3 gap-4 text-label text-ink-3">
               <span>{copy.fundsSplit.columns.role}</span>
               <span className="text-right">{copy.fundsSplit.columns.amount}</span>
               <span className="text-right">{copy.fundsSplit.columns.share}</span>
@@ -148,14 +148,14 @@ export function FundsSplit({ id }: { id: CampaignId }) {
                   key={seg.role}
                   className="grid grid-cols-3 items-baseline gap-4 py-2"
                 >
-                  <span className="text-sm text-ink">{seg.role}</span>
+                  <span className="text-body text-ink">{seg.role}</span>
                   <span className="text-right">
-                    <span className="num text-sm text-ink">
+                    <span className="num text-body text-ink">
                       {formatInj(seg.amount)}
                     </span>
-                    <span className="text-xs text-ink-3"> test INJ</span>
+                    <span className="text-micro text-ink-3"> test INJ</span>
                   </span>
-                  <span className="num text-right text-sm text-ink-2">
+                  <span className="num text-right text-body text-ink-2">
                     {sharePct(seg.amount, split.retail)}
                   </span>
                 </div>
@@ -163,17 +163,17 @@ export function FundsSplit({ id }: { id: CampaignId }) {
             </div>
           </div>
 
-          <p className="mt-3 text-xs text-ink-3">
+          <p className="mt-3 text-micro text-ink-3">
             {state === "Succeeded" || state === "PaidOut"
               ? copy.fundsSplit.basisSettled
               : copy.fundsSplit.basisPreview}
           </p>
-          <p className="mt-2 text-sm text-ink-2">{copy.fundsSplit.note}</p>
+          <p className="mt-2 text-body text-ink-2">{copy.fundsSplit.note}</p>
         </div>
       )}
 
       {showTotals && (
-        <p className="mt-4 text-sm text-ink-2">
+        <p className="num mt-4 text-body text-ink-2">
           {copy.fundsSplit.totals
             .replace("{count}", campaign.winnerCount!.toString())
             .replace("{factory}", formatInj(campaign.factoryReceivable!))

@@ -151,17 +151,17 @@ export function CompilePanel() {
 
   return (
     <section className="surface p-5 lg:p-6">
-      <h2 className="text-base font-semibold text-ink">
+      <h2 className="text-h2 text-ink">
         {copy.console.compile.title}
       </h2>
 
       <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-ink-2">{copy.console.compile.sourceLabel}</span>
+          <span className="text-body text-ink-2">{copy.console.compile.sourceLabel}</span>
           <select
             value={source}
             onChange={(e) => setSource(e.target.value as CommentSource)}
-            className="input h-9 min-h-0 px-3 text-sm"
+            className="input h-9 min-h-0 px-3 text-body"
           >
             <option value="camera">{copy.console.compile.sourceCamera}</option>
             <option value="bracelet">{copy.console.compile.sourceBracelet}</option>
@@ -189,10 +189,10 @@ export function CompilePanel() {
         </button>
 
         {source === "paste" && pasteLines.length < PASTE_MIN && (
-          <p className="text-xs text-warn">{copy.console.compile.pasteTooFew}</p>
+          <p className="text-micro text-warn">{copy.console.compile.pasteTooFew}</p>
         )}
         {source === "paste" && pasteLines.length > PASTE_MAX && (
-          <p className="text-xs text-warn">{copy.console.compile.pasteTooMany}</p>
+          <p className="text-micro text-warn">{copy.console.compile.pasteTooMany}</p>
         )}
       </div>
 
@@ -202,10 +202,10 @@ export function CompilePanel() {
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
             placeholder={copy.console.compile.pasteHint}
-            className="mt-3 h-64 w-full rounded-md border border-line bg-canvas p-3 font-mono text-xs text-ink"
+            className="mt-3 h-64 w-full rounded-md border border-line bg-canvas p-3 font-mono text-micro text-ink"
             spellCheck={false}
           />
-          <p className="mt-1 text-xs text-ink-3">
+          <p className="mt-1 text-micro text-ink-3">
             {copy.console.compile.pasteCount.replace(
               "{n}",
               String(pasteLines.length),
@@ -214,25 +214,25 @@ export function CompilePanel() {
         </>
       )}
 
-      <p className="mt-3 text-xs text-ink-3">
+      <p className="mt-3 text-micro text-ink-3">
         {copy.console.compile.noWallet}
       </p>
 
       {error && (
-        <p className="mt-4 text-sm text-danger">{error}</p>
+        <p className="mt-4 text-body text-danger">{error}</p>
       )}
 
       {output && (
         <div className="mt-6 space-y-4">
           {output.fixture && (
-            <div className="flex items-center gap-2 text-sm text-warn">
+            <div className="flex items-center gap-2 text-body text-warn">
               <AlertTriangle size={16} />
               {copy.console.compile.fixture}
               {output.error && <span className="text-ink-3">— {output.error}</span>}
             </div>
           )}
 
-          <p className="text-xs text-ink-3">
+          <p className="text-micro text-ink-3">
             {copy.console.compile.stats
               .replace("{valid}", String(output.stats.valid))
               .replace("{candidates}", String(output.result.candidates.length))}
@@ -245,7 +245,7 @@ export function CompilePanel() {
                 className="border border-line rounded-md p-4"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-sm font-semibold text-ink">
+                  <h3 className="text-body font-semibold text-ink">
                     {candidate.title}
                   </h3>
                   <span
@@ -263,7 +263,7 @@ export function CompilePanel() {
                   </span>
                 </div>
 
-                <p className="mt-2 text-xs text-ink-2 line-clamp-2">
+                <p className="mt-2 text-micro text-ink-2 line-clamp-2">
                   {candidate.problem}
                 </p>
 
@@ -271,7 +271,7 @@ export function CompilePanel() {
                   {candidate.specs.map((spec, sidx) => (
                     <div
                       key={sidx}
-                      className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                      className="flex flex-wrap items-center justify-between gap-2 text-micro"
                     >
                       <span className="text-ink-2">
                         {spec.key}: <span className="font-medium text-ink">{spec.value}</span>
@@ -303,10 +303,10 @@ export function CompilePanel() {
 
       {editingManifest && (
         <div className="mt-6 border-t border-line pt-5">
-          <h3 className="text-sm font-semibold text-ink">
+          <h3 className="text-body font-semibold text-ink">
             {copy.console.compile.humanConfirmTitle}
           </h3>
-          <p className="mt-1 text-xs text-ink-2">
+          <p className="mt-1 text-micro text-ink-2">
             {copy.console.compile.editJsonHint}
           </p>
           <textarea
@@ -314,11 +314,11 @@ export function CompilePanel() {
             onChange={(e) =>
               setEditingManifest({ ...editingManifest, json: e.target.value })
             }
-            className="mt-3 h-64 w-full rounded-md border border-line bg-canvas p-3 font-mono text-xs text-ink"
+            className="mt-3 h-64 w-full rounded-md border border-line bg-canvas p-3 font-mono text-micro text-ink"
             spellCheck={false}
           />
           {confirmError && (
-            <p className="mt-2 text-sm text-danger">{confirmError}</p>
+            <p className="mt-2 text-body text-danger">{confirmError}</p>
           )}
           <button
             type="button"
@@ -333,7 +333,7 @@ export function CompilePanel() {
 
       {confirmed && (
         <div className="mt-6 border-t border-line pt-5">
-          <div className="flex items-center gap-2 text-sm font-medium">
+          <div className="flex items-center gap-2 text-body font-medium">
             {confirmed.anchor === null ? (
               <>
                 <Check size={16} className="text-ink-3" />
@@ -364,10 +364,10 @@ export function CompilePanel() {
           </div>
 
           <details className="mt-3">
-            <summary className="cursor-pointer text-xs text-ink-3">
+            <summary className="cursor-pointer text-micro text-ink-3">
               {copy.console.compile.viewJson}
             </summary>
-            <pre className="mt-2 max-h-64 overflow-auto rounded-md bg-surface p-3 text-xs text-ink-2">
+            <pre className="mt-2 max-h-64 overflow-auto rounded-md bg-surface p-3 text-micro text-ink-2">
               {JSON.stringify(confirmed.manifest, null, 2)}
             </pre>
           </details>

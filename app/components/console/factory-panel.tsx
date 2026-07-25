@@ -56,14 +56,14 @@ function FactoryCampaignCard({
     <article className="border border-line rounded-md p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-ink">{meta.product}</h3>
-          <p className="mt-0.5 text-xs text-ink-2">{meta.batchName}</p>
-          <p className="mt-3 text-sm text-ink-2">
+          <h3 className="text-body font-semibold text-ink">{meta.product}</h3>
+          <p className="num mt-0.5 text-micro text-ink-2">{meta.batchName}</p>
+          <p className="mt-3 text-body text-ink-2">
             {copy.console.factory.title}:{" "}
             <span className="num text-ink">{truncateAddress(address)}</span>
           </p>
           <p
-            className={`mt-2 text-sm font-medium ${
+            className={`mt-2 text-body font-medium ${
               state === "Succeeded" || state === "PaidOut"
                 ? isSelected
                   ? "text-success"
@@ -110,7 +110,7 @@ function FactoryCampaignCard({
               href={explorerTx(claim.result.txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-accent hover:underline"
+              className="inline-flex items-center gap-1 text-body text-accent hover:underline"
             >
               {copy.orders.viewTx}
               <ExternalLink size={14} />
@@ -120,7 +120,7 @@ function FactoryCampaignCard({
       </div>
 
       {claim.error && (
-        <p className="mt-3 text-sm text-danger">{claim.error}</p>
+        <p className="mt-3 text-body text-danger">{claim.error}</p>
       )}
     </article>
   );
@@ -137,7 +137,7 @@ export function FactoryPanel() {
 
   return (
     <section className="surface p-5 lg:p-6">
-      <h2 className="text-base font-semibold text-ink">
+      <h2 className="text-h2 text-ink">
         {copy.console.factory.title}
       </h2>
 

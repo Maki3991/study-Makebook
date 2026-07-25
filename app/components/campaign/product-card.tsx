@@ -40,16 +40,16 @@ function ProductDimensionLines({
       </div>
 
       {/* Labels */}
-      <span className="num absolute left-[8%] top-[9%] text-micro text-ink-3">
+      <span className="num absolute left-[8%] top-[9%] text-label text-ink-3">
         8L
       </span>
-      <span className="num absolute right-[8%] top-[36%] text-micro text-ink-3">
+      <span className="num absolute right-[8%] top-[36%] text-label text-ink-3">
         {values.black ?? "Black"}
       </span>
-      <span className="num absolute left-[10%] top-[58%] text-micro text-ink-3">
+      <span className="num absolute left-[10%] top-[58%] text-label text-ink-3">
         {values.removable ?? "Removable"}
       </span>
-      <span className="num absolute right-[10%] top-[78%] text-micro text-ink-3">
+      <span className="num absolute right-[10%] top-[78%] text-label text-ink-3">
         {batchName}
       </span>
     </div>
@@ -85,14 +85,14 @@ export function ProductCard({ id }: { id: CampaignId }) {
 
         <div className="flex flex-1 flex-col p-5 lg:p-6">
           <div>
-            <h1 className="text-h2 font-semibold leading-tight tracking-tight text-ink lg:text-h1">
+            <h1 className="text-h2 text-ink lg:text-h1">
               {meta.product}
             </h1>
-            <p className="mt-1 text-sm text-ink-2">{meta.batchName}</p>
+            <p className="num mt-1 text-body text-ink-2">{meta.batchName}</p>
           </div>
 
           <div className="mt-6">
-            <p className="text-xs font-medium uppercase tracking-wide text-ink-3">
+            <p className="text-label text-ink-3">
               {copy.product.specsTitle}
             </p>
             <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
@@ -106,8 +106,10 @@ export function ProductCard({ id }: { id: CampaignId }) {
                   ] ?? spec.value;
                 return (
                   <div key={idx}>
-                    <dt className="text-xs text-ink-3">{keyLabel}</dt>
-                    <dd className="mt-0.5 text-sm font-medium text-ink">
+                    <dt className="text-micro text-ink-3">{keyLabel}</dt>
+                    {/* N-7: spec values are mono + tabular like every other
+                        numeric/factual readout on the page. */}
+                    <dd className="num mt-0.5 text-body font-medium text-ink">
                       {valueLabel}
                     </dd>
                   </div>
@@ -125,18 +127,18 @@ export function ProductCard({ id }: { id: CampaignId }) {
                   {data.hashOk ? (
                     <ProvenanceTag type="ONCHAIN" />
                   ) : (
-                    <p className="flex items-center gap-1.5 text-xs text-danger">
+                    <p className="flex items-center gap-1.5 text-micro text-danger">
                       <AlertTriangle size={14} />
                       {copy.product.hashBad}
                     </p>
                   )}
                 </>
               ) : manifest.isLoading ? (
-                <span className="text-xs text-ink-3">
+                <span className="text-micro text-ink-3">
                   {copy.product.manifestLoading}
                 </span>
               ) : manifest.isError ? (
-                <span className="text-xs text-danger">
+                <span className="text-micro text-danger">
                   {copy.product.manifestError}
                 </span>
               ) : null}
@@ -161,10 +163,10 @@ export function ProductCard({ id }: { id: CampaignId }) {
                 <div className="animate-fade-in mt-3 border border-line p-4">
                   <div className="space-y-4">
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-ink-3">
+                      <p className="text-label text-ink-3">
                         {copy.product.trust.manifestTitle}
                       </p>
-                      <pre className="num mt-2 max-h-64 overflow-auto bg-canvas p-3 text-xs text-ink-2">
+                      <pre className="num mt-2 max-h-64 overflow-auto bg-canvas p-3 text-micro text-ink-2">
                         {data
                           ? JSON.stringify(data.manifest, null, 2)
                           : manifest.isError
@@ -174,24 +176,24 @@ export function ProductCard({ id }: { id: CampaignId }) {
                     </div>
 
                     <div>
-                      <p className="text-xs text-ink-2">
+                      <p className="text-micro text-ink-2">
                         {copy.product.trust.canonicalNote}
                       </p>
-                      <pre className="num mt-1 overflow-x-auto text-xs text-ink">
+                      <pre className="num mt-1 overflow-x-auto text-micro text-ink">
                         {data?.canonicalHash ?? "—"}
                       </pre>
                     </div>
 
                     <div>
-                      <p className="text-xs text-ink-2">
+                      <p className="text-micro text-ink-2">
                         {copy.product.trust.onchainNote}
                       </p>
-                      <pre className="num mt-1 overflow-x-auto text-xs text-ink">
+                      <pre className="num mt-1 overflow-x-auto text-micro text-ink">
                         {campaign.manifestHash ?? "—"}
                       </pre>
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm font-medium">
+                    <div className="flex items-center gap-2 text-body font-medium">
                       {data ? (
                         data.hashOk ? (
                           <>

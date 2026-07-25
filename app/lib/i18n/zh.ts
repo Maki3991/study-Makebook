@@ -60,8 +60,17 @@ export const zh = {
       escrowed: "链上托管",
       escrowedValue: "{amount} test INJ",
       untilDeadline: "距截止",
-      countdown: "{dd}天{hh}时{mm}分",
     },
+  },
+
+  provenance: {
+    onchain: "链上",
+    aiGenerated: "AI 生成",
+    humanConfirmed: "人工确认",
+    demoFactory: "演示工厂",
+    demoBrand: "演示品牌",
+    offchainDemo: "链下演示",
+    testnet: "测试网",
   },
 
   batch: {
@@ -88,10 +97,26 @@ export const zh = {
     closed: "已截止",
     succeeded: "已成团",
     failed: "未成团",
-    countdown: "距截止 {dd}天{hh}时{mm}分",
+    countdownUntil: "距截止 {span}",
+    countdown: {
+      dhm: "{dd}天{hh}时{mm}分",
+      hm: "{hh}时{mm}分",
+      m: "{mm}分",
+    },
+    badge: {
+      canClear: "可成团",
+      belowMoq: "未满 MOQ",
+    },
     orders: "{n}/50 单",
     ordersLabel: "订单数",
-    currentPreviewLabel: "当前预览",
+  },
+
+  monument: {
+    previewLabel: "统一清算价 · 若现在截止的预览",
+    settledLabel: "统一清算价 · 清算结果",
+    unit: "test INJ",
+    context: "{orders} 单中 {winners} 单可成交 · {factory} · MOQ {moq}",
+    contextSettled: "{orders} 单中 {winners} 单成交 · {factory} · MOQ {moq}",
   },
 
   product: {

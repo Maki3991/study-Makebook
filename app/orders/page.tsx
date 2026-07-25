@@ -17,10 +17,10 @@ function ConnectEmptyState() {
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
         <Wallet size={24} />
       </div>
-      <h2 className="mt-5 text-base font-semibold text-ink">
+      <h2 className="mt-5 text-h2 text-ink">
         {copy.orders.empty.connect}
       </h2>
-      <p className="mt-2 max-w-sm text-sm text-ink-2">
+      <p className="mt-2 max-w-sm text-body text-ink-2">
         {copy.orders.empty.connectBody}
       </p>
       <div className="mt-5">
@@ -35,7 +35,7 @@ function NoOrdersState() {
 
   return (
     <div className="surface flex flex-col items-center justify-center py-16 text-center">
-      <h2 className="text-base font-semibold text-ink">
+      <h2 className="text-h2 text-ink">
         {copy.orders.empty.none}
       </h2>
       <Link
@@ -88,10 +88,10 @@ export default function OrdersPage() {
     <main className="page py-10 lg:py-16">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-h2 font-semibold leading-tight text-ink lg:text-h1">
+          <h1 className="text-h2 text-ink lg:text-h1">
             {copy.global.nav.orders}
           </h1>
-          <p className="mt-1 text-sm text-ink-2">{copy.orders.subtitle}</p>
+          <p className="mt-1 text-body text-ink-2">{copy.orders.subtitle}</p>
         </div>
       </div>
 

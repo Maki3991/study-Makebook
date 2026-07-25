@@ -61,8 +61,19 @@ export const copy = {
       escrowed: "Escrowed",
       escrowedValue: "{amount} test INJ",
       untilDeadline: "Until deadline",
-      countdown: "{dd}d {hh}h {mm}m",
     },
+  },
+
+  // Spec 009 §1.7: provenance pills go through the dictionary — the enum value
+  // itself is never rendered as visible text.
+  provenance: {
+    onchain: "ONCHAIN",
+    aiGenerated: "AI GENERATED",
+    humanConfirmed: "HUMAN CONFIRMED",
+    demoFactory: "DEMO FACTORY",
+    demoBrand: "DEMO BRAND",
+    offchainDemo: "OFF-CHAIN DEMO",
+    testnet: "TESTNET",
   },
 
   batch: {
@@ -91,10 +102,33 @@ export const copy = {
     closed: "Closed",
     succeeded: "Cleared",
     failed: "Did not clear",
-    countdown: "{dd}d {hh}h {mm}m until deadline",
+    // N-8: leading zero units are omitted — pick the template by magnitude.
+    countdownUntil: "{span} until deadline",
+    countdown: {
+      dhm: "{dd}d {hh}h {mm}m",
+      hm: "{hh}h {mm}m",
+      m: "{mm}m",
+    },
+    // N-9: short badge-only status labels; long explanations drop to a micro
+    // line next to the badge instead of living inside it.
+    badge: {
+      canClear: "Can clear",
+      belowMoq: "Below MOQ",
+    },
     orders: "{n}/50 orders",
     ordersLabel: "orders",
-    currentPreviewLabel: "current preview",
+  },
+
+  // Spec 009 §11.2 N-2: clearing-price monument at the top of the campaign
+  // page. The preview label must frame the number as hypothetical — it is
+  // never presented as a final result before settlement.
+  monument: {
+    previewLabel: "Clearing price · preview if it closed now",
+    settledLabel: "Final clearing price",
+    unit: "test INJ",
+    context: "{winners} of {orders} orders clearing · {factory} · MOQ {moq}",
+    contextSettled:
+      "{winners} of {orders} orders cleared · {factory} · MOQ {moq}",
   },
 
   product: {

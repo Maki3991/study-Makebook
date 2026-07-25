@@ -7,15 +7,19 @@ import {
 } from "@/app/lib/chain/hooks";
 import { CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
 import { useCopy } from "@/app/lib/i18n/use-copy";
-import { formatInj, getCountdownParts } from "@/app/lib/chain/format";
+import {
+  formatCountdownSpan,
+  formatInj,
+  getCountdownParts,
+} from "@/app/lib/chain/format";
 
 const TICKER_IDS: CampaignId[] = ["success", "failure", "bracelet"];
 
 function TickerCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex-1 px-5 py-5 md:px-6 md:py-6">
-      <p className="text-xs uppercase tracking-wide text-ink-3">{label}</p>
-      <p className="num mt-0.5 text-sm font-medium text-ink">{value}</p>
+      <p className="text-label text-ink-3">{label}</p>
+      <p className="num mt-0.5 text-body font-medium text-ink">{value}</p>
     </div>
   );
 }
@@ -52,12 +56,10 @@ export function LiveTicker() {
   let countdownValue = "—";
   if (deadline !== undefined) {
     const parts = getCountdownParts(deadline, now);
+    // N-8: leading zero units are omitted inside formatCountdownSpan.
     countdownValue = parts.expired
       ? copy.status.closed
-      : copy.home.ticker.countdown
-          .replace("{dd}", String(parts.dd))
-          .replace("{hh}", String(parts.hh))
-          .replace("{mm}", String(parts.mm));
+      : formatCountdownSpan(parts, copy.status.countdown);
   }
 
   return (
