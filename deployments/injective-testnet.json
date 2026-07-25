@@ -26,11 +26,11 @@
     "feeBps": 200
   },
   "bracelet": {
-    "address": "0x8Bb41E7195eD2b440c868BBa1d3d1146970dC691",
+    "address": "0x0c4A1bee6B352C7916560774BBda408c3E47d595",
     "manifestHash": "0x1c503957667bb009a161c7d9bfe70e59db01c61c80920faae60f98a1e3c958dd",
     "manifestURI": "https://raw.githubusercontent.com/gmy20060609-jpg/ACL-team/main/public/manifests/heritage-bracelet.json",
-    "deadline": 1785024000,
-    "deployBlock": 134615480,
+    "deadline": 1785571630,
+    "deployBlock": 134634908,
     "creator": "0x42a0c1B8fC4e804972Eb522C6C8043Ce72393B0a",
     "feeRecipient": "0x04A47233230bEd2aE963cfA7DCCf4D59B77dE2D3",
     "marginBps": 2500,

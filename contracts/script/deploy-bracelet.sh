@@ -17,7 +17,7 @@ FEE_BPS="${FEE_BPS:-200}"
 
 export MANIFEST_HASH="0x1c503957667bb009a161c7d9bfe70e59db01c61c80920faae60f98a1e3c958dd"
 export MANIFEST_URI="https://raw.githubusercontent.com/gmy20060609-jpg/ACL-team/main/public/manifests/heritage-bracelet.json"
-export DEADLINE="${DEADLINE:-$(( $(date +%s) + 259200 ))}"   # 默认现在 +72h
+export DEADLINE="${DEADLINE_OVERRIDE:-${DEADLINE:-$(( $(date +%s) + 259200 ))}}"   # 默认现在 +72h；.env 里的 DEADLINE 是 FRAME-01 演示批次的，bracelet 重部署用 DEADLINE_OVERRIDE 覆盖
 export OPERATOR_ADDRESS="$($CAST wallet address --private-key "$OPERATOR_KEY")"
 NORTH_ADDRESS="$($CAST wallet address --private-key "$NORTH_KEY")"
 LOOM_ADDRESS="$($CAST wallet address --private-key "$LOOM_KEY")"
