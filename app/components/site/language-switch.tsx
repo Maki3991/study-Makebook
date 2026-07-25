@@ -29,6 +29,15 @@ export function LanguageSwitch({ onSelected }: { onSelected?: () => void }) {
             setLanguage(option.code);
             onSelected?.();
           }}
+          // The "中" label renders on en pages too; without this stack the
+          // CJK subset's unicode-range would match it and pull a 65KB font
+          // onto every en pageview for one glyph. System CJK first, subset
+          // last as the portable fallback (spec 009 §1.5).
+          style={
+            option.code === "zh"
+              ? { fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC Subset", sans-serif' }
+              : undefined
+          }
           className={`whitespace-nowrap px-2 py-1 text-body font-medium transition-colors ${
             language === option.code
               ? "font-semibold text-accent"
