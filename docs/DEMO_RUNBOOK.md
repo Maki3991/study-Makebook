@@ -23,16 +23,16 @@
 3. 只读验证网络：`cast chain-id --rpc-url https://k8s.testnet.json-rpc.injective.network/` 应返回 `1439`；Blockscout 能打开。
 4. 复核 manifestHash：`npm test` 中 lib/schema 单测会打印并断言 FRAME-01 的 hash，必须与部署参数一致。
 
-## 2. 预部署两套 Campaign（演示前一天完成）
+## 2. 预部署三套 Campaign（演示前一天完成）
 
 使用一键流水线 `contracts/script/demo-pipeline.sh`（已在 anvil 全流程排练通过）：
 
 ```bash
 cp .env.example .env   # 填入 8 个角色私钥 + 确认 MANIFEST_HASH / MANIFEST_URI / DEADLINE
-contracts/script/demo-pipeline.sh testnet up       # 部署×2 → 登记/报价/开盘 → 5+2 单 → 回填地址 → verify
+contracts/script/demo-pipeline.sh testnet up       # 部署×3 → 登记/报价/开盘 → 5+2 单 → 回填地址 → verify
 contracts/script/demo-pipeline.sh testnet status   # 只读核对 state / orders / previewSettlement
 # 现场（deadline 过后）：
-contracts/script/demo-pipeline.sh testnet settle   # 两套各自触发清算
+contracts/script/demo-pipeline.sh testnet settle   # 三套各自触发清算
 contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + 工厂/品牌/平台三路领取
 ```
 
@@ -40,7 +40,7 @@ contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + 工�
 - **Failure Campaign**：只下 2 单（Buyer A/B，低于 MOQ 3），现场 settle → Failed → 全额退款。
 - `DEADLINE` 部署后不可改：设为演示日清晨、早于任何演示时段（P1 社区批次已用 1785024000 = 2026-07-26 08:00 UTC+8，pitch 当天早晨现场 settle）。
 - 每次运行生成 `deployments/receipts/testnet-<时间戳>.jsonl` 证据文件（deploy/订单/settle/refund/payout 全部 tx hash），提交前随仓库公开。
-- 部署后流水线自动回填 `deployments/injective-testnet.json`（address / manifestHash / deadline），前端从此文件读取；两个合约自动做 Blockscout verify（失败可 `demo-pipeline.sh testnet verify` 重试）。
+- 部署后流水线自动回填 `deployments/injective-testnet.json`（address / manifestHash / deadline），前端从此文件读取；三个合约自动做 Blockscout verify（失败可 `demo-pipeline.sh testnet verify` 重试）。
 
 ## 3. 现场 2 分钟流程（对应 PRD 18 章节）
 
@@ -50,7 +50,7 @@ contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + 工�
 | 0:15–0:35 | AI Studio 粘贴 fixtures/comments.json 的 20 条评论 → 生成 3 候选 → 展示证据/unknowns → 确认 FRAME-01，展示 manifestHash（AI Studio 已砍，编译入口移至 /console，见 specs/006 §3.4） | AI GENERATED → HUMAN CONFIRMED 标签切换 |
 | 0:35–0:55 | Campaign 页展示两家 DEMO FACTORY 的冻结 MOQ 曲线 | 报价卡 + ONCHAIN 标签 |
 | 0:55–1:15 | 一个 buyer 钱包现场连接 MetaMask 下单（或展示已下单 tx） | 真实 testnet tx + Blockscout 深链 |
-| 1:15–1:35 | Success Campaign 现场 `settle`；结果页逐条解释 Loom min3@0.019 为何中标（North 只有 2 人 ≥0.024 不可行） | CampaignSettled 事件 |
+| 1:15–1:35 | Success Campaign 现场 `settle`；结果页逐条解释 Loom min3、零售清算价 0.0238 为何中标（North 零售 0.030，只有 2 人达标 < MOQ 3，不可行） | CampaignSettled 事件 |
 | 1:35–1:50 | 赢家领差额 / 切 Failure Campaign 展示 Failed + 全额退款；打开 Blockscout | RefundClaimed / FactoryPayoutClaimed tx |
 | 1:50–2:00 | 收尾一句话：MAKEBOOK 把需求、价格和 MOQ 变成 Injective 上可执行的生产清算 | — |
 
@@ -66,7 +66,7 @@ contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + 工�
 ## 5. 提交前证据清单（PRD 附录 A.3 精简版）
 
 - [ ] Chain ID 1439，RPC/Explorer 现场可达
-- [ ] 两个合约地址已 verify，源码公开
+- [ ] 三个合约地址已 verify，源码公开
 - [ ] manifest JSON 与链上 hash 一致（`0x92e96e07…cc6ec`）
 - [ ] 3+ buyer 订单 tx 可在 Blockscout 查看
 - [ ] settle / 差额 refund / 全额 refund / factory payout 各至少一条 tx
@@ -78,5 +78,5 @@ contracts/script/demo-pipeline.sh testnet claims   # 差额/全额退款 + 工�
 ## 6. 评委最可能攻击的三个点（背熟）
 
 1. **"普通服务器也能做，为什么上链？"** —— 平台可以改订单、报价、deadline、退款逻辑；这里资金已全额预锁，关键输入 Open 后冻结，清算由公开合约执行，任何一方不能事后改规则。
-2. **"为什么是 Injective？"** —— 高性能金融向 EVM、极低 gas 让 50 订单清算成本可忽略（实测 settle 286,858 gas）、MetaMask 零门槛、Bank/MTS 余额互操作是后续稳定币支付的扩展点。
+2. **"为什么是 Injective？"** —— 高性能金融向 EVM、极低 gas 让 50 订单清算成本可忽略（实测 settle 468,877 gas）、MetaMask 零门槛、Bank/MTS 余额互操作是后续稳定币支付的扩展点。
 3. **"AI 是不是噱头？"** —— AI 只做结构化编译：每条规格可追溯评论、unknowns 明示、Schema 强校验、人工确认后哈希上链；AI 无钱包、无发布权，资金决策全在人和合约。
