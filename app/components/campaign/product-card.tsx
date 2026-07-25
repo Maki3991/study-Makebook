@@ -86,7 +86,7 @@ export function ProductCard({ id }: { id: CampaignId }) {
           <ProductDimensionLines id={id} batchName={batchName} copy={copy} />
         </div>
 
-        <div className="flex flex-1 flex-col p-5 lg:p-6">
+        <div className="flex flex-1 flex-col p-5">
           <div>
             <h1 className="text-h2 text-ink lg:text-h1">
               {meta.product}
@@ -98,7 +98,7 @@ export function ProductCard({ id }: { id: CampaignId }) {
             <p className="text-label text-ink-3">
               {copy.product.specsTitle}
             </p>
-            <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-4 xl:grid-cols-3">
               {specs.map((spec, idx) => {
                 const keyLabel =
                   (copy.product.spec.key as Record<string, string>)[spec.key] ??

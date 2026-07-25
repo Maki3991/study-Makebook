@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+/* Spec 009 §1.5: build-time CJK subset (scripts/build-cjk-subset.mjs).
+   The site uses ~359 unique hanzi; two self-hosted weights replace the
+   101-shard @fontsource-variable/noto-sans-sc (4.3MB, 350–900KB per zh
+   pageview) with ≤40KB total. h1/h2 ask for 800 and font matching picks the
+   nearest available weight, so the 900 face covers 700–900 requests.
+   unicode-range keeps the font off en pages entirely; characters outside the
+   subset fall through to PingFang SC / system fonts (no tofu). */
+@font-face {
+  font-family: "Noto Sans SC Subset";
+  src: url("/fonts/noto-sans-sc-subset-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+3000-303F, U+4E00-9FFF, U+FF00-FFEF;
+}
+
+@font-face {
+  font-family: "Noto Sans SC Subset";
+  src: url("/fonts/noto-sans-sc-subset-900.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+3000-303F, U+4E00-9FFF, U+FF00-FFEF;
+}
+
 @theme {
   /* Paper */
   --color-paper-0: #f5f3ef;
@@ -64,9 +89,9 @@
   --text-body: 0.9375rem;
   --text-micro: 0.75rem;
 
-  /* Fonts */
-  --font-sans: "Instrument Sans", "Noto Sans SC Variable", -apple-system,
-    "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* Fonts — spec 009 §1.5 stack: subset first for CJK, then system fallback */
+  --font-sans: "Instrument Sans", "Noto Sans SC Subset", "PingFang SC",
+    "Microsoft YaHei", -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
@@ -286,6 +311,9 @@
     border-radius: var(--radius-1);
     font-size: var(--text-label);
     font-weight: 500;
+    /* Pills never wrap internally — the parent flex-wrap row moves a whole
+       pill to the next line instead (P2-6: no two-line pills). */
+    white-space: nowrap;
     line-height: 1;
     text-transform: uppercase;
     letter-spacing: 0.12em;

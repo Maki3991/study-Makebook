@@ -60,7 +60,7 @@ function AdminRow({ id }: { id: CampaignId }) {
         {campaign.ordersLength?.toString() ?? "—"}
       </td>
       <td className="num py-3 pr-4 text-body text-ink-2">
-        {quoteText || copy.console.admin.noQuotes}
+        {campaign.isLoading ? "—" : quoteText || copy.console.admin.noQuotes}
       </td>
       <td className="py-3 pr-4 text-body">
         {campaign.state === "Open" ? (
