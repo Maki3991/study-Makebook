@@ -413,6 +413,23 @@
       opacity: 1;
     }
   }
+
+  /* Loading placeholder block (spec 009 §5) — calm pulse, paper-2 fill. */
+  .skeleton {
+    background: var(--color-paper-2);
+    border-radius: var(--radius-1);
+    animation: skeletonPulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes skeletonPulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

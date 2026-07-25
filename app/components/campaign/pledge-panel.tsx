@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useChainId, useSwitchChain } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   useAccount,
   useCampaign,
@@ -13,15 +15,15 @@ import { CampaignId } from "@/app/lib/types";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, explorerTx } from "@/app/lib/chain/format";
 import { ExternalLink } from "lucide-react";
-import { MAX_ORDERS } from "@/app/lib/chain/config";
+import { CAMPAIGNS, CHAIN_ID, MAX_ORDERS } from "@/app/lib/chain/config";
 import { BackDrawer } from "./back-drawer";
-
-// Spec 008 §1 frozen suggested prices, straddling both retail tiers.
-const SUGGESTED_PRICES = ["0.020", "0.024", "0.030"];
 
 export function PledgePanel({ id }: { id: CampaignId }) {
   const copy = useCopy();
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { switchChain, isPending: isSwitchingNetwork } = useSwitchChain();
+  const { openConnectModal } = useConnectModal();
   const campaign = useCampaign(id);
   const myOrderQuery = useMyOrder(id, address);
   const placeOrder = usePlaceOrder(id);
@@ -37,7 +39,10 @@ export function PledgePanel({ id }: { id: CampaignId }) {
   const preview = campaign.preview;
   const feasible = preview?.[0];
   const clearingPrice = preview?.[3];
-  const chips = SUGGESTED_PRICES;
+  // Spec 009 §5-8: chips come from per-batch config (the failure batch's chips
+  // are all below its retail clearing price).
+  const chips = CAMPAIGNS[id].suggestedPrices;
+  const isWrongNetwork = isConnected && chainId !== CHAIN_ID;
 
   const myOrder = myOrderQuery.data as
     | { buyer: `0x${string}`; variantHash: `0x${string}`; maxPriceWei: bigint; refundClaimed: boolean }
@@ -82,6 +87,30 @@ export function PledgePanel({ id }: { id: CampaignId }) {
     await settle.settle();
   };
 
+  // Spec 009 §5-4: gate write actions behind wallet connection / correct
+  // network up front, instead of letting the tx fail into a generic retry.
+  const connectCta = (
+    <button
+      type="button"
+      onClick={() => openConnectModal?.()}
+      className="btn btn-primary w-full"
+    >
+      {copy.pledge.connectCta}
+    </button>
+  );
+  const switchNetworkCta = (
+    <button
+      type="button"
+      disabled={isSwitchingNetwork}
+      onClick={() => switchChain?.({ chainId: CHAIN_ID })}
+      className="btn btn-danger w-full"
+    >
+      {isSwitchingNetwork
+        ? copy.global.wallet.switching
+        : copy.global.wallet.wrongNetwork}
+    </button>
+  );
+
   let cta: React.ReactNode = null;
   if (isSettled) {
     cta = (
@@ -90,7 +119,11 @@ export function PledgePanel({ id }: { id: CampaignId }) {
       </button>
     );
   } else if (isPastDeadline) {
-    cta = (
+    cta = !isConnected ? (
+      connectCta
+    ) : isWrongNetwork ? (
+      switchNetworkCta
+    ) : (
       <button
         type="button"
         onClick={handleSettle}
@@ -119,6 +152,10 @@ export function PledgePanel({ id }: { id: CampaignId }) {
         )}
       </Link>
     );
+  } else if (!isConnected) {
+    cta = connectCta;
+  } else if (isWrongNetwork) {
+    cta = switchNetworkCta;
   } else {
     cta = (
       <button

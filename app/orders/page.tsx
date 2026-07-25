@@ -48,6 +48,24 @@ function NoOrdersState() {
   );
 }
 
+// Spec 009 §5-7: while order reads are in flight, show a skeleton instead of
+// flashing the "no orders yet" empty state.
+function OrdersSkeleton() {
+  const copy = useCopy();
+
+  return (
+    <div
+      className="surface p-5"
+      role="status"
+      aria-label={copy.global.a11y.loading}
+    >
+      <div className="skeleton h-4 w-24" />
+      <div className="skeleton mt-3 h-3 w-16" />
+      <div className="skeleton mt-3 h-3 w-24" />
+    </div>
+  );
+}
+
 export default function OrdersPage() {
   const copy = useCopy();
   const { address, isConnected } = useAccount();
@@ -64,6 +82,7 @@ export default function OrdersPage() {
   };
 
   const hasAnyOrder = DEPLOYED_CAMPAIGNS.some((id) => orderMap[id].data);
+  const isLoadingAny = DEPLOYED_CAMPAIGNS.some((id) => orderMap[id].isLoading);
 
   return (
     <main className="page py-10 lg:py-16">
@@ -79,6 +98,8 @@ export default function OrdersPage() {
       <div className="mt-8 space-y-4">
         {!isConnected ? (
           <ConnectEmptyState />
+        ) : isLoadingAny ? (
+          <OrdersSkeleton />
         ) : !hasAnyOrder ? (
           <NoOrdersState />
         ) : (

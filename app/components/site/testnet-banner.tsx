@@ -9,7 +9,10 @@ export function TestnetBanner() {
 
   return (
     <div className="bg-accent-soft text-accent">
-      <div className="page flex min-h-9 items-center justify-center gap-2 px-5 py-2 text-center text-xs font-medium sm:text-sm">
+      {/* N-6: the faucet link never wraps mid-text; when space runs out the
+          link drops to a second line (flex-wrap). N-4: horizontal padding
+          comes from .page only, so it matches every other container. */}
+      <div className="page flex min-h-9 flex-wrap items-center justify-center gap-x-2 gap-y-1 py-1 text-center text-xs font-medium sm:text-sm">
         <ProvenanceTag type="TESTNET" />
         <span className="text-ink-2">{copy.global.banner.testnet.message}</span>
         <span className="hidden sm:inline">·</span>
@@ -17,7 +20,7 @@ export function TestnetBanner() {
           href={FAUCET_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center underline underline-offset-2 hover:text-accent-hover"
+          className="inline-flex items-center whitespace-nowrap underline underline-offset-2 hover:text-accent-hover"
         >
           {copy.global.banner.testnet.cta}
         </a>

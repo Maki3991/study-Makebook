@@ -2,7 +2,6 @@
 
 import { useAccount } from "wagmi";
 import { useConsoleRole } from "@/app/lib/chain/hooks";
-import { WalletButton } from "@/app/components/site/wallet-button";
 import { ProvenanceTag } from "@/app/components/site/provenance-tag";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 
@@ -43,15 +42,13 @@ export function RoleBar() {
           <p className="mt-1 text-sm text-ink-2">{copy.console.role.subtitle}</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {isConnected && !isLoading && (
-            <>
-              <span className={`tag ${roleClass}`}>{roleText}</span>
-              {role === "factory" && <ProvenanceTag type="DEMO FACTORY" />}
-            </>
-          )}
-          <WalletButton />
-        </div>
+        {/* N-10: no second Connect wallet here — the top bar already has one. */}
+        {isConnected && !isLoading && (
+          <div className="flex items-center gap-3">
+            <span className={`tag ${roleClass}`}>{roleText}</span>
+            {role === "factory" && <ProvenanceTag type="DEMO FACTORY" />}
+          </div>
+        )}
       </div>
     </section>
   );

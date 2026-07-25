@@ -11,6 +11,24 @@ export function StatusStrip({ id }: { id: CampaignId }) {
   const campaign = useCampaign(id);
   const now = useNowSec();
 
+  // Spec 009 §5-5: while the first reads are in flight, render placeholders —
+  // never fall through to the default green "Accepting orders".
+  if (campaign.isLoading) {
+    return (
+      <section
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        role="status"
+        aria-label={copy.global.a11y.loading}
+      >
+        <div className="skeleton h-4 w-16" />
+        <div className="flex items-baseline gap-x-8">
+          <div className="skeleton h-4 w-16" />
+          <div className="skeleton h-4 w-24" />
+        </div>
+      </section>
+    );
+  }
+
   const state = campaign.state;
   const deadline = campaign.deadline;
   const preview = campaign.preview;
@@ -24,7 +42,14 @@ export function StatusStrip({ id }: { id: CampaignId }) {
   let statusLabel: string = copy.status.open;
   let statusClass: string = "tag-success";
 
-  if (state === "Succeeded" || state === "PaidOut") {
+  if (campaign.isError) {
+    // Spec 009 §5-9: surface RPC failure instead of a false green state.
+    statusLabel = copy.errors.RpcError;
+    statusClass = "tag-danger";
+  } else if (state === "Draft") {
+    statusLabel = copy.notOpen.title;
+    statusClass = "tag-neutral";
+  } else if (state === "Succeeded" || state === "PaidOut") {
     statusLabel = copy.status.succeeded;
     statusClass = "tag-accent";
   } else if (state === "Failed") {

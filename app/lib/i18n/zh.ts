@@ -10,6 +10,8 @@ export const zh = {
       toggleLanguage: "切换语言",
       close: "关闭",
       demandCurve: "需求曲线",
+      openMenu: "打开菜单",
+      loading: "加载中…",
     },
     banner: {
       testnet: {
@@ -21,6 +23,18 @@ export const zh = {
       connect: "连接钱包",
       wrongNetwork: "网络不对，点击切换",
       switching: "正在切换网络…",
+      installMetaMask: "请安装 MetaMask →",
+    },
+    errorPage: {
+      title: "页面出错了",
+      body: "发生了未预期的错误。链上状态不受影响，可以重试或返回首页。",
+      retry: "重试",
+      home: "返回首页",
+    },
+    notFound: {
+      title: "页面不存在",
+      body: "你要找的页面不存在。",
+      home: "返回首页",
     },
   },
 
@@ -120,6 +134,7 @@ export const zh = {
     feasibleNow: "按当前订单，这个价可以成团",
     infeasibleNow: "按当前订单，这个价暂不成团（清算后全额退回）",
     cta: "立即支持",
+    connectCta: "连接钱包后出价",
     ordered: "你已出价 {price} test INJ · 查看订单",
     full: "本批 50 单已满",
     settleCta: "立即清算（任何人可触发）",
@@ -337,6 +352,7 @@ export const zh = {
   },
 
   errors: {
+    ConnectRequired: "请先连接钱包",
     UserRejected: "你已取消签名，链上没有产生订单",
     WrongNetwork: "当前网络不对，点这里切到 Injective 测试网",
     InsufficientFunds: "test INJ 不足，先去免费领水",

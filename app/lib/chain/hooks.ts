@@ -350,6 +350,9 @@ export function useMyOrder(id: CampaignId, myAddress?: Address) {
     query: {
       refetchInterval: POLL_INTERVAL_MS,
       enabled,
+      // The contract reverts NoOrder() for addresses without an order — that is
+      // the normal "no order" case, not a transient failure. Never retry it.
+      retry: false,
     },
   });
 }

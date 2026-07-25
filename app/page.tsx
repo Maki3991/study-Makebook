@@ -21,21 +21,40 @@ import { formatInj, getCountdownParts } from "@/app/lib/chain/format";
 import { FAUCET_URL } from "@/app/lib/chain/config";
 
 function StatusTag({
-  state,
-  deadline,
+  campaign,
 }: {
-  state: ReturnType<typeof useCampaign>["state"];
-  deadline: bigint | undefined;
+  campaign: ReturnType<typeof useCampaign>;
 }) {
   const copy = useCopy();
   const now = useNowSec();
+  const state = campaign.state;
+  const deadline = campaign.deadline;
+
+  // Spec 009 §5-5: loading renders a placeholder, not a false green state.
+  if (campaign.isLoading) {
+    return (
+      <span
+        className="skeleton inline-block h-4 w-16"
+        role="status"
+        aria-label={copy.global.a11y.loading}
+      />
+    );
+  }
+
   const isPastDeadline =
     state === "Open" && deadline !== undefined && now >= Number(deadline);
 
   let label: string = copy.status.open;
   let variant: string = "tag-success";
 
-  if (state === "Succeeded" || state === "PaidOut") {
+  if (campaign.isError) {
+    // Spec 009 §5-9: consume the RPC failure state.
+    label = copy.errors.RpcError;
+    variant = "tag-danger";
+  } else if (state === "Draft") {
+    label = copy.notOpen.title;
+    variant = "tag-neutral";
+  } else if (state === "Succeeded" || state === "PaidOut") {
     label = copy.status.succeeded;
     variant = "tag-accent";
   } else if (state === "Failed") {
@@ -48,7 +67,9 @@ function StatusTag({
 
   return (
     <span className={`tag ${variant}`}>
-      {state === "Open" && !isPastDeadline ? <Clock size={12} /> : null}
+      {state === "Open" && !isPastDeadline && !campaign.isError ? (
+        <Clock size={12} />
+      ) : null}
       {label}
     </span>
   );
@@ -89,7 +110,7 @@ function BatchCard({ id }: { id: CampaignId }) {
               )}
             </p>
           </div>
-          <StatusTag state={campaign.state} deadline={campaign.deadline} />
+          <StatusTag campaign={campaign} />
         </div>
 
         <div className="mt-4 space-y-2">
@@ -115,7 +136,15 @@ function BatchCard({ id }: { id: CampaignId }) {
             </p>
           ) : null}
 
-          {campaign.state === "Open" ? (
+          {campaign.isLoading ? (
+            <span
+              className="skeleton block h-3 w-24"
+              role="status"
+              aria-label={copy.global.a11y.loading}
+            />
+          ) : campaign.isError ? (
+            <p className="text-sm text-danger">{copy.errors.RpcError}</p>
+          ) : campaign.state === "Open" ? (
             feasible ? (
               <p className="text-sm text-success">
                 {copy.batch.card.preview
@@ -308,8 +337,9 @@ export default function Home() {
 
   return (
     <main className="page">
-      {/* Hero */}
-      <section className="section relative overflow-hidden">
+      {/* Hero — mobile padding stays tight (N-5): the CTA must sit inside the
+          first viewport. Desktop keeps the --spacing-7 section rhythm. */}
+      <section className="relative overflow-hidden py-5 lg:py-24">
         <div className="ambient-grid" aria-hidden="true" />
         <div className="relative grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
           <div>
@@ -319,7 +349,7 @@ export default function Home() {
             </p>
             <Link
               href="/campaigns/success"
-              className="btn btn-primary mt-8 inline-flex"
+              className="btn btn-primary mt-5 inline-flex lg:mt-6"
             >
               {copy.home.hero.cta}
               <ArrowRight size={16} />

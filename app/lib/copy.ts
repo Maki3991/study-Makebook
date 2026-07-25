@@ -10,6 +10,8 @@ export const copy = {
       toggleLanguage: "Toggle language",
       close: "Close",
       demandCurve: "Demand curve",
+      openMenu: "Open menu",
+      loading: "Loading…",
     },
     banner: {
       testnet: {
@@ -22,6 +24,18 @@ export const copy = {
       connect: "Connect wallet",
       wrongNetwork: "Wrong network — click to switch",
       switching: "Switching network…",
+      installMetaMask: "Install MetaMask →",
+    },
+    errorPage: {
+      title: "Something went wrong",
+      body: "An unexpected error occurred. On-chain state is unaffected — retry or head back home.",
+      retry: "Retry",
+      home: "Back to home",
+    },
+    notFound: {
+      title: "Page not found",
+      body: "This page does not exist.",
+      home: "Back to home",
     },
   },
 
@@ -124,6 +138,7 @@ export const copy = {
     infeasibleNow:
       "At current orders, this price would not clear yet (full refund after settlement)",
     cta: "Back now",
+    connectCta: "Connect wallet to back",
     ordered: "You bid {price} test INJ · View order",
     full: "This batch is full (50/50)",
     settleCta: "Settle now (anyone can trigger)",
@@ -348,6 +363,7 @@ export const copy = {
   },
 
   errors: {
+    ConnectRequired: "Please connect your wallet first",
     UserRejected: "You cancelled the signature. No order was created on-chain.",
     WrongNetwork: "Wrong network — click here to switch to Injective testnet",
     InsufficientFunds: "Not enough test INJ. Get free test tokens from the faucet first.",

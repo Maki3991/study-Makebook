@@ -1,34 +1,21 @@
-import { copy } from "../copy";
+import type { Copy } from "../copy";
 
 export type ErrorMap = Record<string, string>;
 
-const errorMap: ErrorMap = {
-  UserRejected: copy.errors.UserRejected,
-  WrongNetwork: copy.errors.WrongNetwork,
-  InsufficientFunds: copy.errors.InsufficientFunds,
-  InvalidPayment: copy.errors.InvalidPayment,
-  DuplicateOrder: copy.errors.DuplicateOrder,
-  OrderLimitReached: copy.errors.OrderLimitReached,
-  CampaignNotOpen: copy.errors.CampaignNotOpen,
-  WrongState: copy.errors.WrongState,
-  DeadlinePassed: copy.errors.DeadlinePassed,
-  DeadlineNotReached: copy.errors.DeadlineNotReached,
-  NoOrder: copy.errors.NoOrder,
-  AlreadyClaimed: copy.errors.AlreadyClaimed,
-  NotSelectedFactory: copy.errors.NotSelectedFactory,
-  NotCreator: copy.errors.NotCreator,
-  NotFeeRecipient: copy.errors.NotFeeRecipient,
-  InvalidFeeConfig: copy.errors.InvalidFeeConfig,
-  TransferFailed: copy.errors.TransferFailed,
-  RpcError: copy.errors.RpcError,
-};
-
-export function mapErrorName(errorName: string | undefined): string {
+// The dictionary's `errors` keys mirror the on-chain custom error names, so the
+// map is a plain lookup into the active language pack. The copy object is
+// passed in by the caller (a hook reading `useCopy()`) so Chinese users get
+// the Chinese messages instead of the statically imported English pack.
+export function mapErrorName(
+  errorName: string | undefined,
+  copy: Copy,
+): string {
   if (!errorName) return copy.errors.fallback;
-  return errorMap[errorName] ?? copy.errors.fallback;
+  const table = copy.errors as ErrorMap;
+  return table[errorName] ?? copy.errors.fallback;
 }
 
-export function humanizeError(err: unknown): string {
+export function humanizeError(err: unknown, copy: Copy): string {
   if (err instanceof Error && err.message.includes("User rejected the request")) {
     return copy.errors.UserRejected;
   }

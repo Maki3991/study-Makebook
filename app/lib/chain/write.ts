@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useAccount, useChainId, useWriteContract } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  BaseError,
   parseUnits,
   parseEventLogs,
   ContractFunctionRevertedError,
@@ -14,6 +15,7 @@ import {
 import { makebookAbi } from "./abi";
 import { CHAIN_ID, CAMPAIGNS, type CampaignId } from "./config";
 import { mapErrorName, humanizeError } from "./errors";
+import { useCopy } from "../i18n/use-copy";
 
 export type TxStage =
   | "idle"
@@ -92,8 +94,15 @@ function invalidateCampaignReads(
 }
 
 function extractRevertReason(err: unknown): string {
-  if (err instanceof ContractFunctionRevertedError) {
-    return err.data?.errorName ?? "";
+  // wagmi wraps the viem revert inside ContractFunctionExecutionError — walk
+  // the cause chain to find the underlying ContractFunctionRevertedError and
+  // read its decoded custom error name (e.g. "DuplicateOrder").
+  if (err instanceof BaseError) {
+    const reverted = err.walk(
+      (e) => e instanceof ContractFunctionRevertedError,
+    ) as ContractFunctionRevertedError | null;
+    const errorName = reverted?.data?.errorName;
+    if (errorName) return errorName;
   }
   if (err instanceof Error) {
     if (
@@ -105,7 +114,11 @@ function extractRevertReason(err: unknown): string {
     if (err.message.toLowerCase().includes("insufficient funds")) {
       return "InsufficientFunds";
     }
-    const revertMatch = err.message.match(/reverted: ([A-Za-z]+)\(\)/);
+    // Fallback for stringified errors: viem renders custom errors as
+    // `Error: DuplicateOrder()`, some wallets as `reverted: DuplicateOrder()`.
+    const revertMatch = err.message.match(
+      /(?:Error|reverted):\s*([A-Za-z][A-Za-z0-9]*)\(\)/,
+    );
     if (revertMatch) {
       return revertMatch[1];
     }
@@ -124,6 +137,7 @@ export function useTx<T = unknown>(): UseTxResult<T> {
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<TransactionReceipt | null>(null);
   const [result, setResult] = useState<T | null>(null);
+  const copy = useCopy();
 
   const reset = useCallback(() => {
     setStage("idle");
@@ -158,16 +172,16 @@ export function useTx<T = unknown>(): UseTxResult<T> {
     } catch (err) {
       const reason = extractRevertReason(err);
       if (reason === "UserRejected" || reason === "InsufficientFunds") {
-        setError(humanizeError(err) || mapErrorName(reason));
+        setError(humanizeError(err, copy) || mapErrorName(reason, copy));
       } else if (reason) {
-        setError(mapErrorName(reason));
+        setError(mapErrorName(reason, copy));
       } else {
-        setError(humanizeError(err));
+        setError(humanizeError(err, copy));
       }
       setStage("error");
       return null;
     }
-  }, [reset]);
+  }, [reset, copy]);
 
   return { stage, error, receipt, result, execute, reset };
 }
@@ -181,20 +195,21 @@ export function usePlaceOrder(id: CampaignId): UseTxResult<PlaceOrderResult> & {
   const queryClient = useQueryClient();
   const tx = useTx<PlaceOrderResult>();
   const campaign = CAMPAIGNS[id];
+  const copy = useCopy();
 
   const placeOrder = useCallback(
     async (maxPrice: string) => {
       const result = await tx.execute({
         preflight: () => {
-          if (!address) return mapErrorName("");
-          if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork");
+          if (!address) return mapErrorName("ConnectRequired", copy);
+          if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork", copy);
           if (!campaign.deployed || !campaign.deployment) {
-            return mapErrorName("CampaignNotOpen");
+            return mapErrorName("CampaignNotOpen", copy);
           }
           try {
             parseUnits(maxPrice, 18);
           } catch {
-            return mapErrorName("InvalidPayment");
+            return mapErrorName("InvalidPayment", copy);
           }
           return undefined;
         },
@@ -239,7 +254,7 @@ export function usePlaceOrder(id: CampaignId): UseTxResult<PlaceOrderResult> & {
         }
       }
     },
-    [address, chainId, campaign, id, queryClient, tx, writeContractAsync],
+    [address, chainId, campaign, copy, id, queryClient, tx, writeContractAsync],
   );
 
   return { ...tx, placeOrder };
@@ -254,14 +269,15 @@ export function useSettle(id: CampaignId): UseTxResult<SettleResult> & {
   const queryClient = useQueryClient();
   const tx = useTx<SettleResult>();
   const campaign = CAMPAIGNS[id];
+  const copy = useCopy();
 
   const settle = useCallback(async () => {
     const result = await tx.execute({
       preflight: () => {
-        if (!address) return mapErrorName("");
-        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork");
+        if (!address) return mapErrorName("ConnectRequired", copy);
+        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork", copy);
         if (!campaign.deployed || !campaign.deployment) {
-          return mapErrorName("CampaignNotOpen");
+          return mapErrorName("CampaignNotOpen", copy);
         }
         return undefined;
       },
@@ -301,7 +317,7 @@ export function useSettle(id: CampaignId): UseTxResult<SettleResult> & {
         );
       }
     }
-  }, [address, chainId, campaign, id, queryClient, tx, writeContractAsync]);
+  }, [address, chainId, campaign, copy, id, queryClient, tx, writeContractAsync]);
 
   return { ...tx, settle };
 }
@@ -315,14 +331,15 @@ export function useClaimRefund(id: CampaignId): UseTxResult<ClaimRefundResult> &
   const queryClient = useQueryClient();
   const tx = useTx<ClaimRefundResult>();
   const campaign = CAMPAIGNS[id];
+  const copy = useCopy();
 
   const claimRefund = useCallback(async () => {
     const result = await tx.execute({
       preflight: () => {
-        if (!address) return mapErrorName("");
-        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork");
+        if (!address) return mapErrorName("ConnectRequired", copy);
+        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork", copy);
         if (!campaign.deployed || !campaign.deployment) {
-          return mapErrorName("CampaignNotOpen");
+          return mapErrorName("CampaignNotOpen", copy);
         }
         return undefined;
       },
@@ -359,7 +376,7 @@ export function useClaimRefund(id: CampaignId): UseTxResult<ClaimRefundResult> &
         );
       }
     }
-  }, [address, chainId, campaign, id, queryClient, tx, writeContractAsync]);
+  }, [address, chainId, campaign, copy, id, queryClient, tx, writeContractAsync]);
 
   return { ...tx, claimRefund };
 }
@@ -373,14 +390,15 @@ export function useClaimPayout(id: CampaignId): UseTxResult<ClaimPayoutResult> &
   const queryClient = useQueryClient();
   const tx = useTx<ClaimPayoutResult>();
   const campaign = CAMPAIGNS[id];
+  const copy = useCopy();
 
   const claimPayout = useCallback(async () => {
     const result = await tx.execute({
       preflight: () => {
-        if (!address) return mapErrorName("");
-        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork");
+        if (!address) return mapErrorName("ConnectRequired", copy);
+        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork", copy);
         if (!campaign.deployed || !campaign.deployment) {
-          return mapErrorName("CampaignNotOpen");
+          return mapErrorName("CampaignNotOpen", copy);
         }
         return undefined;
       },
@@ -417,7 +435,7 @@ export function useClaimPayout(id: CampaignId): UseTxResult<ClaimPayoutResult> &
         );
       }
     }
-  }, [address, chainId, campaign, id, queryClient, tx, writeContractAsync]);
+  }, [address, chainId, campaign, copy, id, queryClient, tx, writeContractAsync]);
 
   return { ...tx, claimPayout };
 }
@@ -433,14 +451,15 @@ export function useClaimCreatorPayout(
   const queryClient = useQueryClient();
   const tx = useTx<ClaimCreatorPayoutResult>();
   const campaign = CAMPAIGNS[id];
+  const copy = useCopy();
 
   const claimCreatorPayout = useCallback(async () => {
     const result = await tx.execute({
       preflight: () => {
-        if (!address) return mapErrorName("");
-        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork");
+        if (!address) return mapErrorName("ConnectRequired", copy);
+        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork", copy);
         if (!campaign.deployed || !campaign.deployment) {
-          return mapErrorName("CampaignNotOpen");
+          return mapErrorName("CampaignNotOpen", copy);
         }
         return undefined;
       },
@@ -477,7 +496,7 @@ export function useClaimCreatorPayout(
         );
       }
     }
-  }, [address, chainId, campaign, id, queryClient, tx, writeContractAsync]);
+  }, [address, chainId, campaign, copy, id, queryClient, tx, writeContractAsync]);
 
   return { ...tx, claimCreatorPayout };
 }
@@ -493,14 +512,15 @@ export function useClaimPlatformFee(
   const queryClient = useQueryClient();
   const tx = useTx<ClaimPlatformFeeResult>();
   const campaign = CAMPAIGNS[id];
+  const copy = useCopy();
 
   const claimPlatformFee = useCallback(async () => {
     const result = await tx.execute({
       preflight: () => {
-        if (!address) return mapErrorName("");
-        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork");
+        if (!address) return mapErrorName("ConnectRequired", copy);
+        if (chainId !== CHAIN_ID) return mapErrorName("WrongNetwork", copy);
         if (!campaign.deployed || !campaign.deployment) {
-          return mapErrorName("CampaignNotOpen");
+          return mapErrorName("CampaignNotOpen", copy);
         }
         return undefined;
       },
@@ -537,7 +557,7 @@ export function useClaimPlatformFee(
         );
       }
     }
-  }, [address, chainId, campaign, id, queryClient, tx, writeContractAsync]);
+  }, [address, chainId, campaign, copy, id, queryClient, tx, writeContractAsync]);
 
   return { ...tx, claimPlatformFee };
 }

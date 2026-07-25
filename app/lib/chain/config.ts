@@ -31,6 +31,10 @@ export type CampaignMeta = {
   manifestHashAnchor: `0x${string}`;
   // Deploy tx hash from the 2026-07-25 P1 deployment run (on-chain fact).
   deployTx: `0x${string}`;
+  // Spec 009 §5-8: suggested-price chips are per-batch. The failure batch's
+  // chips all sit below its lowest retail tier (0.02375) so the UI never
+  // nudges a user into making the deliberately-failing demo batch feasible.
+  suggestedPrices: readonly string[];
   deployment: DeploymentEntry | undefined;
   deployed: boolean;
 };
@@ -47,6 +51,7 @@ const REGISTRY_BASE: Omit<CampaignMeta, "deployment" | "deployed">[] = [
       "0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec",
     deployTx:
       "0xd4f94c035f756f3c88f04819f9260fa988a4455058a3599acda49a1b8982abc1",
+    suggestedPrices: ["0.020", "0.024", "0.030"],
   },
   {
     id: "failure",
@@ -59,6 +64,9 @@ const REGISTRY_BASE: Omit<CampaignMeta, "deployment" | "deployed">[] = [
       "0x92e96e079279e2a5d21e099f2693513f0e954384407de71ae66f8b853becc6ec",
     deployTx:
       "0xbaca5eee8b34a2de325b2f7801e444b984179bc1f746a923c06abb0cee1c31b8",
+    // All below the 0.02375 retail clearing price: one more order ≥0.02375
+    // would flip this deliberately-infeasible batch to feasible.
+    suggestedPrices: ["0.018", "0.020", "0.022"],
   },
   {
     id: "bracelet",
@@ -71,6 +79,7 @@ const REGISTRY_BASE: Omit<CampaignMeta, "deployment" | "deployed">[] = [
       "0x1c503957667bb009a161c7d9bfe70e59db01c61c80920faae60f98a1e3c958dd",
     deployTx:
       "0x8a648d3f44b713205e1aef41f7b7f256e112fbe02ba9d95723c2dbd45d247e32",
+    suggestedPrices: ["0.020", "0.024", "0.030"],
   },
 ];
 
