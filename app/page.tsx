@@ -12,7 +12,7 @@ import {
   Tag,
 } from "lucide-react";
 import { useCampaign, useNowSec } from "@/app/lib/chain/hooks";
-import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
+import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, BATCH_COPY_KEY, type CampaignId } from "@/app/lib/chain/config";
 import { ProvenanceTag } from "@/app/components/site/provenance-tag";
 import { LiveTicker } from "@/app/components/site/live-ticker";
 import { useCopy } from "@/app/lib/i18n/use-copy";
@@ -109,7 +109,7 @@ function BatchCard({ id }: { id: CampaignId }) {
           <div>
             <h3 className="text-h2 text-ink">{meta.product}</h3>
             <p className="num mt-0.5 text-body text-ink-2">
-              {meta.batchName}
+              {copy.batch[BATCH_COPY_KEY[id]].name}
               {id === "failure" && (
                 <span className="ml-2 text-ink-3">({copy.batch.b.note})</span>
               )}
@@ -180,7 +180,7 @@ function BatchCard({ id }: { id: CampaignId }) {
 
         <div className="mt-auto pt-5">
           <span className="btn btn-secondary w-full">
-            {copy.home.hero.cta}
+            {copy.batch.card.cta}
             <ArrowRight size={16} />
           </span>
         </div>
@@ -312,6 +312,91 @@ function StepBar() {
   );
 }
 
+// Spec 009 §3.3 CTA target. Deliberate deviation from the spec's mailto: the
+// team has no public inbox (no mail address anywhere in the repo) and the
+// repo is public, so the CTA opens the GitHub repo in a new tab instead.
+const REPO_URL = "https://github.com/gmy20060609-jpg/AdventureX2026-MAKEBOOK";
+
+// Spec 009 §3.3: creator-facing narrative block — between "Active batches"
+// and "Demand being compiled". No new route, no new nav item. The section
+// never uses 收益/回报/投资/profit/return/invest wording (§2.1 rule 1).
+function CreatorSection() {
+  const copy = useCopy();
+  const c = copy.home.creator;
+
+  return (
+    <section className="section">
+      <h2 className="text-h2 text-ink">{c.title}</h2>
+      <p className="mt-1 max-w-2xl text-body text-ink-2">{c.sub}</p>
+
+      <div className="mt-5 grid gap-5 md:grid-cols-3">
+        <div className="surface p-5">
+          <h3 className="text-body font-semibold text-ink">
+            {c.cards.noInventory.title}
+          </h3>
+          <p className="mt-2 text-body text-ink-2">{c.cards.noInventory.body}</p>
+        </div>
+
+        <div className="surface p-5">
+          <h3 className="text-body font-semibold text-ink">
+            {c.cards.margin.title}
+          </h3>
+          <p className="mt-2 text-body text-ink-2">
+            {c.cards.margin.body1}
+            <strong className="font-semibold text-ink">
+              {c.cards.margin.fee}
+            </strong>
+            {c.cards.margin.body2}
+          </p>
+        </div>
+
+        <div className="surface p-5">
+          <h3 className="text-body font-semibold text-ink">
+            {c.cards.responsibility.title}
+          </h3>
+          <p className="mt-2 text-body text-ink-2">
+            {c.cards.responsibility.body1}
+            <strong className="font-semibold text-ink">
+              {c.cards.responsibility.your}
+            </strong>
+            {c.cards.responsibility.body2}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <p className="text-label text-ink-3">{c.flow.label}</p>
+        <div className="mt-3 border-y border-line">
+          <ol className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-4 md:px-6">
+            {c.flow.steps.map((step, idx) => (
+              <li key={idx} className="flex items-center gap-3">
+                <span className="text-label text-ink-2">{step}</span>
+                {idx < c.flow.steps.length - 1 ? (
+                  <span aria-hidden="true" className="text-label text-ink-3">
+                    →
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-wrap items-center gap-4">
+        <a
+          href={REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-secondary"
+        >
+          {c.cta}
+        </a>
+        <p className="text-micro text-ink-3">{c.note}</p>
+      </div>
+    </section>
+  );
+}
+
 function HeroDimensionLines({ copy }: { copy: ReturnType<typeof useCopy> }) {
   const values = copy.product.spec.value as Record<string, string>;
 
@@ -407,6 +492,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Creator narrative (spec 009 §3.3) */}
+      <CreatorSection />
 
       {/* Preview — kept to 2 columns so the row is balanced */}
       <section className="section">

@@ -7,7 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
-import { CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
+import { CAMPAIGNS, BATCH_COPY_KEY, type CampaignId } from "@/app/lib/chain/config";
 import { useCampaign, useManifest } from "@/app/lib/chain/hooks";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 import { ProvenanceTag } from "@/app/components/site/provenance-tag";
@@ -61,6 +61,9 @@ export function ProductCard({ id }: { id: CampaignId }) {
   const campaign = useCampaign(id);
   const manifest = useManifest(id, campaign.manifestHash);
   const meta = CAMPAIGNS[id];
+  // Spec 009 §2.2: the display name comes from the copy dictionary — the
+  // bracelet batch is 社区批次, no longer a second "Batch A".
+  const batchName = copy.batch[BATCH_COPY_KEY[id]].name;
 
   const data = manifest.data;
   const specs = data?.manifest.specs ?? [];
@@ -80,7 +83,7 @@ export function ProductCard({ id }: { id: CampaignId }) {
             alt={meta.product}
             className="h-full w-full object-cover"
           />
-          <ProductDimensionLines id={id} batchName={meta.batchName} copy={copy} />
+          <ProductDimensionLines id={id} batchName={batchName} copy={copy} />
         </div>
 
         <div className="flex flex-1 flex-col p-5 lg:p-6">
@@ -88,7 +91,7 @@ export function ProductCard({ id }: { id: CampaignId }) {
             <h1 className="text-h2 text-ink lg:text-h1">
               {meta.product}
             </h1>
-            <p className="num mt-1 text-body text-ink-2">{meta.batchName}</p>
+            <p className="num mt-1 text-body text-ink-2">{batchName}</p>
           </div>
 
           <div className="mt-6">

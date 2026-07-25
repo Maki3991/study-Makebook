@@ -11,7 +11,7 @@ import {
   useClaimCreatorPayout,
   useClaimPlatformFee,
 } from "@/app/lib/chain/write";
-import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
+import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, BATCH_COPY_KEY, type CampaignId } from "@/app/lib/chain/config";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, explorerTx, truncateAddress } from "@/app/lib/chain/format";
 
@@ -106,7 +106,7 @@ function CreatorBatchCard({
             <h3 className="text-body font-semibold text-ink">{meta.product}</h3>
             <span className={`tag ${stateClass}`}>{stateLabel}</span>
           </div>
-          <p className="num mt-0.5 text-micro text-ink-2">{meta.batchName}</p>
+          <p className="num mt-0.5 text-micro text-ink-2">{copy.batch[BATCH_COPY_KEY[id]].name}</p>
 
           <dl className="mt-3 space-y-1">
             {state === "Open" && !isPastDeadline && (
@@ -267,7 +267,7 @@ function PlatformFeeCard({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-body font-semibold text-ink">{meta.product}</h3>
-          <p className="num mt-0.5 text-micro text-ink-2">{meta.batchName}</p>
+          <p className="num mt-0.5 text-micro text-ink-2">{copy.batch[BATCH_COPY_KEY[id]].name}</p>
           <p className="mt-3 text-body text-ink-2">
             {copy.console.platform.address}:{" "}
             <span className="num text-ink">{truncateAddress(address)}</span>

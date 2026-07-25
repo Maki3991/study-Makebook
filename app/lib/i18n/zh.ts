@@ -40,16 +40,16 @@ export const zh = {
 
   home: {
     hero: {
-      title: "说出你的最高愿付价，工厂按真实需求生产。",
+      title: "说出你愿意付的最高价。品牌据此下单，工厂据此生产。",
       sub: "你出的价全额托管进合约。成团只付统一清算价，差额自动退回；不成团全额退回。",
-      cta: "开始体验",
+      cta: "看看正在开的批次",
     },
     steps: {
       title: "三步上手",
       stepLabel: "第 {n} 步",
       step1: "连接钱包（自动切换到 Injective 测试网）",
       step2: "领取免费 test INJ",
-      step3: "给喜欢的装备出价",
+      step3: "给想要的东西出价",
     },
     batches: {
       title: "进行中的批次",
@@ -60,6 +60,36 @@ export const zh = {
       escrowed: "链上托管",
       escrowedValue: "{amount} test INJ",
       untilDeadline: "距截止",
+    },
+    // spec 009 §3.3 主理人叙事块：平台费 2% 与「你的」靠分段加粗；
+    // 本 section 禁用 收益/回报/投资 字样（spec 009 §2.1 原则 1）。
+    creator: {
+      title: "不压货，也能开一条产线",
+      sub: "给有社群、有想法，但不想为了一次尝试押上全部现金流的主理人。",
+      cards: {
+        noInventory: {
+          title: "你不用先下单",
+          body: "消费者的钱先全额锁进合约。够 MOQ 才生产，不够全员全额退。库存风险不在你身上。",
+        },
+        margin: {
+          title: "你收零售差价",
+          body1: "清算价 = 出厂价 × 你设的加价系数。成交那一刻链上记账，你自己领，平台不经手。平台费 ",
+          fee: "2%",
+          body2: "（大平台通常 8–12%）。",
+        },
+        responsibility: {
+          title: "你承担什么",
+          body1: "商品责任、质保、退换货、配送、社群运营。工厂是",
+          your: "你的",
+          body2: "供应商，不直接面对消费者。",
+        },
+      },
+      flow: {
+        label: "一个批次怎么跑",
+        steps: ["选评论源", "AI 编译 SKU", "你确认上链", "工厂报价冻结", "社群出价", "清算", "你领差价"],
+      },
+      cta: "聊聊你的批次 →",
+      note: "自助发起为 V1；当前批次由 MAKEBOOK 团队协助开设。",
     },
   },
 
@@ -75,13 +105,15 @@ export const zh = {
 
   batch: {
     a: { name: "批次 A" },
-    b: { name: "批次 B", note: "未满 MOQ" },
-    bracelet: { name: "批次 A" },
+    b: { name: "批次 B", note: "演示：未达 MOQ 的批次" },
+    bracelet: { name: "社区批次" },
     card: {
       orders: "{n}/50 单",
       preview: "若现在截止：统一价 {price} test INJ，{count} 单成团",
-      previewInfeasible: "暂未满 MOQ，暂不成团",
+      previewInfeasible: "未达 MOQ，当前不成团",
       closed: "已截止，等待清算",
+      // spec 009 §2.1 原则 3：卡片 CTA 说明去向，不复用 hero CTA
+      cta: "进入批次",
     },
   },
 
@@ -152,13 +184,13 @@ export const zh = {
   },
 
   pledge: {
-    title: "我要支持",
+    title: "出价预订",
     inputLabel: "你的最高愿付价（test INJ）",
     inputError: "请输入大于 0 的价格",
     chipHint: "参考价格点",
     feasibleNow: "按当前订单，这个价可以成团",
     infeasibleNow: "按当前订单，这个价暂不成团（清算后全额退回）",
-    cta: "立即支持",
+    cta: "立即出价",
     connectCta: "连接钱包后出价",
     ordered: "你已出价 {price} test INJ · 查看订单",
     full: "本批 50 单已满",
@@ -167,7 +199,7 @@ export const zh = {
   },
 
   quotes: {
-    title: "工厂条件",
+    title: "工厂报价（出厂价）",
     empty: "暂无工厂报价",
     ordersSuffix: "单",
     row: "MOQ {minQty} 件 · 单价 {price} test INJ · 当前 {eligible} 单达标",
@@ -224,7 +256,7 @@ export const zh = {
   },
 
   drawer: {
-    title: "确认支持",
+    title: "确认出价",
     step: "确认订单 → 钱包签名 → 完成",
     summary: "{product} × 1 · 你的最高愿付价 {price} test INJ",
     breakdown: {

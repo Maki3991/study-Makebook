@@ -64,6 +64,31 @@ async function bodyText(route, waitFor, timeoutMs = 60000) {
   await page.screenshot({ path: "visual-snapshots/spec009-success-desktop.png", fullPage: true });
 }
 
+// 1.5 首页（en）：§2.2 新 hero/steps/批次名 + §3.3 主理人叙事块
+{
+  const text = await bodyText("/", "Run a production line without inventory");
+  report("home hero §2.2", [
+    "Name your max price. The brand orders against it, the factory produces against it.",
+    "See live batches", "Bid on what you want",
+  ].filter((n) => !text.includes(n)));
+  report("home creator section §3.3", [
+    "Run a production line without inventory",
+    "You never order first", "You keep the retail margin", "What you own",
+    "Platform fee 2% (big marketplaces take 8–12%).",
+    "PICK A COMMENT SOURCE", "YOU CLAIM THE MARGIN",
+    "Talk to us about your batch", "Self-serve launch is V1",
+  ].filter((n) => !text.includes(n)));
+  report("home batch names §2.2", [
+    "Community batch", "Demo: a below-MOQ batch", "View batch",
+  ].filter((n) => !text.includes(n)));
+  // §2.1 原则 1：主理人 section 禁用词（负断言，只扫该 section）
+  const creatorText = (
+    await page.locator("section", { hasText: "Run a production line without inventory" }).innerText()
+  ).toLowerCase();
+  report("creator section banned words", ["profit", "return", "invest"].filter((w) => creatorText.includes(w)));
+  await page.screenshot({ path: "visual-snapshots/spec009-home-creator-desktop.png", fullPage: true });
+}
+
 // 2. failure 页（en）：两厂均 未中标 + 不可行
 {
   const text = await bodyText("/campaigns/failure", "Tie-break");
@@ -85,6 +110,31 @@ async function bodyText(route, waitFor, timeoutMs = 60000) {
     "每一分钱去哪了", "每一笔都在清算时链上记账",
   ].filter((n) => !text.includes(n)));
   await page.screenshot({ path: "visual-snapshots/spec009-success-zh-desktop.png", fullPage: true });
+
+  // 3.5 首页（zh）：§2.2/§3.3 词典镜像（复用当前 zh localStorage 会话）
+  {
+    const homeText = await bodyText("/", "不压货，也能开一条产线");
+    report("zh home hero §2.2", [
+      "说出你愿意付的最高价。品牌据此下单，工厂据此生产。",
+      "看看正在开的批次", "给想要的东西出价",
+    ].filter((n) => !homeText.includes(n)));
+    report("zh home creator section §3.3", [
+      "不压货，也能开一条产线",
+      "给有社群、有想法，但不想为了一次尝试押上全部现金流的主理人。",
+      "你不用先下单", "你收零售差价", "你承担什么",
+      "平台费 2%（大平台通常 8–12%）。",
+      "选评论源", "你领差价",
+      "聊聊你的批次", "自助发起为 V1",
+    ].filter((n) => !homeText.includes(n)));
+    report("zh home batch names §2.2", [
+      "社区批次", "演示：未达 MOQ 的批次", "进入批次",
+    ].filter((n) => !homeText.includes(n)));
+    // §2.1 原则 1：中文禁用词（负断言，只扫该 section）
+    const creatorZh = await page.locator("section", { hasText: "不压货，也能开一条产线" }).innerText();
+    report("zh creator section banned words", ["收益", "回报", "投资"].filter((w) => creatorZh.includes(w)));
+    await page.screenshot({ path: "visual-snapshots/spec009-home-creator-zh-desktop.png", fullPage: true });
+  }
+
   await page.evaluate(() => window.localStorage.setItem("makebook-language", "en"));
 }
 

@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-const BASE = "http://127.0.0.1:3210";
+const BASE = process.env.BASE_URL ?? "http://127.0.0.1:3210";
 const browser = await chromium.launch({ headless: true, args: ["--no-proxy-server"] });
 const page = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
 let failures = 0;
@@ -10,6 +10,8 @@ try { await page.waitForFunction(() => document.body.innerText.includes("HERITAG
 await page.waitForTimeout(800);
 let text = (await page.innerText("body")).replace(/\s+/g, " ");
 report("bracelet byline HERITAGE STUDIO", ["Sold by HERITAGE STUDIO", "DEMO BRAND", "0x42a0…3B0a"].filter((n) => !text.includes(n)));
+// §2.2：bracelet 批次名不再是第二个 "Batch A"
+report("bracelet batch name §2.2", ["Community batch"].filter((n) => !text.includes(n)));
 
 await page.goto(BASE + "/console", { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(6000);

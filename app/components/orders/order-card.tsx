@@ -10,7 +10,7 @@ import {
   useNowSec,
 } from "@/app/lib/chain/hooks";
 import { useClaimRefund } from "@/app/lib/chain/write";
-import { CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
+import { CAMPAIGNS, BATCH_COPY_KEY, type CampaignId } from "@/app/lib/chain/config";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, explorerTx } from "@/app/lib/chain/format";
 
@@ -117,7 +117,7 @@ export function OrderCard({ id }: OrderCardProps) {
         <div>
           <h3 className="text-h2 text-ink">{meta.product}</h3>
           <p className="num mt-0.5 text-body text-ink-2">
-            {meta.batchName}
+            {copy.batch[BATCH_COPY_KEY[id]].name}
             {id === "failure" && (
               <span className="ml-2 text-ink-3">({copy.batch.b.note})</span>
             )}

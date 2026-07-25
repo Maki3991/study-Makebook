@@ -41,16 +41,17 @@ export const copy = {
 
   home: {
     hero: {
-      title: "Name your max price. Factories produce to real demand.",
+      title:
+        "Name your max price. The brand orders against it, the factory produces against it.",
       sub: "Your bid is held in full by the contract. If the batch clears, you pay one uniform price and the difference is refunded automatically. If it does not clear, everyone gets a full refund.",
-      cta: "Start demo",
+      cta: "See live batches",
     },
     steps: {
       title: "Get started in 3 steps",
       stepLabel: "Step {n}",
       step1: "Connect wallet (auto-switches to Injective testnet)",
       step2: "Claim free test INJ",
-      step3: "Place a bid on a batch",
+      step3: "Bid on what you want",
     },
     batches: {
       title: "Active batches",
@@ -61,6 +62,47 @@ export const copy = {
       escrowed: "Escrowed",
       escrowedValue: "{amount} test INJ",
       untilDeadline: "Until deadline",
+    },
+    // Spec 009 §3.3: creator-facing narrative block on the home page. The 2%
+    // fee and "your" stay bold-able via split segments. Never use
+    // profit/return/invest wording in this section (spec 009 §2.1 rule 1).
+    creator: {
+      title: "Run a production line without inventory",
+      sub: "For creators with a community and an idea, who don't want to stake all their cash flow on one try.",
+      cards: {
+        noInventory: {
+          title: "You never order first",
+          body: "Buyers' money is locked in the contract in full, first. Production starts only when MOQ is met; otherwise everyone is refunded in full. Inventory risk is not on you.",
+        },
+        margin: {
+          title: "You keep the retail margin",
+          body1:
+            "Clearing price = factory price × the markup factor you set. Booked on-chain the moment the batch clears; you claim it yourself — the platform never holds it. Platform fee ",
+          fee: "2%",
+          body2: " (big marketplaces take 8–12%).",
+        },
+        responsibility: {
+          title: "What you own",
+          body1:
+            "Product liability, warranty, refunds and exchanges, shipping, community ops. The factory is ",
+          your: "your",
+          body2: " supplier — it never faces consumers directly.",
+        },
+      },
+      flow: {
+        label: "How a batch runs",
+        steps: [
+          "Pick a comment source",
+          "AI compiles SKUs",
+          "You confirm on-chain",
+          "Factory quotes freeze",
+          "Community bids",
+          "Settlement",
+          "You claim the margin",
+        ],
+      },
+      cta: "Talk to us about your batch →",
+      note: "Self-serve launch is V1; current batches are opened with help from the MAKEBOOK team.",
     },
   },
 
@@ -78,14 +120,17 @@ export const copy = {
 
   batch: {
     a: { name: "Batch A" },
-    b: { name: "Batch B", note: "Below MOQ" },
-    bracelet: { name: "Batch A" },
+    b: { name: "Batch B", note: "Demo: a below-MOQ batch" },
+    bracelet: { name: "Community batch" },
     card: {
       orders: "{n}/50 orders",
       preview:
         "If it closed now: uniform price {price} test INJ, {count} orders clearing",
-      previewInfeasible: "Below MOQ — would not clear yet",
+      previewInfeasible: "Below MOQ — not clearing at current orders",
       closed: "Closed — awaiting settlement",
+      // N-3/spec 009 §2.1 rule 3: the card CTA names its destination instead
+      // of reusing the hero CTA.
+      cta: "View batch",
     },
   },
 
@@ -164,15 +209,15 @@ export const copy = {
   },
 
   pledge: {
-    title: "Back this batch",
+    title: "Bid to pre-order",
     inputLabel: "Your max price (test INJ)",
     inputError: "Enter a price greater than 0",
     chipHint: "Reference price points",
     feasibleNow: "At current orders, this price would clear",
     infeasibleNow:
       "At current orders, this price would not clear yet (full refund after settlement)",
-    cta: "Back now",
-    connectCta: "Connect wallet to back",
+    cta: "Bid now",
+    connectCta: "Connect wallet to bid",
     ordered: "You bid {price} test INJ · View order",
     full: "This batch is full (50/50)",
     settleCta: "Settle now (anyone can trigger)",
@@ -180,7 +225,7 @@ export const copy = {
   },
 
   quotes: {
-    title: "Factory terms",
+    title: "Factory quotes (factory price)",
     empty: "No factory quotes yet.",
     ordersSuffix: "orders",
     row: "MOQ {minQty} · Unit price {price} test INJ · {eligible} orders eligible",
@@ -240,7 +285,7 @@ export const copy = {
   },
 
   drawer: {
-    title: "Confirm backing",
+    title: "Confirm your bid",
     step: "Confirm order → Sign in wallet → Done",
     summary: "{product} × 1 · Your max price {price} test INJ",
     breakdown: {

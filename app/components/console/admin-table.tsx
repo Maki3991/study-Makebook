@@ -1,7 +1,7 @@
 "use client";
 
 import { useCampaign } from "@/app/lib/chain/hooks";
-import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
+import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, BATCH_COPY_KEY, type CampaignId } from "@/app/lib/chain/config";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, formatCountdown } from "@/app/lib/chain/format";
 import { Clock } from "lucide-react";
@@ -38,7 +38,7 @@ function AdminRow({ id }: { id: CampaignId }) {
     <tr className="border-b border-line">
       <td className="py-3 pr-4 text-body font-medium text-ink">
         {meta.product}
-        <span className="num ml-2 text-ink-3">{meta.batchName}</span>
+        <span className="num ml-2 text-ink-3">{copy.batch[BATCH_COPY_KEY[id]].name}</span>
       </td>
       <td className="py-3 pr-4 text-body">
         {/* N-9: one badge grammar — uppercase, outline, semantic colors */}

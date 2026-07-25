@@ -7,7 +7,7 @@ import {
   useConsoleRole,
 } from "@/app/lib/chain/hooks";
 import { useClaimPayout } from "@/app/lib/chain/write";
-import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
+import { CAMPAIGNS, DEPLOYED_CAMPAIGNS, BATCH_COPY_KEY, type CampaignId } from "@/app/lib/chain/config";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, explorerTx, truncateAddress } from "@/app/lib/chain/format";
 
@@ -57,7 +57,7 @@ function FactoryCampaignCard({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-body font-semibold text-ink">{meta.product}</h3>
-          <p className="num mt-0.5 text-micro text-ink-2">{meta.batchName}</p>
+          <p className="num mt-0.5 text-micro text-ink-2">{copy.batch[BATCH_COPY_KEY[id]].name}</p>
           <p className="mt-3 text-body text-ink-2">
             {copy.console.factory.title}:{" "}
             <span className="num text-ink">{truncateAddress(address)}</span>
