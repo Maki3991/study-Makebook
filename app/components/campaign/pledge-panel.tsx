@@ -204,6 +204,7 @@ export function PledgePanel({ id }: { id: CampaignId }) {
                     type="button"
                     onClick={() => handleChip(price)}
                     data-selected={input === price ? "true" : "false"}
+                    aria-pressed={input === price}
                     className="chip"
                   >
                     {price}
@@ -222,7 +223,9 @@ export function PledgePanel({ id }: { id: CampaignId }) {
               </p>
             )}
             {inputError && (
-              <p className="mt-4 text-body text-danger">{inputError}</p>
+              <p role="alert" className="mt-4 text-body text-danger">
+                {inputError}
+              </p>
             )}
           </div>
         ) : null}
@@ -242,9 +245,15 @@ export function PledgePanel({ id }: { id: CampaignId }) {
         )}
 
         {placeOrder.error && (
-          <p className="mt-4 text-body text-danger">{placeOrder.error}</p>
+          <p role="alert" className="mt-4 text-body text-danger">
+            {placeOrder.error}
+          </p>
         )}
-        {settle.error && <p className="mt-4 text-body text-danger">{settle.error}</p>}
+        {settle.error && (
+          <p role="alert" className="mt-4 text-body text-danger">
+            {settle.error}
+          </p>
+        )}
       </section>
 
       <BackDrawer

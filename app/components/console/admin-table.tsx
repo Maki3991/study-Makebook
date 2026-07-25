@@ -121,14 +121,15 @@ export function AdminTable() {
 
       <div className="mt-5 overflow-x-auto">
         <table className="w-full min-w-[640px] text-left">
+          <caption className="sr-only">{copy.console.admin.title}</caption>
           <thead>
             <tr className="bg-paper-2 text-label text-ink-3">
-              <th className="py-2 pr-4 pl-4 text-left font-medium">{copy.console.admin.headers.batch}</th>
-              <th className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.state}</th>
-              <th className="py-2 pr-4 text-right font-medium">{copy.console.admin.headers.orders}</th>
-              <th className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.factoryQuotes}</th>
-              <th className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.currentPreview}</th>
-              <th className="py-2 pr-4 text-right font-medium">{copy.console.admin.headers.deadline}</th>
+              <th scope="col" className="py-2 pr-4 pl-4 text-left font-medium">{copy.console.admin.headers.batch}</th>
+              <th scope="col" className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.state}</th>
+              <th scope="col" className="py-2 pr-4 text-right font-medium">{copy.console.admin.headers.orders}</th>
+              <th scope="col" className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.factoryQuotes}</th>
+              <th scope="col" className="py-2 pr-4 text-left font-medium">{copy.console.admin.headers.currentPreview}</th>
+              <th scope="col" className="py-2 pr-4 text-right font-medium">{copy.console.admin.headers.deadline}</th>
             </tr>
           </thead>
           <tbody>

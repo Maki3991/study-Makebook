@@ -119,6 +119,30 @@ export function ProductCard({ id }: { id: CampaignId }) {
                 );
               })}
             </dl>
+
+            {/* Spec 009 §6-2: FRAME-01 detail shots under the spec grid.
+                Bracelet skips this — its detail set is a different product.
+                aspect + intrinsic dimensions keep the boxes from collapsing. */}
+            {id !== "bracelet" && (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/products/frame-01/detail-strap.png"
+                  alt={copy.product.detailStrapAlt}
+                  width={896}
+                  height={1184}
+                  className="aspect-[3/4] w-full object-cover object-center"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/products/frame-01/detail-insert.png"
+                  alt={copy.product.detailInsertAlt}
+                  width={896}
+                  height={1184}
+                  className="aspect-[3/4] w-full object-cover object-center"
+                />
+              </div>
+            )}
           </div>
 
           <div className="mt-auto border-t border-line pt-4 lg:pt-5">

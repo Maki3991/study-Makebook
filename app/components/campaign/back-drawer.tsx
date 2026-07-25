@@ -252,7 +252,11 @@ export function BackDrawer({
                 </label>
               </div>
 
-              {error && <p className="text-body text-danger">{error}</p>}
+              {error && (
+                <p role="alert" className="text-body text-danger">
+                  {error}
+                </p>
+              )}
             </div>
           )}
         </DrawerBody>

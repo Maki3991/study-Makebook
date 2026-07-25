@@ -104,8 +104,8 @@ export const zh = {
   },
 
   batch: {
-    a: { name: "批次 A" },
-    b: { name: "批次 B", note: "演示：未达 MOQ 的批次" },
+    a: { name: "批次 A", badge: "演示：可成团" },
+    b: { name: "批次 B", note: "演示：未达 MOQ 的批次", badge: "演示：未达 MOQ" },
     bracelet: { name: "社区批次" },
     card: {
       orders: "{n}/50 单",
@@ -114,6 +114,10 @@ export const zh = {
       closed: "已截止，等待清算",
       // spec 009 §2.1 原则 3：卡片 CTA 说明去向，不复用 hero CTA
       cta: "进入批次",
+      // spec 009 §6-4：卡片 CTA 随批次状态分化；cta 留作未知/错误态兜底，
+      // 已清算态复用 pledge.resultCta
+      ctaBid: "去出价",
+      ctaClosed: "已截止 · 等待清算",
     },
   },
 
@@ -173,6 +177,10 @@ export const zh = {
         removable: "可拆卸",
       },
     },
+    // spec 009 §6-2：规格区下方的细节图 + 页面次级场景图（仅 FRAME-01 批次）
+    detailStrapAlt: "FRAME-01 背带快拆扣细节",
+    detailInsertAlt: "FRAME-01 可拆卸内胆",
+    sceneAlt: "挂在书桌旁椅背上的 FRAME-01",
     trust: {
       toggle: "链上校验详情",
       manifestTitle: "说明书 JSON",
@@ -425,6 +433,8 @@ export const zh = {
 
   fundsSplit: {
     title: "每一分钱去哪了",
+    // spec 009 §6-1：出价面板下方的紧凑小卡（右栏）
+    cardTitle: "你这笔钱会怎么走",
     roles: {
       factory: "工厂",
       creator: "品牌",

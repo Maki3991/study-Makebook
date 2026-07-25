@@ -91,6 +91,36 @@ function BatchCard({ id }: { id: CampaignId }) {
   const clearingPrice = preview?.[3];
   const winnerCount = preview?.[4];
 
+  // Spec 009 §6-3: A/B share the same product photo, so each card carries a
+  // positioning badge (existing tag style, nothing new). The bracelet batch
+  // is already distinguished by its 社区批次 name — no badge there.
+  const badge =
+    id === "success"
+      ? copy.batch.a.badge
+      : id === "failure"
+        ? copy.batch.b.badge
+        : null;
+
+  // Spec 009 §6-4: the card CTA tracks the batch state. While reads are in
+  // flight a skeleton holds the space — never a prematurely wrong label
+  // (Phase C lesson); on RPC error we fall back to the neutral `cta`.
+  const isPastDeadline =
+    campaign.state === "Open" &&
+    campaign.deadline !== undefined &&
+    now >= Number(campaign.deadline);
+  const isSettled =
+    campaign.state === "Succeeded" ||
+    campaign.state === "Failed" ||
+    campaign.state === "PaidOut";
+  let ctaLabel: string = copy.batch.card.cta;
+  if (isSettled) {
+    ctaLabel = copy.pledge.resultCta;
+  } else if (isPastDeadline) {
+    ctaLabel = copy.batch.card.ctaClosed;
+  } else if (campaign.state === "Open") {
+    ctaLabel = copy.batch.card.ctaBid;
+  }
+
   return (
     <Link
       href={meta.route}
@@ -114,6 +144,11 @@ function BatchCard({ id }: { id: CampaignId }) {
                 <span className="ml-2 text-ink-3">({copy.batch.b.note})</span>
               )}
             </p>
+            {badge !== null && (
+              <p className="mt-2">
+                <span className="tag tag-neutral">{badge}</span>
+              </p>
+            )}
           </div>
           <StatusTag campaign={campaign} />
         </div>
@@ -179,10 +214,18 @@ function BatchCard({ id }: { id: CampaignId }) {
         </div>
 
         <div className="mt-auto pt-5">
-          <span className="btn btn-secondary w-full">
-            {copy.batch.card.cta}
-            <ArrowRight size={16} />
-          </span>
+          {campaign.isLoading ? (
+            <span
+              className="skeleton block h-11 w-full"
+              role="status"
+              aria-label={copy.global.a11y.loading}
+            />
+          ) : (
+            <span className="btn btn-secondary w-full">
+              {ctaLabel}
+              <ArrowRight size={16} />
+            </span>
+          )}
         </div>
       </div>
     </Link>

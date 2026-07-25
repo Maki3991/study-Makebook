@@ -59,6 +59,11 @@ async function bodyText(route, waitFor, timeoutMs = 60000) {
     "Per unit, at the current preview clearing price",
     "the platform never holds the brand's or the factory's money",
   ].filter((n) => !text.includes(n)));
+  // §6-1：右栏分账小卡（success 批 preview 可行 → 标题 + 三行金额 + 说明）
+  report("§6-1 pledge split card", [
+    "Where your money goes",
+    "the platform never holds the brand's or the factory's money",
+  ].filter((n) => !text.includes(n)));
   // 供货方不得写死在署名行（只允许表格里出现 Factory A/B）
   report("C1 no hardcoded supplier", ["FACTORY B 供货", "supplied by"].filter((n) => text.includes(n)) );
   await page.screenshot({ path: "visual-snapshots/spec009-success-desktop.png", fullPage: true });
@@ -67,20 +72,33 @@ async function bodyText(route, waitFor, timeoutMs = 60000) {
 // 1.5 首页（en）：§2.2 新 hero/steps/批次名 + §3.3 主理人叙事块
 {
   const text = await bodyText("/", "Run a production line without inventory");
+  // §6-4: the card CTA is state-driven — wait until chain reads land before
+  // asserting it (same pattern as the "4 eligible" wait on campaign pages).
+  try {
+    await page.waitForFunction(
+      (needle) => document.body.innerText.includes(needle),
+      "Bid now",
+      { timeout: 60000, polling: 500 },
+    );
+    await page.waitForTimeout(500);
+  } catch {}
+  const homeText = (await page.innerText("body")).replace(/\s+/g, " ");
   report("home hero §2.2", [
     "Name your max price. The brand orders against it, the factory produces against it.",
     "See live batches", "Bid on what you want",
-  ].filter((n) => !text.includes(n)));
+  ].filter((n) => !homeText.includes(n)));
   report("home creator section §3.3", [
     "Run a production line without inventory",
     "You never order first", "You keep the retail margin", "What you own",
     "Platform fee 2% (big marketplaces take 8–12%).",
     "PICK A COMMENT SOURCE", "YOU CLAIM THE MARGIN",
     "Talk to us about your batch", "Self-serve launch is V1",
-  ].filter((n) => !text.includes(n)));
-  report("home batch names §2.2", [
-    "Community batch", "Demo: a below-MOQ batch", "View batch",
-  ].filter((n) => !text.includes(n)));
+  ].filter((n) => !homeText.includes(n)));
+  // §6-3/§6-4：批次卡定位标识（tag 大写）+ CTA 按状态分化（三批均 Open → Bid now）
+  report("home batch names §2.2 + §6-3/§6-4", [
+    "Community batch", "Demo: a below-MOQ batch",
+    "DEMO: CAN CLEAR", "DEMO: BELOW MOQ", "Bid now",
+  ].filter((n) => !homeText.includes(n)));
   // §2.1 原则 1：主理人 section 禁用词（负断言，只扫该 section）
   const creatorText = (
     await page.locator("section", { hasText: "Run a production line without inventory" }).innerText()
@@ -95,6 +113,11 @@ async function bodyText(route, waitFor, timeoutMs = 60000) {
   report("failure batch both infeasible", [
     "0 eligible < MOQ 3 · infeasible",
   ].filter((n) => !text.includes(n)));
+  // §6-1：failure 批 preview 不可行 → 小卡只留标题 + 说明，无金额（与 C3 抽屉口径一致）
+  report("§6-1 split card infeasible (no amounts)", [
+    "Where your money goes",
+    "the platform never holds the brand's or the factory's money",
+  ].filter((n) => !text.includes(n)));
   await page.screenshot({ path: "visual-snapshots/spec009-failure-desktop.png", fullPage: true });
 }
 
@@ -108,12 +131,23 @@ async function bodyText(route, waitFor, timeoutMs = 60000) {
     "达标 4 ≥ MOQ 3 · 达标数最多 → 中标",
     "排序规则：eligibleCount 最大 → 出厂价低 → quoteId/tierIndex 小",
     "每一分钱去哪了", "每一笔都在清算时链上记账",
+    "你这笔钱会怎么走",
   ].filter((n) => !text.includes(n)));
   await page.screenshot({ path: "visual-snapshots/spec009-success-zh-desktop.png", fullPage: true });
 
   // 3.5 首页（zh）：§2.2/§3.3 词典镜像（复用当前 zh localStorage 会话）
   {
-    const homeText = await bodyText("/", "不压货，也能开一条产线");
+    let homeText = await bodyText("/", "不压货，也能开一条产线");
+    // §6-4：CTA 依赖链上状态，等数据落地再断言
+    try {
+      await page.waitForFunction(
+        (needle) => document.body.innerText.includes(needle),
+        "去出价",
+        { timeout: 60000, polling: 500 },
+      );
+      await page.waitForTimeout(500);
+      homeText = (await page.innerText("body")).replace(/\s+/g, " ");
+    } catch {}
     report("zh home hero §2.2", [
       "说出你愿意付的最高价。品牌据此下单，工厂据此生产。",
       "看看正在开的批次", "给想要的东西出价",
@@ -126,8 +160,8 @@ async function bodyText(route, waitFor, timeoutMs = 60000) {
       "选评论源", "你领差价",
       "聊聊你的批次", "自助发起为 V1",
     ].filter((n) => !homeText.includes(n)));
-    report("zh home batch names §2.2", [
-      "社区批次", "演示：未达 MOQ 的批次", "进入批次",
+    report("zh home batch names §2.2 + §6-3/§6-4", [
+      "社区批次", "演示：未达 MOQ 的批次", "演示：可成团", "去出价",
     ].filter((n) => !homeText.includes(n)));
     // §2.1 原则 1：中文禁用词（负断言，只扫该 section）
     const creatorZh = await page.locator("section", { hasText: "不压货，也能开一条产线" }).innerText();

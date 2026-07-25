@@ -49,6 +49,9 @@ export function WalletButton() {
                 <button
                   type="button"
                   onClick={openConnectModal}
+                  // §5.1: aria-hidden until ready — keep it out of the tab
+                  // order too, otherwise the hidden button stays focusable.
+                  tabIndex={ready ? undefined : -1}
                   className="btn btn-primary whitespace-nowrap px-4 text-body"
                 >
                   {copy.global.wallet.connect}
@@ -58,6 +61,7 @@ export function WalletButton() {
                   href={METAMASK_DOWNLOAD_URL}
                   target="_blank"
                   rel="noopener noreferrer"
+                  tabIndex={ready ? undefined : -1}
                   className="btn btn-primary whitespace-nowrap px-4 text-body"
                 >
                   {copy.global.wallet.installMetaMask}
@@ -68,6 +72,7 @@ export function WalletButton() {
                 type="button"
                 disabled={isPending}
                 onClick={() => switchChain?.({ chainId: CHAIN_ID })}
+                tabIndex={ready ? undefined : -1}
                 className="btn btn-danger whitespace-nowrap px-4 text-body"
               >
                 {isPending
@@ -78,6 +83,7 @@ export function WalletButton() {
               <button
                 type="button"
                 onClick={openAccountModal}
+                tabIndex={ready ? undefined : -1}
                 className="btn btn-secondary whitespace-nowrap px-4 text-body"
               >
                 {truncateAddress(account.address)}

@@ -157,8 +157,14 @@ export function CompilePanel() {
 
       <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2">
-          <span className="text-body text-ink-2">{copy.console.compile.sourceLabel}</span>
+          <label
+            htmlFor="compile-source"
+            className="text-body text-ink-2"
+          >
+            {copy.console.compile.sourceLabel}
+          </label>
           <select
+            id="compile-source"
             value={source}
             onChange={(e) => setSource(e.target.value as CommentSource)}
             className="input h-9 min-h-0 px-3 text-body"
@@ -202,6 +208,7 @@ export function CompilePanel() {
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
             placeholder={copy.console.compile.pasteHint}
+            aria-label={copy.console.compile.sourcePaste}
             className="mt-3 h-64 w-full rounded-md border border-line bg-canvas p-3 font-mono text-micro text-ink"
             spellCheck={false}
           />
@@ -219,7 +226,9 @@ export function CompilePanel() {
       </p>
 
       {error && (
-        <p className="mt-4 text-body text-danger">{error}</p>
+        <p role="alert" className="mt-4 text-body text-danger">
+          {error}
+        </p>
       )}
 
       {output && (
@@ -314,11 +323,14 @@ export function CompilePanel() {
             onChange={(e) =>
               setEditingManifest({ ...editingManifest, json: e.target.value })
             }
+            aria-label={copy.console.compile.humanConfirmTitle}
             className="mt-3 h-64 w-full rounded-md border border-line bg-canvas p-3 font-mono text-micro text-ink"
             spellCheck={false}
           />
           {confirmError && (
-            <p className="mt-2 text-body text-danger">{confirmError}</p>
+            <p role="alert" className="mt-2 text-body text-danger">
+              {confirmError}
+            </p>
           )}
           <button
             type="button"

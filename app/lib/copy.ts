@@ -119,8 +119,8 @@ export const copy = {
   },
 
   batch: {
-    a: { name: "Batch A" },
-    b: { name: "Batch B", note: "Demo: a below-MOQ batch" },
+    a: { name: "Batch A", badge: "Demo: can clear" },
+    b: { name: "Batch B", note: "Demo: a below-MOQ batch", badge: "Demo: below MOQ" },
     bracelet: { name: "Community batch" },
     card: {
       orders: "{n}/50 orders",
@@ -131,6 +131,10 @@ export const copy = {
       // N-3/spec 009 §2.1 rule 3: the card CTA names its destination instead
       // of reusing the hero CTA.
       cta: "View batch",
+      // Spec 009 §6-4: the card CTA tracks the batch state. `cta` stays as the
+      // fallback for unknown/error states; `ctaResult` reuses pledge.resultCta.
+      ctaBid: "Bid now",
+      ctaClosed: "Closed · awaiting settlement",
     },
   },
 
@@ -198,6 +202,11 @@ export const copy = {
         removable: "Removable",
       },
     },
+    // Spec 009 §6-2: detail shots below the spec grid + the scene image as a
+    // secondary visual (FRAME-01 batches only — the bracelet has its own set).
+    detailStrapAlt: "FRAME-01 strap quick-release buckle detail",
+    detailInsertAlt: "FRAME-01 removable camera insert",
+    sceneAlt: "FRAME-01 sling hanging on a chair by a desk",
     trust: {
       toggle: "On-chain verification",
       manifestTitle: "Manifest JSON",
@@ -460,6 +469,8 @@ export const copy = {
 
   fundsSplit: {
     title: "Where every penny goes",
+    // Spec 009 §6-1: compact card under the pledge panel (right rail).
+    cardTitle: "Where your money goes",
     roles: {
       factory: "Factory",
       creator: "Brand",

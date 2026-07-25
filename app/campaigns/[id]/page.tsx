@@ -13,6 +13,7 @@ import { ResultBlock } from "@/app/components/campaign/result-block";
 import { FundsSplit } from "@/app/components/campaign/funds-split";
 import { EvidenceBlock } from "@/app/components/campaign/evidence-block";
 import { PledgePanel } from "@/app/components/campaign/pledge-panel";
+import { PledgeSplitCard } from "@/app/components/campaign/pledge-split-card";
 
 const VALID_IDS: CampaignId[] = ["success", "failure", "bracelet"];
 
@@ -46,7 +47,10 @@ export default function CampaignPage() {
         <div>
           <ProductCard id={campaignId} />
 
-          <div className="mt-2">
+          {/* Spec 009 §6-5: 96px (--spacing-7) from the product card's bottom
+              edge to the first hairline, matching the .section rhythm below.
+              Mobile tightens to --spacing-6 (64px), cf. the hero's py-5. */}
+          <div className="mt-6 lg:mt-7">
             <QuoteTable id={campaignId} />
             <DemandCurve id={campaignId} />
             <ResultBlock id={campaignId} />
@@ -54,14 +58,32 @@ export default function CampaignPage() {
           </div>
         </div>
 
-        <div className="lg:sticky lg:top-24 lg:self-start">
+        <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           <PledgePanel id={campaignId} />
+          <PledgeSplitCard id={campaignId} />
         </div>
       </div>
 
       <EvidenceBlock id={campaignId} />
 
-      <footer className="mt-12 border-t border-line pt-6 text-micro text-ink-3">
+      {/* Spec 009 §6-2: scene-desk as the page's secondary visual, after the
+          evidence block so it never squeezes the main flow. FRAME-01 batches
+          only — the bracelet batch has no desk-scene shot. aspect + intrinsic
+          width/height keep the container from collapsing (N-3). */}
+      {campaignId !== "bracelet" && (
+        <div className="mt-6 lg:mt-7">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/products/frame-01/scene-desk.png"
+            alt={copy.product.sceneAlt}
+            width={768}
+            height={1360}
+            className="aspect-[4/3] w-full object-cover object-[center_68%] lg:aspect-[21/9]"
+          />
+        </div>
+      )}
+
+      <footer className="mt-6 border-t border-line pt-6 text-micro text-ink-3 lg:mt-7">
         <p className="font-mono">
           {copy.campaign.contractLabel} {meta.deployment?.address}
         </p>
