@@ -68,6 +68,10 @@ export async function callProvider(
       body: JSON.stringify({
         model,
         temperature,
+        // 推理型模型（glm-5.2）不关思考会把 token 预算烧在 reasoning 上导致空响应；
+        // 4000 token 上限给 2–3 个候选（实测 5.5–6.8k 字符 ≈ 2000 token）留足余量
+        max_tokens: 4000,
+        thinking: { type: "disabled" },
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: SYSTEM_PROMPT } satisfies ChatMessage,
