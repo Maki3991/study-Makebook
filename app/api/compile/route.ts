@@ -24,8 +24,8 @@ export async function POST(req: Request): Promise<Response> {
     );
   }
 
-  // 网关生成速度 25–80 tok/s，真实编译实测 26–90s；90s 内等真实结果，超出才降级 fixture
-  const output = await compileComments(comments, { timeoutMs: 90000 });
+  // 网关生成速度 25–80 tok/s，真实编译实测 26–92s；120s 预算提高成功率，超出才降级 fixture
+  const output = await compileComments(comments, { timeoutMs: 120000 });
   return Response.json(output);
 }
 
