@@ -107,8 +107,11 @@ export function ProductCard({ id }: { id: CampaignId }) {
                   (copy.product.spec.value as Record<string, string>)[
                     spec.value
                   ] ?? spec.value;
+                // Long prose values (bracelet manifest) take a full row —
+                // a 118px grid track shreds them into one-word lines.
+                const fullRow = valueLabel.length > 24;
                 return (
-                  <div key={idx}>
+                  <div key={idx} className={fullRow ? "col-span-full" : ""}>
                     <dt className="text-micro text-ink-3">{keyLabel}</dt>
                     {/* N-7: spec values are mono + tabular like every other
                         numeric/factual readout on the page. */}
