@@ -20,7 +20,7 @@ PRD v1.0 为仓外文档（不在本仓库内）。
 |---|---|---|
 | [001](001-campaign-contract.md) | 清算合约：状态机、ABI 冻结、不变量与测试映射 | 已实现（73/73 测试，含 P1 三方分账 22 例） |
 | [002](002-ai-compiler.md) | AI 需求编译器：I/O 契约、脱敏、fixture 降级 | 已实现（9/9 测试） |
-| [003](003-frontend-integration.md) | 前端集成：mock → 链上替换规则与数值对齐清单 | 已归档（被 006 取代） |
+| [003](../docs/archive/003-frontend-integration.md) | 前端集成：mock → 链上替换规则与数值对齐清单 | 已归档（被 006 取代，2026-07-25 移入 `docs/archive/`） |
 | [004](004-testnet-deployment.md) | Testnet 预部署与演示证据 | 已完成（2026-07-25 三套 Campaign 重新部署并预下单，见 deployments/injective-testnet.json） |
 | [005](005-stakeholder-requirements.md) | 三方真实需求矩阵：P0 机制 / 有意推迟 / 永不承诺 | 已评审 |
 | [006](006-frontend-rebuild.md) | 前端重建：用户上手 demo（极简三页 + 真链全流程） | 已完成（T1–T9 全部落地并上线） |
@@ -45,3 +45,4 @@ PRD v1.0 为仓外文档（不在本仓库内）。
 | 2026-07-25 | 全角色链路补全：新增 `/console` 工作台（品牌方编译+监控 / 工厂报价+claimPayout，按钱包角色切换）；spec 006 加 §3.4 与状态矩阵工厂列；spec 007 加 T9 与 console 文案 | specs/006、specs/007、AGENTS.md |
 | 2026-07-25 | 三套 Campaign 重新部署（deadline 1785187183 = 2026-07-28 05:19 UTC+8，now+72h；operator `0x9d60…DA89`），旧 2026-07-24 地址废弃；BRACELET-01 已部署（Open，0 单，已 verify）；前端上线 https://makebook-frontend.jiachexie6.workers.dev | deployments/、docs/、AGENTS.md、specs/006 |
 | 2026-07-25 | **P1 三方分账全链路上线**（spec 008）：合约 8 参构造 + `_computeSettlement` 零售口径 + settle 三笔账 + 品牌/平台两路新 claim（73 测试绿）；三套 P1 合约重部署（success `0x260A…556e` / failure `0x785C…77AA9` / bracelet `0x8Bb4…C691`，deadline 1785024000 = 2026-07-26 08:00 UTC+8，均 verify）；前端 P1 版上线（creator/platform 领取面板、每一分钱去哪了、chips 0.020/0.024/0.030、曲线零售口径）；PRD/PITCH/005/fixtures 叙事对齐 | contracts/、app/、deployments/、docs/、specs/、fixtures/、AGENTS.md |
+| 2026-07-25 | 文档收尾（spec 009 §8.2）：spec 003 与 CC_FRONTEND_HANDOFF / FRONTEND-ARCHITECTURE / PRD_FRONTEND_AUDIT 移入 `docs/archive/`；`docs/AGENT_CONTEXT.md` 删除（与 AGENTS.md 重复且过期）；spec 006 §7、spec 007 §3/§6、ALAN_DESIGN_OPTIMIZATION_REPORT 挂失效横幅；EVIDENCE.md 底部自动生成段剥离，`render-evidence.sh` 改输出 `docs/evidence-auto.md`；README「当前实现边界」重写为已上线口径；测试数 51→73 | docs/、specs/、README.md、.gitignore、contracts/script/ |

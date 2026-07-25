@@ -59,3 +59,11 @@ next-env.d.ts
 deployments/state.anvil.json
 deployments/receipts/anvil-*
 tsconfig.tsbuildinfo
+
+# predictions SPA build output
+predictions/dist/
+
+# 本地调试与快照产物（spec 009 §8.2）
+kimi-debug-session_*.zip
+t7-t9-snapshots.txt
+visual-snapshots.txt

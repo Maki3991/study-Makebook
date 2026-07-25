@@ -47,6 +47,8 @@ deployments json 里每个非零地址的 key 对应一行；bracelet 未部署�
 
 ## 3. 设计 Token（写进 `app/globals.css` 的 `@theme`，Tailwind v4）
 
+> ⚠️ 【本节已失效 2026-07-25】token 数值已被 `specs/009-ux-polish.md` §1 取代：代码实际视觉为暖纸底 `#F5F3EF` + 赭红 `#B23A18`，非本节的白底 + 功能蓝。当前唯一权威是 `app/globals.css` / `app/lib/design-tokens.ts` 与 spec 009 §1，本节保留作历史记录。
+
 ```css
 @theme {
   /* 色板：白画布 / 炭黑墨 / 冷灰辅 / 唯一功能蓝 */
@@ -170,6 +172,8 @@ if (state === Succeeded || PaidOut) {
 fetch `/manifests/frame-01.json`（本地 public 副本，刻意不用链上 manifestURI 的 GitHub raw 地址——避免现场网络依赖与 CORS；两个文件内容相同，hash 校验即证明一致）→ `MarketManifestSchema.parse`（从仓库 `lib/schema/` import）→ `canonicalHash()` → 与链上 `manifestHash()` 对比 → 项目页小字行显示"说明书 hash 已校验一致 ✓"（不一致显示警示，不阻塞页面）。规格的 key/value 渲染走 copy.ts 映射表（§6.3 product.spec.*），未命中映射的 key/value 原样显示兜底。
 
 ## 6. 文案字典（`app/lib/copy.ts`，逐字定稿，禁止改写）
+
+> ⚠️ 【本节已失效 2026-07-25】文案权威已迁移至 `specs/009-ux-polish.md` §2（文案打磨）：界面为中英双语，本节假设的中文逐字定稿已被代码推翻。现行文案以 `app/lib/copy.ts` 实际内容与 spec 009 §2 为准，本节保留作历史记录。
 
 ### 6.1 全局
 

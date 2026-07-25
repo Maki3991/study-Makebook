@@ -19,9 +19,10 @@ MAKEBOOK 是面向实体新品的预生产订单簿：AI 将评论与访谈整�
 
 ## 当前实现边界
 
-- 前端交互与成功/失败演示状态可独立运行。
-- 仓库中的固定交易哈希和订单数据仅用于前端联调，不是最终链上证据。
-- 钱包、合约读取、真实交易与 AI API 由团队技术分支接入；接入后仍沿用当前状态与错误界面。
+- 前端已上线并接入 Injective EVM Testnet 真实合约：https://makebook-frontend.jiachexie6.workers.dev 。下单即时上链；清算（settle）与三路领取在 deadline（2026-07-26 08:00 UTC+8）后由合约执行。
+- 链上为三套 P1 Campaign（8 参构造，三方分账：工厂出厂价 / 平台费 2% / 品牌差价，各自 pull 领取）：success `0x260A9C9075B09B5950385fEB1AEa7d83a25E556e`、failure `0x785CbE7E2C874413CF5430BA272Bfa02bcc77AA9`、bracelet 见 `deployments/injective-testnet.json`；三套均已 Blockscout verify，合约 73 个测试全绿。
+- 页面所有数值（订单数、工厂报价、清算预览/结果）实时读自链上，无手写演示数据；fixtures 仅在 AI API 不可用时作降级兜底。
+- AI 编译已真实化：品牌方在 `/console` 粘贴评论，经 `/api/compile`（OpenAI 兼容接口）生成候选 manifest，人工确认后锚定上链。
 - 这是测试网原型，不处理真实资产，也不保证真实生产、物流或质量履约。
 
 ## 仓库结构（Monorepo）

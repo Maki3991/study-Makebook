@@ -4,14 +4,15 @@
 #
 # 用法：
 #   contracts/script/render-evidence.sh <anvil|testnet> [输出文件]
-# 默认输出 docs/EVIDENCE.md；anvil 冒烟测试请显式给输出路径，避免污染提交材料。
+# 默认输出 docs/evidence-auto.md（独立文件，随重跑覆盖）；docs/EVIDENCE.md 为人工策展的
+# 当前有效锚点，本脚本不再写入。anvil 冒烟测试请显式给输出路径，避免污染提交材料。
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 JQ="$(command -v jq)"
 NETWORK="${1:?用法: render-evidence.sh <anvil|testnet> [输出文件]}"
-OUT="${2:-$ROOT/docs/EVIDENCE.md}"
+OUT="${2:-$ROOT/docs/evidence-auto.md}"
 
 case "$NETWORK" in
   anvil) STATE_FILE="$ROOT/deployments/state.anvil.json" ;;

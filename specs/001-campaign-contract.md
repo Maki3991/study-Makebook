@@ -17,7 +17,7 @@
 | 清算算法 | R-01~R-10：eligibleCount 最大优先 → 价低优先 → quoteId/tierIndex 小优先；统一价；`maxPrice == clearingPrice` 算赢家 |
 | 资金流出 | 仅 pull：claimRefund（赢家差额/落选全额/失败全额，一次）、claimPayout（仅中标工厂，winnerCount × clearingPrice，一次） |
 | 清算成本 | 有界循环 2×3×50 次比较，settle 不做任何转账；满负载实测 468,877 gas（P1，P0 为 286,858） |
-| 错误风格 | custom errors（19 个前端相关），不用 revert string |
+| 错误风格 | custom errors（21 个前端相关；ABI 总计 24 错误，口径见 §3），不用 revert string |
 
 ## 3. ABI 冻结面
 
@@ -44,7 +44,7 @@
 
 ## 6. 验收锚点
 
-- [ ] `forge build && forge test` 全绿（当前 51/51）
+- [ ] `forge build && forge test` 全绿（当前 73/73，含 P1 三方分账 22 例）
 - [ ] `contracts/abi/MakebookCampaign.json` 与接口文档第 2 节一致
 - [ ] settle gas 实测 < 2,000,000（当前 468,877）
 - [ ] 无 proxy / delegatecall / selfdestruct / ownerWithdraw（grep 检查）

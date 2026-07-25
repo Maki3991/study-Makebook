@@ -145,6 +145,8 @@ Connect →      MetaMask 缺币 →     项目页输入 maxPrice →   deadline
 
 ## 7. 视觉方向（遵循 alan-design）
 
+> ⚠️ 【本节已失效 2026-07-25】视觉权威已迁移至 `specs/009-ux-polish.md` §1（设计 Token 契约）/ §2（文案打磨）+ `.agents/skills/alan-design/SKILL.md`。本节的"白/软白画布 + 功能蓝 accent"已被代码推翻——实际视觉为暖纸底 `#F5F3EF` + 赭红 `#B23A18`。本节保留作历史记录，施工与验收以 spec 009 为准。
+
 视觉标准的权威文件是 `.agents/skills/alan-design/SKILL.md`（设计师个人标准，已随仓安装）。一切 UI 决策——配色、字体、间距、组件形态、动效——以它为准；本节只写 MAKEBOOK 的落地决定，不复制其全文。
 
 - **设计目标**：像一个真实的量产产品页面，不像黑客松通宵产物；用户 30 秒理解、3 步走完主流程。

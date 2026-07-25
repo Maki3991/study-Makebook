@@ -107,7 +107,7 @@ P0 参数（manifestHash / manifestURI / operator / deadline / paymentAsset / li
 
 ## 9.A P0 算法（历史口径，2026-07-25 起由 P1 取代）
 
-与 v1.0 R-01~R-10 逐字一致，链上证据：success `0xBcA0…00c5`（Open，5 单 2 报价）、failure `0x4415…4e6d`（Open，2 单 2 报价）。清算价 = 中标工厂档位价；无保留价；平台费 0；单一工厂应收。51 个测试（CT-01~CT-12）与 Slither 静态分析已归档。
+与 v1.0 R-01~R-10 逐字一致，链上证据：success `0xBcA0…00c5`（Open，5 单 2 报价）、failure `0x4415…4e6d`（Open，2 单 2 报价）。清算价 = 中标工厂档位价；无保留价；平台费 0；单一工厂应收。73 个测试（CT-01~CT-12，含 P1 三方分账 22 例）与 Slither 静态分析已归档。
 
 **P1 已实现三方分账（2026-07-25）**：算法见 9.B。P0 双批次到期后由 P1 三批次（success / failure / bracelet）取代；本节保留为历史口径，不得改述。
 

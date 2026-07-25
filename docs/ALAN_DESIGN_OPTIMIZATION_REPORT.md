@@ -1,5 +1,7 @@
 # MAKEBOOK T4–T6 视觉优化报告
 
+> ⚠️ 【已失效 2026-07-25】本报告写于 P0 时代，三处核心前提已被推翻：① 价格口径 `0.019` 是**出厂价**统一价，P1 起页面展示**零售清算价**（出厂 ×1.25，见 spec 008 / `docs/FRONTEND_INTERFACE.md` §2）；② "仅使用 spec 007 token（白底 + 功能蓝）"的结论不再成立，视觉权威现为 `specs/009-ux-polish.md` §1 + `.agents/skills/alan-design/SKILL.md`（暖纸底 `#F5F3EF` + 赭红 `#B23A18`）；③ 「遗留问题」中的 copy.ts 缺键（`viewTxBlockscout`、结算区标题）与 deadline 重部署均已在后续施工中修复。保留仅作历史参考。
+
 ## 修改文件清单
 
 | 文件 | 改动概要 |
