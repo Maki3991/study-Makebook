@@ -38,7 +38,7 @@ export function TopBar() {
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/makebook-logo.png"
+            src="/brand/lockup.png"
             alt={copy.global.nav.brand}
             className="hidden h-9 w-auto shrink-0 md:block"
           />
