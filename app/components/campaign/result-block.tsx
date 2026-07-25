@@ -1,22 +1,27 @@
 "use client";
 
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import {
   useAccount,
   useCampaign,
   useMyOrder,
   deriveMyOrderStatus,
   useNowSec,
+  useSettleTx,
 } from "@/app/lib/chain/hooks";
 import { CampaignId } from "@/app/lib/types";
 import { useCopy } from "@/app/lib/i18n/use-copy";
-import { formatInj } from "@/app/lib/chain/format";
+import { formatInj, explorerTx, truncateAddress } from "@/app/lib/chain/format";
 
 export function ResultBlock({ id }: { id: CampaignId }) {
   const copy = useCopy();
   const { address } = useAccount();
   const campaign = useCampaign(id);
   const myOrderQuery = useMyOrder(id, address);
+  // Spec 009 §4.4: the settle tx hash is read from the on-chain
+  // CampaignSettled event — no off-chain source needed.
+  const settleTx = useSettleTx(id);
 
   const state = campaign.state;
   const deadline = campaign.deadline;
@@ -71,6 +76,19 @@ export function ResultBlock({ id }: { id: CampaignId }) {
       {state === "PaidOut" && (
         <p className="mt-2 text-sm text-ink-2">{copy.result.factoryPaidOut}</p>
       )}
+
+      {settleTx.data ? (
+        <a
+          href={explorerTx(settleTx.data)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1 text-sm text-accent hover:underline"
+        >
+          {copy.result.viewSettleTx}
+          <span className="num text-xs">{truncateAddress(settleTx.data)}</span>
+          <ExternalLink size={14} />
+        </a>
+      ) : null}
 
       {myOrder ? (
         <div className="mt-4 border-t border-line pt-4">

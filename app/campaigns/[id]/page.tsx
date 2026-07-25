@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 import { StatusStrip } from "@/app/components/campaign/status-strip";
+import { BrandByline } from "@/app/components/campaign/brand-byline";
 import { ProductCard } from "@/app/components/campaign/product-card";
 import { QuoteTable } from "@/app/components/campaign/quote-table";
 import { DemandCurve } from "@/app/components/campaign/demand-curve";
@@ -39,6 +40,7 @@ export default function CampaignPage() {
   return (
     <main className="page py-10 lg:py-16">
       <StatusStrip id={campaignId} />
+      <BrandByline id={campaignId} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
         <div>

@@ -129,9 +129,9 @@ function FactoryCampaignCard({
 export function FactoryPanel() {
   const copy = useCopy();
   const { address, isConnected } = useAccount();
-  const { role } = useConsoleRole(address);
+  const { roles } = useConsoleRole(address);
 
-  if (!isConnected || !address || role !== "factory") {
+  if (!isConnected || !address || !roles.includes("factory")) {
     return null;
   }
 

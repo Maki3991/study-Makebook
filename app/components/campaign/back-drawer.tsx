@@ -14,6 +14,7 @@ import {
 } from "@/app/components/ui/drawer";
 import { Checkbox } from "@/app/components/ui/checkbox";
 import { CAMPAIGNS, type CampaignId } from "@/app/lib/chain/config";
+import { useCampaign } from "@/app/lib/chain/hooks";
 import { useCopy } from "@/app/lib/i18n/use-copy";
 import { formatInj, explorerTx, truncateAddress } from "@/app/lib/chain/format";
 import { TxStage, PlaceOrderResult } from "@/app/lib/chain/write";
@@ -47,6 +48,43 @@ export function BackDrawer({
   const [checked2, setChecked2] = useState(false);
   const meta = CAMPAIGNS[id];
   const productTitle = meta.product;
+  const campaign = useCampaign(id);
+
+  // Spec 009 §3.2 C3: per-unit price breakdown for the tier the current
+  // preview would settle at. The platform fee is carved OUT of the clearing
+  // price (creator gets markup − fee), never added on top of it.
+  // Hidden when the preview is infeasible — there is no uniform price yet,
+  // and inventing one would be a fabrication.
+  const marginBps = campaign.marginBps;
+  const feeBps = campaign.feeBps;
+  const preview = campaign.preview;
+  let breakdown:
+    | {
+        tierWei: bigint;
+        markupWei: bigint;
+        retailWei: bigint;
+        creatorWei: bigint;
+        platformWei: bigint;
+      }
+    | undefined;
+  if (marginBps !== undefined && feeBps !== undefined && preview?.[0]) {
+    const quoteId = Number(preview[1]);
+    const tierIndex = Number(preview[2]);
+    const tierWei = campaign.quotes.find((q) => q.quoteId === quoteId)?.tiers[
+      tierIndex
+    ]?.unitPriceWei;
+    if (tierWei !== undefined) {
+      const retailWei = (tierWei * (10000n + BigInt(marginBps))) / 10000n;
+      const platformWei = (retailWei * BigInt(feeBps)) / 10000n;
+      breakdown = {
+        tierWei,
+        markupWei: retailWei - tierWei,
+        retailWei,
+        creatorWei: retailWei - tierWei - platformWei,
+        platformWei,
+      };
+    }
+  }
 
   const canSubmit = checked1 && checked2;
   const isBusy = stage === "signing" || stage === "confirming";
@@ -116,6 +154,71 @@ export function BackDrawer({
                   .replace("{product}", productTitle)
                   .replace("{price}", maxPrice)}
               </p>
+
+              {breakdown && (
+                <div className="border border-line p-3">
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <span className="text-sm text-ink-2">
+                        {copy.drawer.breakdown.factory}
+                      </span>
+                      <span className="num text-sm text-ink">
+                        {formatInj(breakdown.tierWei)}
+                        <span className="text-xs text-ink-3"> test INJ</span>
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <span className="text-sm text-ink-2">
+                        {copy.drawer.breakdown.markup.replace(
+                          "{factor}",
+                          String((10000 + marginBps!) / 10000),
+                        )}
+                      </span>
+                      <span className="num text-sm text-ink">
+                        + {formatInj(breakdown.markupWei)}
+                        <span className="text-xs text-ink-3"> test INJ</span>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="hairline my-2" />
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="text-sm font-medium text-ink">
+                      {copy.drawer.breakdown.youPay}
+                    </span>
+                    <span className="num text-sm font-medium text-ink">
+                      {formatInj(breakdown.retailWei)}
+                      <span className="text-xs font-normal text-ink-3">
+                        {" "}
+                        test INJ
+                      </span>
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <span className="text-xs text-ink-3">
+                        {copy.drawer.breakdown.ofWhich} ·{" "}
+                        {copy.drawer.breakdown.creatorNet}{" "}
+                        {copy.drawer.breakdown.creatorNetNote}
+                      </span>
+                      <span className="num text-xs text-ink-2">
+                        {formatInj(breakdown.creatorWei)}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <span className="text-xs text-ink-3">
+                        {copy.drawer.breakdown.platformFee}{" "}
+                        {copy.drawer.breakdown.platformFeeNote.replace(
+                          "{pct}",
+                          String(feeBps! / 100),
+                        )}
+                      </span>
+                      <span className="num text-xs text-ink-2">
+                        {formatInj(breakdown.platformWei)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="legal space-y-3 text-sm text-ink-2">
                 <p>

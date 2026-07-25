@@ -148,18 +148,27 @@ export const copy = {
   quotes: {
     title: "Factory terms",
     empty: "No factory quotes yet.",
-    canClear: "Can clear",
     ordersSuffix: "orders",
     row: "MOQ {minQty} · Unit price {price} test INJ · {eligible} orders eligible",
-    rowShort: "{n} orders short",
-    rowShortSingular: "{n} order short",
     headers: {
       factory: "Factory",
       moq: "MOQ",
-      unitPrice: "Unit price",
+      factoryPrice: "Factory price",
+      retailPrice: "Retail price",
       eligible: "Eligible",
-      status: "Status",
+      status: "Result",
     },
+    result: {
+      win: "Selected",
+      lost: "Not selected",
+    },
+    reason: {
+      win: "{n} eligible ≥ MOQ {moq} · most eligible → selected",
+      infeasible: "{n} eligible < MOQ {moq} · infeasible",
+      lost: "{n} eligible ≥ MOQ {moq}, but fewer than {winner} → not selected",
+    },
+    tiebreak:
+      "Tie-break: highest eligibleCount → lowest factory price → lowest quoteId/tierIndex",
   },
 
   curve: {
@@ -187,6 +196,7 @@ export const copy = {
     success:
       "Batch cleared: uniform price {price} test INJ, {count} orders",
     failure: "Below MOQ — batch did not clear, everyone gets a full refund",
+    viewSettleTx: "View settle tx ↗",
     mine: {
       win: "You won: pay {clearing}, refund difference {diff} test INJ",
       lose: "Not selected: claim full refund {amount} test INJ",
@@ -199,6 +209,16 @@ export const copy = {
     title: "Confirm backing",
     step: "Confirm order → Sign in wallet → Done",
     summary: "{product} × 1 · Your max price {price} test INJ",
+    breakdown: {
+      factory: "Factory price",
+      markup: "Brand markup ×{factor}",
+      youPay: "You pay (uniform clearing price)",
+      ofWhich: "of which",
+      creatorNet: "Brand receives",
+      creatorNetNote: "(markup − platform fee)",
+      platformFee: "Platform fee",
+      platformFeeNote: "({pct}%)",
+    },
     legal1:
       "You will lock {price} test INJ. If the uniform price is not higher than this, you will receive 1 × {product} and can claim the difference; otherwise you can claim a full refund. After submitting, the order cannot be cancelled.",
     legal2:
@@ -248,6 +268,8 @@ export const copy = {
       factory: "Registered factory",
       creator: "Brand creator",
       platform: "Platform fee recipient",
+      operatorNote:
+        "Operator actions (open batch / register factory / submit quote) run via CLI — private keys never enter the browser.",
     },
     compile: {
       title: "Demand compiler",
@@ -310,8 +332,13 @@ export const copy = {
       claimed: "Receivable claimed ✓",
     },
     creator: {
-      title: "Brand receivables",
+      title: "My batches",
       address: "Brand creator address",
+      previewPrice: "Preview retail price",
+      expected: "Expected brand receivable",
+      actual: "Final receivable",
+      awaitingSettle: "Claimable after settlement",
+      previewInfeasible: "Below MOQ at current orders — no receivable",
       pending: "Not settled yet",
       win: "Cleared · brand receivable {amount} test INJ",
       failed: "Did not clear — no receivable",
@@ -331,6 +358,9 @@ export const copy = {
 
   campaign: {
     contractLabel: "Contract:",
+    brand: {
+      byline: "Sold by {brand}",
+    },
     evidence: {
       title: "On-chain evidence",
       deployTxLabel: "Deploy tx:",
@@ -351,8 +381,19 @@ export const copy = {
 
   fundsSplit: {
     title: "Where every penny goes",
-    unitSplit:
-      "Uniform price {retail} test INJ = factory {factory} + brand {creator} + platform fee {platform}",
+    roles: {
+      factory: "Factory",
+      creator: "Brand",
+      platform: "Platform",
+    },
+    columns: {
+      role: "Role",
+      amount: "Amount",
+      share: "Share",
+    },
+    note: "Every unit is booked on-chain at settlement; each of the three parties claims its own share — the platform never holds the brand's or the factory's money.",
+    basisPreview: "Per unit, at the current preview clearing price",
+    basisSettled: "Per unit, at the final clearing price",
     totals:
       "{count} orders cleared — factory receivable {factory} · brand receivable {creator} · platform fee {platform} test INJ",
   },

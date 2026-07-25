@@ -536,7 +536,10 @@ export type ConsoleRole =
 const ALL_CAMPAIGN_IDS: CampaignId[] = ["success", "failure", "bracelet"];
 
 export function useConsoleRole(address?: Address): {
-  role: ConsoleRole;
+  // Spec 009 §3.2 C4: an address can hold several roles at once (e.g. the
+  // demo wallet is both operator and creator). Return the full set; panels
+  // gate on membership instead of a single priority winner.
+  roles: ConsoleRole[];
   isLoading: boolean;
 } {
   // Call hooks for every possible campaign in fixed order to obey Rules of Hooks.
@@ -566,7 +569,7 @@ export function useConsoleRole(address?: Address): {
   ].some((r) => r.isLoading);
 
   if (!address) {
-    return { role: "guest", isLoading: false };
+    return { roles: ["guest"], isLoading: false };
   }
 
   const isOperator = operatorReads
@@ -585,11 +588,13 @@ export function useConsoleRole(address?: Address): {
     .filter((_, idx) => CAMPAIGNS[ALL_CAMPAIGN_IDS[idx]].deployed)
     .some((r) => r.data?.toLowerCase() === address.toLowerCase());
 
-  if (isOperator) return { role: "operator", isLoading };
-  if (isFactory) return { role: "factory", isLoading };
-  if (isCreator) return { role: "creator", isLoading };
-  if (isPlatform) return { role: "platform", isLoading };
-  return { role: "viewer", isLoading };
+  const roles: ConsoleRole[] = [];
+  if (isOperator) roles.push("operator");
+  if (isFactory) roles.push("factory");
+  if (isCreator) roles.push("creator");
+  if (isPlatform) roles.push("platform");
+  if (roles.length === 0) roles.push("viewer");
+  return { roles, isLoading };
 }
 
 // ---------------------------------------------------------------------------
@@ -673,6 +678,43 @@ export function useRecentOrderActivity(id: CampaignId, limit = 8) {
         blockNumber: Number(e.blockNumber),
         timestamp: Number(timestampByBlock.get(e.blockNumber) ?? 0n),
       }));
+    },
+    refetchInterval: POLL_INTERVAL_MS,
+    staleTime: POLL_INTERVAL_MS / 2,
+    retry: 2,
+    enabled: true,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Settle transaction hash from the CampaignSettled event (spec 009 §4.4)
+// ---------------------------------------------------------------------------
+
+// The settle tx is not stored anywhere off-chain; the CampaignSettled event
+// is the canonical on-chain source. Undefined while the batch is unsettled.
+export function useSettleTx(id: CampaignId) {
+  const address = campaignAddress(id);
+
+  return useQuery({
+    queryKey: ["settleTx", id],
+    queryFn: async (): Promise<`0x${string}` | null> => {
+      const logs = await publicClient.getLogs({
+        address,
+        event: {
+          type: "event",
+          name: "CampaignSettled",
+          inputs: [
+            { type: "bool", name: "success" },
+            { type: "uint256", name: "winningQuoteId" },
+            { type: "uint256", name: "tierIndex" },
+            { type: "uint256", name: "clearingPrice" },
+            { type: "uint256", name: "winnerCount" },
+          ],
+        },
+        fromBlock: deployBlock(id),
+        toBlock: "latest",
+      });
+      return logs.length > 0 ? logs[logs.length - 1].transactionHash : null;
     },
     refetchInterval: POLL_INTERVAL_MS,
     staleTime: POLL_INTERVAL_MS / 2,

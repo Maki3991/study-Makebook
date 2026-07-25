@@ -144,18 +144,26 @@ export const zh = {
   quotes: {
     title: "工厂条件",
     empty: "暂无工厂报价",
-    canClear: "可成团",
     ordersSuffix: "单",
     row: "MOQ {minQty} 件 · 单价 {price} test INJ · 当前 {eligible} 单达标",
-    rowShort: "还差 {n} 单达标",
-    rowShortSingular: "还差 {n} 单达标",
     headers: {
       factory: "工厂",
       moq: "MOQ",
-      unitPrice: "单价",
+      factoryPrice: "出厂价",
+      retailPrice: "零售价",
       eligible: "达标",
-      status: "状态",
+      status: "结果",
     },
+    result: {
+      win: "中标",
+      lost: "未中标",
+    },
+    reason: {
+      win: "达标 {n} ≥ MOQ {moq} · 达标数最多 → 中标",
+      infeasible: "达标 {n} < MOQ {moq} · 不可行",
+      lost: "达标 {n} ≥ MOQ {moq}，但达标数少于 {winner} → 未中标",
+    },
+    tiebreak: "排序规则：eligibleCount 最大 → 出厂价低 → quoteId/tierIndex 小",
   },
 
   curve: {
@@ -181,6 +189,7 @@ export const zh = {
     factoryPaidOut: "工厂应收已领取，买家仍可领取退款",
     success: "本批已成团：统一价 {price} test INJ，共 {count} 单",
     failure: "未满 MOQ，本批未成团，全员全额退款",
+    viewSettleTx: "查看清算交易 ↗",
     mine: {
       win: "你中了：应付 {clearing}，可领回差额 {diff} test INJ",
       lose: "未中选：可领回全额 {amount} test INJ",
@@ -193,6 +202,16 @@ export const zh = {
     title: "确认支持",
     step: "确认订单 → 钱包签名 → 完成",
     summary: "{product} × 1 · 你的最高愿付价 {price} test INJ",
+    breakdown: {
+      factory: "工厂出厂价",
+      markup: "品牌加价 ×{factor}",
+      youPay: "你支付（统一清算价）",
+      ofWhich: "其中",
+      creatorNet: "品牌实收",
+      creatorNetNote: "（加价 − 平台费）",
+      platformFee: "平台费",
+      platformFeeNote: "（{pct}%）",
+    },
     legal1:
       "你将预锁 {price} test INJ。若统一价不高于它，你会获得 1 件 {product}，并可领取差额；否则可领取全额。提交后不可撤销。",
     legal2:
@@ -234,10 +253,11 @@ export const zh = {
       subtitle: "编译需求、监控批次、管理工厂应收",
       guest: "连接钱包以识别角色（品牌方 / 工厂）",
       viewer: "当前地址不是品牌方或已登记工厂，编译与监控可用，操作不可用",
-      operator: "品牌方（Operator）",
+      operator: "运营方（Operator）",
       factory: "已登记工厂",
       creator: "品牌主理人",
       platform: "平台费收款方",
+      operatorNote: "Operator 操作（开批次 / 登记工厂 / 报价）走 CLI，私钥不进浏览器",
     },
     compile: {
       title: "需求编译",
@@ -299,8 +319,13 @@ export const zh = {
       claimed: "应收已领取 ✓",
     },
     creator: {
-      title: "品牌应收",
+      title: "我的批次",
       address: "品牌主理人地址",
+      previewPrice: "当前预览零售价",
+      expected: "预计品牌应收",
+      actual: "实际应收",
+      awaitingSettle: "清算后可领取",
+      previewInfeasible: "按当前订单暂不成团，无应收",
       pending: "尚未清算",
       win: "已成团 · 品牌应收 {amount} test INJ",
       failed: "未成团，无应收",
@@ -320,6 +345,9 @@ export const zh = {
 
   campaign: {
     contractLabel: "合约地址：",
+    brand: {
+      byline: "由 {brand} 发售",
+    },
     evidence: {
       title: "链上证据",
       deployTxLabel: "部署交易：",
@@ -340,8 +368,19 @@ export const zh = {
 
   fundsSplit: {
     title: "每一分钱去哪了",
-    unitSplit:
-      "统一零售价 {retail} test INJ = 工厂 {factory} + 品牌 {creator} + 平台费 {platform}",
+    roles: {
+      factory: "工厂",
+      creator: "品牌",
+      platform: "平台",
+    },
+    columns: {
+      role: "角色",
+      amount: "金额",
+      share: "占比",
+    },
+    note: "每一笔都在清算时链上记账，三方各自领取，平台不经手品牌与工厂的钱",
+    basisPreview: "按当前预览清算价，每件的分账",
+    basisSettled: "按实际清算价，每件的分账",
     totals:
       "成交 {count} 单：工厂应收 {factory} · 品牌应收 {creator} · 平台费 {platform} test INJ",
   },

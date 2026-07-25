@@ -25,6 +25,10 @@ export type CampaignMeta = {
   id: CampaignId;
   product: string;
   batchName: string;
+  // Spec 009 §3.2 C1: the brand (creator) that sells this batch. A proper
+  // noun, distinct from the MAKEBOOK platform — the whole point is that the
+  // brand is not the platform.
+  brandName: string;
   manifestPath: string;
   heroImage: string;
   route: string;
@@ -44,6 +48,7 @@ const REGISTRY_BASE: Omit<CampaignMeta, "deployment" | "deployed">[] = [
     id: "success",
     product: "FRAME-01 Camera Sling",
     batchName: "Batch A",
+    brandName: "FRAME LAB",
     manifestPath: "/manifests/frame-01.json",
     heroImage: "/products/frame-01/hero.png",
     route: "/campaigns/success",
@@ -57,6 +62,7 @@ const REGISTRY_BASE: Omit<CampaignMeta, "deployment" | "deployed">[] = [
     id: "failure",
     product: "FRAME-01 Camera Sling",
     batchName: "Batch B",
+    brandName: "FRAME LAB",
     manifestPath: "/manifests/frame-01.json",
     heroImage: "/products/frame-01/hero.png",
     route: "/campaigns/failure",
@@ -72,6 +78,7 @@ const REGISTRY_BASE: Omit<CampaignMeta, "deployment" | "deployed">[] = [
     id: "bracelet",
     product: "BRACELET-01 AI Heritage Bracelet",
     batchName: "Batch A",
+    brandName: "HERITAGE STUDIO",
     manifestPath: "/manifests/heritage-bracelet.json",
     heroImage: "/products/bracelet-01/hero.png",
     route: "/campaigns/bracelet",

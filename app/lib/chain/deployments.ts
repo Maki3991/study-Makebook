@@ -6,6 +6,11 @@ export type DeploymentEntry = {
   manifestURI: string;
   deadline: number;
   deployBlock: number;
+  // P1 three-way split (spec 008): frozen in the constructor at deploy time.
+  creator: string;
+  feeRecipient: string;
+  marginBps: number;
+  feeBps: number;
 };
 
 export type DeploymentsJson = {

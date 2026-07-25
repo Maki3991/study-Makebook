@@ -5,6 +5,7 @@ import {
   Factory,
   CloudOff,
   FlaskConical,
+  Store,
 } from "lucide-react";
 
 export type ProvenanceTagType =
@@ -12,6 +13,7 @@ export type ProvenanceTagType =
   | "AI GENERATED"
   | "HUMAN CONFIRMED"
   | "DEMO FACTORY"
+  | "DEMO BRAND"
   | "OFF-CHAIN DEMO"
   | "TESTNET";
 
@@ -37,6 +39,10 @@ const TAG_CONFIG: Record<
   "DEMO FACTORY": {
     icon: Factory,
     className: "tag-warn",
+  },
+  "DEMO BRAND": {
+    icon: Store,
+    className: "tag-accent",
   },
   "OFF-CHAIN DEMO": {
     icon: CloudOff,
